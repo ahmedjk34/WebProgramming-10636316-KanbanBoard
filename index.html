@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Task Board - Web Programming 10636316</title>
+    <meta name="description" content="A responsive Kanban-style task management board built with HTML5, CSS3, JavaScript, PHP, and MySQL">
+    <meta name="author" content="Web Programming 10636316 Student">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="js/app.js" as="script">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="header-left">
+                <h1 class="app-title">
+                    <span class="app-icon">📋</span>
+                    Kanban Task Board
+                </h1>
+                <span class="app-subtitle">Web Programming 10636316 Project</span>
+            </div>
+            
+            <div class="header-controls">
+                <button id="add-task-btn" class="btn btn-primary">
+                    <span class="btn-icon">➕</span>
+                    Add Task
+                </button>
+                
+                <div class="filter-controls">
+                    <select id="project-filter" class="form-select">
+                        <option value="">All Projects</option>
+                        <!-- Projects will be loaded dynamically -->
+                    </select>
+                    
+                    <select id="priority-filter" class="form-select">
+                        <option value="">All Priorities</option>
+                        <option value="high">🔴 High</option>
+                        <option value="medium">🟡 Medium</option>
+                        <option value="low">🟢 Low</option>
+                    </select>
+                </div>
+                
+                <button id="refresh-btn" class="btn btn-secondary" title="Refresh Tasks">
+                    <span class="btn-icon">🔄</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" class="loading-indicator">
+            <div class="spinner"></div>
+            <p>Loading tasks...</p>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="kanban-board" id="kanban-board">
+            <!-- To Do Column -->
+            <div class="kanban-column" data-status="todo">
+                <div class="column-header">
+                    <h2 class="column-title">
+                        <span class="column-icon">📝</span>
+                        To Do
+                        <span class="task-count" id="todo-count">0</span>
+                    </h2>
+                    <button class="add-task-column-btn" data-status="todo" title="Add task to To Do">
+                        ➕
+                    </button>
+                </div>
+                <div class="task-list" id="todo-tasks" data-status="todo">
+                    <!-- Tasks will be loaded here dynamically -->
+                </div>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="kanban-column" data-status="in_progress">
+                <div class="column-header">
+                    <h2 class="column-title">
+                        <span class="column-icon">⚡</span>
+                        In Progress
+                        <span class="task-count" id="in_progress-count">0</span>
+                    </h2>
+                    <button class="add-task-column-btn" data-status="in_progress" title="Add task to In Progress">
+                        ➕
+                    </button>
+                </div>
+                <div class="task-list" id="in_progress-tasks" data-status="in_progress">
+                    <!-- Tasks will be loaded here dynamically -->
+                </div>
+            </div>
+
+            <!-- Done Column -->
+            <div class="kanban-column" data-status="done">
+                <div class="column-header">
+                    <h2 class="column-title">
+                        <span class="column-icon">✅</span>
+                        Done
+                        <span class="task-count" id="done-count">0</span>
+                    </h2>
+                    <button class="add-task-column-btn" data-status="done" title="Add task to Done">
+                        ➕
+                    </button>
+                </div>
+                <div class="task-list" id="done-tasks" data-status="done">
+                    <!-- Tasks will be loaded here dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="empty-state-content">
+                <div class="empty-state-icon">📋</div>
+                <h3>No tasks yet</h3>
+                <p>Create your first task to get started with your Kanban board!</p>
+                <button id="create-first-task-btn" class="btn btn-primary">
+                    Create First Task
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Task Modal (will be implemented in Phase 5) -->
+    <div id="task-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add New Task</h3>
+                <button class="modal-close" id="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Task form will be implemented in Phase 5 -->
+                <p>Task creation form will be implemented in Phase 5</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-content">
+            <p>&copy; 2025 Web Programming 10636316 Project | An-Najah National University</p>
+            <p>Built with HTML5, CSS3, JavaScript, PHP & MySQL</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+    
+    <!-- Development helpers (remove in production) -->
+    <script>
+        // Show development info in console
+        console.log('🗂️ Kanban Board Application');
+        console.log('📚 Course: Web Programming 10636316');
+        console.log('🏫 University: An-Najah National University');
+        console.log('🔧 Tech Stack: HTML5, CSS3, JavaScript, PHP, MySQL');
+        console.log('📅 Version: 1.0.0 - Phase 1 Complete');
+    </script>
+</body>
+</html>
