@@ -26,12 +26,14 @@ A simple, responsive **Kanban-style task management board** built using core web
 ## 🔧 Tech Stack (Taught in Course)
 
 ### 🌐 Frontend
+
 - HTML5, CSS3
 - JavaScript (Vanilla)
 - Bootstrap (optional for layout)
 - HTML5 Drag-and-Drop API
 
 ### 💻 Backend
+
 - PHP (pure, procedural or OOP)
 - MySQL database
 - AJAX (with `XMLHttpRequest` or `fetch`)
@@ -58,3 +60,60 @@ CREATE TABLE tasks (
   due_date DATE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+---
+
+## 🚀 Phase 1 Setup Instructions
+
+### Prerequisites
+- **XAMPP/WAMP/MAMP** or local web server with PHP 7.4+ and MySQL 5.7+
+- Web browser (Chrome, Firefox, Safari, Edge)
+- Text editor or IDE
+
+### Quick Setup
+1. **Clone/Download** this project to your web server directory
+2. **Configure Database**: Edit `php/config/database.php` with your MySQL credentials
+3. **Install Database**:
+   - Option A: Run `php php/setup/install.php` from command line
+   - Option B: Import `database_setup.sql` into MySQL
+4. **Test Setup**: Open `test_connection.php` in your browser
+5. **Launch App**: Open `index.html` in your browser
+
+### Project Structure (Phase 1 Complete)
+```
+
+WebProgramming-10636316-KanbanBoard/
+├── index.html # Main application page
+├── config.php # Application configuration
+├── test_connection.php # Setup verification script
+├── database_setup.sql # Database schema
+├── css/
+│ └── styles.css # Application styles (basic)
+├── js/
+│ └── app.js # Application JavaScript (basic)
+├── php/
+│ ├── config/
+│ │ └── database.php # Database connection
+│ ├── includes/
+│ │ ├── functions.php # Utility functions
+│ │ └── security.php # Security functions
+│ ├── setup/
+│ │ └── install.php # Database installer
+│ └── api/ # API endpoints (Phase 2)
+└── assets/
+└── images/ # Application assets
+
+```
+
+### ✅ Phase 1 Completed Features
+- ✅ Complete project directory structure
+- ✅ Database schema with projects and tasks tables
+- ✅ Security functions (input sanitization, validation)
+- ✅ Configuration management
+- ✅ Database connection with PDO
+- ✅ Basic HTML structure for Kanban board
+- ✅ Installation and testing scripts
+
+### 🔄 Next: Phase 2 - Backend API Development
+Ready to proceed with creating PHP API endpoints for CRUD operations.
+```
