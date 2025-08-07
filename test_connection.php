@@ -92,10 +92,13 @@ require_once 'config.php';
             $existingTables = [];
             
             foreach ($tables as $table) {
-                $stmt = $pdo->prepare("SHOW TABLES LIKE ?");
-                $stmt->execute([$table]);
-                if ($stmt->rowCount() > 0) {
-                    $existingTables[] = $table;
+                try {
+                    $stmt = $pdo->query("DESCRIBE `$table`");
+                    if ($stmt) {
+                        $existingTables[] = $table;
+                    }
+                } catch (PDOException $e) {
+                    // Table doesn't exist, skip it
                 }
             }
             
@@ -131,7 +134,7 @@ require_once 'config.php';
         $sanitized = sanitizeInput($testInput);
         echo "<p><strong>Input Sanitization Test:</strong></p>";
         echo "<p>Original: <code>" . htmlspecialchars($testInput) . "</code></p>";
-        echo "<p>Sanitized: <code>$sanitized</code></p>";
+        echo "<p>Sanitized: <code>" . htmlspecialchars($sanitized) . "</code></p>";
         
         if ($sanitized !== $testInput) {
             echo "<p class='success'>✅ Input sanitization working correctly</p>";
