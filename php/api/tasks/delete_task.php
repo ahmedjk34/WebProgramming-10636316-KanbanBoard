@@ -1,7 +1,121 @@
 <?php
 /**
  * Delete Task API Endpoint
+ * Kanban Board Project - Web Programming <?php
+/**
+ * Delete Task API Endpoint
  * Kanban Board Project - Web Programming 10636316
+ *
+ * Deletes a task from the database
+ * Method: POST
+ * Required: task_id
+ */
+
+// Start output buffering to prevent any unwanted output
+ob_start();
+
+// Suppress PHP errors for clean JSON output
+error_reporting(0);
+ini_set('display_errors', 0);
+
+// Set headers for JSON response and CORS
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+// Only allow POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed. Use POST.']);
+    exit();
+}
+
+// Include required files
+require_once '../../config/database.php';
+require_once '../../includes/functions.php';
+require_once '../../includes/security.php';
+
+try {
+    // Get database connection
+    $pdo = getDBConnection();
+
+    // Get POST data
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (!$input) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'No JSON data received']);
+        exit();
+    }
+
+    // Validate required fields
+    if (empty($input['task_id'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'task_id is required']);
+        exit();
+    }
+
+    $taskId = sanitizeAndValidate($input['task_id'], 'int');
+
+    // Check if task exists
+    $taskCheck = $pdo->prepare("SELECT id, status FROM tasks WHERE id = :task_id");
+    $taskCheck->execute([':task_id' => $taskId]);
+    $task = $taskCheck->fetch(PDO::FETCH_ASSOC);
+
+    if (!$task) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Task not found']);
+        exit();
+    }
+
+    // Delete the task
+    $deleteStmt = $pdo->prepare("DELETE FROM tasks WHERE id = :task_id");
+    $result = $deleteStmt->execute([':task_id' => $taskId]);
+
+    if ($result) {
+        // Simple success response without complex position reordering
+        // Position reordering can be handled by the frontend or in a separate process
+
+        // Clean any output buffer before sending JSON
+        ob_clean();
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Task deleted successfully',
+            'data' => [
+                'deleted_task_id' => (int)$taskId
+            ]
+        ]);
+
+    } else {
+        ob_clean();
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Failed to delete task']);
+    }
+
+} catch (PDOException $e) {
+    ob_clean();
+    error_log("Database error in delete_task.php: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Database error occurred']);
+
+} catch (Exception $e) {
+    ob_clean();
+    error_log("Error in delete_task.php: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'An error occurred while deleting the task']);
+}
+
+// End output buffering
+ob_end_flush();
+?>0636316
  * 
  * Deletes a task from the database
  * Method: DELETE
