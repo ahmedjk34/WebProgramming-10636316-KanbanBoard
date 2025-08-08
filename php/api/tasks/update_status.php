@@ -2,17 +2,20 @@
 /**
  * Update Task Status API Endpoint
  * Kanban Board Project - Web Programming 10636316
- * 
+ *
  * Updates task status and position for drag & drop functionality
- * Method: PATCH
- * Required: id, status
+ * Method: POST
+ * Required: task_id, status
  * Optional: position
  */
+
+// Suppress PHP errors for clean JSON output
+error_reporting(E_ERROR | E_PARSE);
 
 // Set headers for JSON response and CORS
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: PATCH, OPTIONS');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Handle preflight OPTIONS request
@@ -21,33 +24,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Only allow PATCH requests
-if ($_SERVER['REQUEST_METHOD'] !== 'PATCH') {
+// Only allow POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo jsonResponse(false, 'Method not allowed. Use PATCH.');
+    echo jsonResponse(false, 'Method not allowed. Use POST.');
     exit();
 }
 
 // Include required files
-require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../../includes/functions.php';
-require_once __DIR__ . '/../../includes/security.php';
+require_once '../../config/database.php';
+require_once '../../includes/functions.php';
+require_once '../../includes/security.php';
 
 try {
     // Get database connection
     $pdo = getDBConnection();
     
-    // Get PATCH data
+    // Get POST data
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     // Validate required fields
-    if (empty($input['id']) || empty($input['status'])) {
+    if (empty($input['task_id']) || empty($input['status'])) {
         http_response_code(400);
         echo jsonResponse(false, 'Task ID and status are required');
         exit();
     }
-    
-    $taskId = sanitizeAndValidate($input['id'], 'int');
+
+    $taskId = sanitizeAndValidate($input['task_id'], 'int');
     $newStatus = sanitizeAndValidate($input['status'], 'string');
     $newPosition = isset($input['position']) ? sanitizeAndValidate($input['position'], 'int') : null;
     
@@ -211,13 +214,7 @@ try {
         ];
         
         // Log the status change
-        debugLog("Task status updated", [
-            'task_id' => $taskId,
-            'old_status' => $oldStatus,
-            'new_status' => $newStatus,
-            'old_position' => $oldPosition,
-            'new_position' => $newPosition
-        ]);
+        error_log("Task status updated - ID: $taskId, $oldStatus -> $newStatus");
         
         // Return success response
         echo jsonResponse(true, 'Task status updated successfully', [
