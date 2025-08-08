@@ -193,12 +193,12 @@ require_once 'config.php';
 
         async function testUpdateTaskStatus() {
             const statusData = {
-                id: 1,
+                task_id: 1,
                 status: 'in_progress',
                 position: 1
             };
 
-            await testAPI('PATCH', 'php/api/tasks/update_status.php', statusData, 'update-status-result');
+            await testAPI('POST', 'php/api/tasks/update_status.php', statusData, 'update-status-result');
         }
         
         async function testErrorHandling() {
@@ -220,9 +220,9 @@ require_once 'config.php';
                 },
                 {
                     name: 'Invalid Status',
-                    method: 'PATCH',
+                    method: 'POST',
                     url: 'php/api/tasks/update_status.php',
-                    data: { id: 1, status: 'invalid_status' }
+                    data: { task_id: 1, status: 'invalid_status' }
                 }
             ];
             
