@@ -43,6 +43,15 @@
           </button>
 
           <div class="filter-controls">
+            <button
+              id="manage-projects-btn"
+              class="btn btn-secondary"
+              onclick="openProjectManagementDialog()"
+            >
+              <span class="btn-icon">🗂️</span>
+              Manage Projects
+            </button>
+
             <div class="custom-dropdown" id="project-dropdown">
               <button class="dropdown-trigger" type="button">
                 <span class="dropdown-text">All Projects</span>
@@ -65,9 +74,50 @@
                 <div class="dropdown-item active" data-value="">
                   All Priorities
                 </div>
-                <div class="dropdown-item" data-value="high">🔴 High</div>
-                <div class="dropdown-item" data-value="medium">🟡 Medium</div>
-                <div class="dropdown-item" data-value="low">🟢 Low</div>
+                <div class="dropdown-item" data-value="high">
+                  🔴 High Priority
+                </div>
+                <div class="dropdown-item" data-value="medium">
+                  🟡 Medium Priority
+                </div>
+                <div class="dropdown-item" data-value="low">
+                  🟢 Low Priority
+                </div>
+              </div>
+            </div>
+
+            <div class="custom-dropdown" id="status-dropdown">
+              <button class="dropdown-trigger" type="button">
+                <span class="dropdown-text">All Status</span>
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="dropdown-menu">
+                <div class="dropdown-item active" data-value="">All Status</div>
+                <div class="dropdown-item" data-value="todo">📝 To Do</div>
+                <div class="dropdown-item" data-value="in_progress">
+                  ⚡ In Progress
+                </div>
+                <div class="dropdown-item" data-value="done">✅ Done</div>
+              </div>
+            </div>
+
+            <div class="custom-dropdown" id="due-date-dropdown">
+              <button class="dropdown-trigger" type="button">
+                <span class="dropdown-text">All Due Dates</span>
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="dropdown-menu">
+                <div class="dropdown-item active" data-value="">
+                  All Due Dates
+                </div>
+                <div class="dropdown-item" data-value="overdue">🚨 Overdue</div>
+                <div class="dropdown-item" data-value="today">📅 Due Today</div>
+                <div class="dropdown-item" data-value="this_week">
+                  📆 This Week
+                </div>
+                <div class="dropdown-item" data-value="no_date">
+                  ⏳ No Due Date
+                </div>
               </div>
             </div>
           </div>
@@ -347,6 +397,185 @@
               <span class="btn-icon">🗑️</span>
               Delete Task
             </button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Project Management Dialog -->
+    <dialog id="project-management-dialog" class="project-management-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>🗂️ Project Management</h3>
+          <button
+            type="button"
+            class="dialog-close"
+            onclick="closeProjectManagementDialog()"
+          >
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Close</span>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <div class="project-management-tabs">
+            <button class="tab-btn active" data-tab="projects">
+              📋 Projects
+            </button>
+            <button class="tab-btn" data-tab="create">➕ Create Project</button>
+            <button class="tab-btn" data-tab="statistics">📊 Statistics</button>
+          </div>
+
+          <!-- Projects List Tab -->
+          <div id="projects-tab" class="tab-content active">
+            <div class="projects-grid" id="projects-grid">
+              <!-- Projects will be loaded dynamically -->
+            </div>
+          </div>
+
+          <!-- Create Project Tab -->
+          <div id="create-tab" class="tab-content">
+            <form id="project-form">
+              <div class="form-group">
+                <label for="project-name">Project Name *</label>
+                <input
+                  type="text"
+                  id="project-name"
+                  name="name"
+                  required
+                  maxlength="100"
+                  placeholder="Enter project name..."
+                />
+                <div class="form-error" id="project-name-error"></div>
+              </div>
+
+              <div class="form-group">
+                <label for="project-description">Description</label>
+                <textarea
+                  id="project-description"
+                  name="description"
+                  rows="3"
+                  placeholder="Enter project description..."
+                ></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="project-color">Project Color</label>
+                  <div class="color-picker">
+                    <input
+                      type="color"
+                      id="project-color"
+                      name="color"
+                      value="#667eea"
+                    />
+                    <div class="color-presets">
+                      <button
+                        type="button"
+                        class="color-preset"
+                        data-color="#667eea"
+                        style="background: #667eea"
+                      ></button>
+                      <button
+                        type="button"
+                        class="color-preset"
+                        data-color="#f093fb"
+                        style="background: #f093fb"
+                      ></button>
+                      <button
+                        type="button"
+                        class="color-preset"
+                        data-color="#4facfe"
+                        style="background: #4facfe"
+                      ></button>
+                      <button
+                        type="button"
+                        class="color-preset"
+                        data-color="#43e97b"
+                        style="background: #43e97b"
+                      ></button>
+                      <button
+                        type="button"
+                        class="color-preset"
+                        data-color="#fa709a"
+                        style="background: #fa709a"
+                      ></button>
+                      <button
+                        type="button"
+                        class="color-preset"
+                        data-color="#ffecd2"
+                        style="background: #ffecd2"
+                      ></button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="project-status">Status</label>
+                  <select id="project-status" name="status">
+                    <option value="active" selected>🟢 Active</option>
+                    <option value="on_hold">🟡 On Hold</option>
+                    <option value="completed">✅ Completed</option>
+                    <option value="archived">📦 Archived</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  onclick="resetProjectForm()"
+                >
+                  <span class="btn-icon">🔄</span>
+                  Reset
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  id="project-submit-btn"
+                >
+                  <span class="btn-icon">💾</span>
+                  <span id="project-submit-text">Create Project</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Statistics Tab -->
+          <div id="statistics-tab" class="tab-content">
+            <div class="statistics-grid">
+              <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                  <div class="stat-number" id="total-projects">0</div>
+                  <div class="stat-label">Total Projects</div>
+                </div>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                  <div class="stat-number" id="completed-projects">0</div>
+                  <div class="stat-label">Completed</div>
+                </div>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-content">
+                  <div class="stat-number" id="active-projects">0</div>
+                  <div class="stat-label">Active</div>
+                </div>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-content">
+                  <div class="stat-number" id="total-tasks-stat">0</div>
+                  <div class="stat-label">Total Tasks</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
