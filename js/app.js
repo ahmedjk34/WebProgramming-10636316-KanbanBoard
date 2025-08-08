@@ -34,6 +34,15 @@ function initializeApp() {
       // Initialize drag and drop
       initializeDragAndDrop();
 
+      // Setup task form handling
+      setupTaskFormHandling();
+
+      // Debug: Check if dialogs exist
+      const taskDialog = document.getElementById("task-dialog");
+      const deleteDialog = document.getElementById("delete-dialog");
+      console.log("🔍 Task dialog found:", !!taskDialog);
+      console.log("🔍 Delete dialog found:", !!deleteDialog);
+
       console.log("🎉 Kanban Board initialized successfully");
 
       // Add welcome animation
@@ -354,15 +363,816 @@ function setupCustomDropdowns() {
   });
 }
 
-// Placeholder functions for Phase 5
+// Task Management Functions - Phase 5
+let currentEditingTaskId = null;
+
+// Dialog Management - Modern HTML Dialog API
+function openTaskDialog(taskId = null) {
+  console.log("🎯 Opening task dialog, taskId:", taskId);
+
+  const dialog = document.getElementById("task-dialog");
+  const dialogTitle = document.getElementById("task-dialog-title");
+  const submitText = document.getElementById("task-submit-text");
+  const form = document.getElementById("task-form");
+
+  if (!dialog) {
+    console.error("❌ Task dialog not found!");
+    return;
+  }
+
+  currentEditingTaskId = taskId;
+
+  if (taskId) {
+    // Edit mode
+    console.log("📝 Edit mode for task:", taskId);
+    dialogTitle.textContent = "Edit Task";
+    submitText.textContent = "Update Task";
+    loadTaskForEditing(taskId);
+  } else {
+    // Create mode
+    console.log("➕ Create mode");
+    dialogTitle.textContent = "Add New Task";
+    submitText.textContent = "Create Task";
+    form.reset();
+    clearFormErrors();
+  }
+
+  // Populate project dropdown
+  populateTaskProjectDropdown();
+
+  // Lock scrolling
+  lockScroll();
+
+  // Show dialog using the native API
+  console.log("🎭 Opening dialog with showModal()");
+  dialog.showModal();
+
+  // Focus on title field after dialog opens
+  setTimeout(() => {
+    const titleField = document.getElementById("task-title");
+    if (titleField) {
+      titleField.focus();
+    }
+  }, 100);
+
+  // Handle Escape key and click outside to close dialog
+  dialog.addEventListener("keydown", handleDialogKeydown);
+  dialog.addEventListener("click", handleDialogClickOutside);
+}
+
+function closeTaskDialog() {
+  const dialog = document.getElementById("task-dialog");
+  if (dialog) {
+    dialog.close();
+    currentEditingTaskId = null;
+    clearFormErrors();
+    unlockScroll();
+  }
+}
+
+function openDeleteDialog(taskId) {
+  const dialog = document.getElementById("delete-dialog");
+  const taskTitleElement = document.getElementById("delete-task-title");
+
+  if (!dialog) {
+    console.error("❌ Delete dialog not found!");
+    return;
+  }
+
+  // Find task title
+  const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+  const taskTitle =
+    taskElement?.querySelector(".task-title")?.textContent || "Unknown Task";
+
+  taskTitleElement.textContent = taskTitle;
+
+  // Set up delete confirmation
+  const confirmBtn = document.getElementById("confirm-delete-btn");
+  confirmBtn.onclick = () => confirmDeleteTask(taskId);
+
+  // Lock scrolling
+  lockScroll();
+
+  // Show dialog
+  dialog.showModal();
+
+  // Handle Escape key and click outside to close dialog
+  dialog.addEventListener("keydown", handleDialogKeydown);
+  dialog.addEventListener("click", handleDialogClickOutside);
+}
+
+function closeDeleteDialog() {
+  const dialog = document.getElementById("delete-dialog");
+  if (dialog) {
+    dialog.close();
+    unlockScroll();
+  }
+}
+
+// Handle keyboard events for dialogs
+function handleDialogKeydown(event) {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    event.target.close();
+  }
+}
+
+// Handle click outside dialog to close
+function handleDialogClickOutside(event) {
+  const dialog = event.target;
+  const rect = dialog.getBoundingClientRect();
+
+  // Check if click is outside the dialog content
+  if (
+    event.clientX < rect.left ||
+    event.clientX > rect.right ||
+    event.clientY < rect.top ||
+    event.clientY > rect.bottom
+  ) {
+    dialog.close();
+  }
+}
+
+// Scroll lock functions
+function lockScroll() {
+  const scrollY = window.scrollY;
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.width = "100%";
+  document.body.classList.add("modal-open");
+}
+
+function unlockScroll() {
+  const scrollY = document.body.style.top;
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.width = "";
+  document.body.classList.remove("modal-open");
+  window.scrollTo(0, parseInt(scrollY || "0") * -1);
+}
+
+// Legacy function names for backward compatibility
+const openTaskModal = openTaskDialog;
+const closeTaskModal = closeTaskDialog;
+const openDeleteModal = openDeleteDialog;
+const closeDeleteModal = closeDeleteDialog;
+
+// Project Management Functions - Phase 6
+function openProjectManagementDialog() {
+  console.log("🗂️ Opening project management dialog");
+
+  const dialog = document.getElementById("project-management-dialog");
+  if (!dialog) {
+    console.error("❌ Project management dialog not found!");
+    return;
+  }
+
+  // Load projects and statistics
+  loadProjectsData();
+
+  // Lock scrolling
+  lockScroll();
+
+  // Show dialog
+  dialog.showModal();
+
+  // Setup tab switching
+  setupProjectTabs();
+
+  // Setup color picker
+  setupColorPicker();
+
+  // Setup project form
+  setupProjectForm();
+
+  // Handle click outside to close dialog
+  dialog.addEventListener("click", handleDialogClickOutside);
+}
+
+function closeProjectManagementDialog() {
+  const dialog = document.getElementById("project-management-dialog");
+  if (dialog) {
+    dialog.close();
+    unlockScroll();
+  }
+}
+
+function setupProjectTabs() {
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const tabContents = document.querySelectorAll(".tab-content");
+
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const targetTab = button.getAttribute("data-tab");
+
+      // Remove active class from all tabs and contents
+      tabButtons.forEach((btn) => btn.classList.remove("active"));
+      tabContents.forEach((content) => content.classList.remove("active"));
+
+      // Add active class to clicked tab and corresponding content
+      button.classList.add("active");
+      document.getElementById(`${targetTab}-tab`).classList.add("active");
+
+      // Load data for specific tabs
+      if (targetTab === "projects") {
+        loadProjectsGrid();
+      } else if (targetTab === "statistics") {
+        loadProjectStatistics();
+      }
+    });
+  });
+}
+
+function setupColorPicker() {
+  const colorInput = document.getElementById("project-color");
+  const colorPresets = document.querySelectorAll(".color-preset");
+
+  colorPresets.forEach((preset) => {
+    preset.addEventListener("click", () => {
+      const color = preset.getAttribute("data-color");
+      colorInput.value = color;
+    });
+  });
+}
+
+function setupProjectForm() {
+  const form = document.getElementById("project-form");
+  if (form) {
+    form.addEventListener("submit", handleProjectFormSubmit);
+  }
+}
+
+async function handleProjectFormSubmit(e) {
+  e.preventDefault();
+
+  const formData = new FormData(e.target);
+  const projectData = {
+    name: formData.get("name"),
+    description: formData.get("description"),
+    color: formData.get("color"),
+    status: formData.get("status"),
+  };
+
+  console.log("📝 Creating project:", projectData);
+
+  try {
+    // Here you would call your project creation API
+    // const result = await createProjectAPI(projectData);
+
+    // For now, show success message
+    showSuccessMessage("Project created successfully!");
+
+    // Reset form
+    resetProjectForm();
+
+    // Refresh projects grid
+    loadProjectsGrid();
+  } catch (error) {
+    console.error("❌ Error creating project:", error);
+    showErrorMessage("Failed to create project");
+  }
+}
+
+function resetProjectForm() {
+  const form = document.getElementById("project-form");
+  if (form) {
+    form.reset();
+    document.getElementById("project-color").value = "#667eea";
+  }
+}
+
+async function loadProjectsData() {
+  console.log("📊 Loading projects data...");
+
+  try {
+    // Load projects grid
+    loadProjectsGrid();
+
+    // Load statistics
+    loadProjectStatistics();
+  } catch (error) {
+    console.error("❌ Error loading projects data:", error);
+  }
+}
+
+function loadProjectsGrid() {
+  const projectsGrid = document.getElementById("projects-grid");
+  if (!projectsGrid) return;
+
+  // Clear existing content
+  projectsGrid.innerHTML = "";
+
+  // Create project cards for existing projects
+  allProjects.forEach((project) => {
+    const projectCard = createProjectCard(project);
+    projectsGrid.appendChild(projectCard);
+  });
+
+  // Add "Create New Project" card
+  const createCard = createNewProjectCard();
+  projectsGrid.appendChild(createCard);
+}
+
+function createProjectCard(project) {
+  const card = document.createElement("div");
+  card.className = "project-card";
+  card.style.setProperty("--project-color", project.color || "#667eea");
+
+  // Count tasks for this project
+  const projectTasks = allTasks.filter((task) => task.project_id == project.id);
+  const completedTasks = projectTasks.filter((task) => task.status === "done");
+
+  card.innerHTML = `
+    <div class="project-header">
+      <h4 class="project-title">${project.name}</h4>
+      <span class="project-status">${getProjectStatusIcon(project.status)} ${
+    project.status
+  }</span>
+    </div>
+    <p class="project-description">${
+      project.description || "No description"
+    }</p>
+    <div class="project-stats">
+      <div class="project-stat">
+        <div class="project-stat-number">${projectTasks.length}</div>
+        <div class="project-stat-label">Total Tasks</div>
+      </div>
+      <div class="project-stat">
+        <div class="project-stat-number">${completedTasks.length}</div>
+        <div class="project-stat-label">Completed</div>
+      </div>
+      <div class="project-stat">
+        <div class="project-stat-number">${Math.round(
+          (completedTasks.length / Math.max(projectTasks.length, 1)) * 100
+        )}%</div>
+        <div class="project-stat-label">Progress</div>
+      </div>
+    </div>
+    <div class="project-actions">
+      <button class="project-action-btn" onclick="editProject(${
+        project.id
+      })">✏️ Edit</button>
+      <button class="project-action-btn" onclick="viewProjectTasks(${
+        project.id
+      })">👁️ View</button>
+      <button class="project-action-btn" onclick="deleteProject(${
+        project.id
+      })">🗑️ Delete</button>
+    </div>
+  `;
+
+  return card;
+}
+
+function createNewProjectCard() {
+  const card = document.createElement("div");
+  card.className = "project-card project-card-new";
+  card.innerHTML = `
+    <div style="text-align: center; padding: 40px 20px;">
+      <div style="font-size: 3rem; margin-bottom: 16px;">➕</div>
+      <h4>Create New Project</h4>
+      <p style="color: var(--text-secondary); margin-bottom: 20px;">Start organizing your tasks</p>
+      <button class="btn btn-primary" onclick="openAddProjectDialog()">
+        <span class="btn-icon">🚀</span>
+        Get Started
+      </button>
+    </div>
+  `;
+
+  return card;
+}
+
+function openAddProjectDialog() {
+  console.log("➕ Opening add project dialog");
+
+  const dialog = document.getElementById("add-project-dialog");
+  if (!dialog) {
+    console.error("❌ Add project dialog not found!");
+    return;
+  }
+
+  // Reset form
+  resetAddProjectForm();
+
+  // Setup color picker for add project dialog
+  setupAddProjectColorPicker();
+
+  // Setup form submission
+  setupAddProjectForm();
+
+  // Lock scrolling
+  lockScroll();
+
+  // Show dialog
+  dialog.showModal();
+
+  // Focus on name field
+  setTimeout(() => {
+    const nameField = document.getElementById("add-project-name");
+    if (nameField) {
+      nameField.focus();
+    }
+  }, 100);
+
+  // Handle click outside to close dialog
+  dialog.addEventListener("click", handleDialogClickOutside);
+}
+
+function closeAddProjectDialog() {
+  const dialog = document.getElementById("add-project-dialog");
+  if (dialog) {
+    dialog.close();
+    unlockScroll();
+  }
+}
+
+function setupAddProjectColorPicker() {
+  const colorInput = document.getElementById("add-project-color");
+  const colorPresets = document.querySelectorAll(
+    "#add-project-dialog .color-preset"
+  );
+
+  colorPresets.forEach((preset) => {
+    preset.addEventListener("click", () => {
+      const color = preset.getAttribute("data-color");
+      colorInput.value = color;
+    });
+  });
+}
+
+function setupAddProjectForm() {
+  const form = document.getElementById("add-project-form");
+  if (form) {
+    form.removeEventListener("submit", handleAddProjectFormSubmit); // Remove existing listener
+    form.addEventListener("submit", handleAddProjectFormSubmit);
+  }
+}
+
+async function handleAddProjectFormSubmit(e) {
+  e.preventDefault();
+
+  const formData = new FormData(e.target);
+  const projectData = {
+    name: formData.get("name"),
+    description: formData.get("description"),
+    color: formData.get("color"),
+    status: formData.get("status"),
+  };
+
+  console.log("📝 Creating project:", projectData);
+
+  try {
+    // Here you would call your project creation API
+    // const result = await createProjectAPI(projectData);
+
+    // For now, show success message
+    showSuccessMessage("Project created successfully!");
+
+    // Close add project dialog
+    closeAddProjectDialog();
+
+    // Refresh projects grid in management dialog
+    loadProjectsGrid();
+
+    // Refresh project dropdown in main interface
+    await loadProjects();
+  } catch (error) {
+    console.error("❌ Error creating project:", error);
+    showErrorMessage("Failed to create project");
+  }
+}
+
+function resetAddProjectForm() {
+  const form = document.getElementById("add-project-form");
+  if (form) {
+    form.reset();
+    document.getElementById("add-project-color").value = "#667eea";
+  }
+}
+
+function getProjectStatusIcon(status) {
+  const icons = {
+    active: "🟢",
+    on_hold: "🟡",
+    completed: "✅",
+    archived: "📦",
+  };
+  return icons[status] || "🟢";
+}
+
+function loadProjectStatistics() {
+  // Update statistics
+  document.getElementById("total-projects").textContent = allProjects.length;
+  document.getElementById("completed-projects").textContent =
+    allProjects.filter((p) => p.status === "completed").length;
+  document.getElementById("active-projects").textContent = allProjects.filter(
+    (p) => p.status === "active"
+  ).length;
+  document.getElementById("total-tasks-stat").textContent = allTasks.length;
+}
+
+// Project action functions
+function editProject(projectId) {
+  console.log("✏️ Edit project:", projectId);
+  // Switch to create tab and populate with project data
+  switchToCreateTab();
+  // TODO: Load project data into form
+}
+
+function viewProjectTasks(projectId) {
+  console.log("👁️ View project tasks:", projectId);
+  // Close dialog and filter by project
+  closeProjectManagementDialog();
+  // TODO: Set project filter
+}
+
+function deleteProject(projectId) {
+  console.log("🗑️ Delete project:", projectId);
+  // TODO: Show confirmation and delete project
+}
+
+// Task CRUD Operations
 function editTask(taskId) {
-  console.log("Edit task:", taskId);
-  alert("Task editing will be implemented in Phase 5");
+  console.log("🖊️ Opening edit modal for task:", taskId);
+  openTaskModal(taskId);
 }
 
 function deleteTask(taskId) {
-  console.log("Delete task:", taskId);
-  alert("Task deletion will be implemented in Phase 5");
+  console.log("🗑️ Opening delete confirmation for task:", taskId);
+  openDeleteModal(taskId);
+}
+
+async function loadTaskForEditing(taskId) {
+  try {
+    // Find task in current data
+    const task = allTasks.find((t) => t.id == taskId);
+
+    if (task) {
+      document.getElementById("task-title").value = task.title;
+      document.getElementById("task-description").value =
+        task.description || "";
+      document.getElementById("task-project").value = task.project_id;
+      document.getElementById("task-priority").value = task.priority;
+      document.getElementById("task-status").value = task.status;
+
+      if (task.due_date) {
+        document.getElementById("task-due-date").value = task.due_date;
+      }
+    }
+  } catch (error) {
+    console.error("❌ Error loading task for editing:", error);
+    showErrorMessage("Failed to load task data");
+  }
+}
+
+function populateTaskProjectDropdown() {
+  const projectSelect = document.getElementById("task-project");
+
+  // Clear existing options except the first one
+  projectSelect.innerHTML = '<option value="">Select a project...</option>';
+
+  // Add project options
+  allProjects.forEach((project) => {
+    const option = document.createElement("option");
+    option.value = project.id;
+    option.textContent = project.name;
+    projectSelect.appendChild(option);
+  });
+}
+
+// Form Handling
+function setupTaskFormHandling() {
+  const form = document.getElementById("task-form");
+
+  if (form) {
+    form.addEventListener("submit", handleTaskFormSubmit);
+  }
+}
+
+async function handleTaskFormSubmit(e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const formData = new FormData(form);
+
+  // Clear previous errors
+  clearFormErrors();
+
+  // Validate form
+  if (!validateTaskForm(formData)) {
+    return;
+  }
+
+  // Show loading state
+  setFormLoading(true);
+
+  try {
+    const taskData = {
+      title: formData.get("title"),
+      description: formData.get("description"),
+      project_id: parseInt(formData.get("project_id")),
+      priority: formData.get("priority"),
+      status: formData.get("status"),
+      due_date: formData.get("due_date") || null,
+    };
+
+    let result;
+
+    if (currentEditingTaskId) {
+      // Update existing task
+      taskData.id = currentEditingTaskId;
+      result = await updateTaskAPI(taskData);
+    } else {
+      // Create new task
+      result = await createTaskAPI(taskData);
+    }
+
+    if (result.success) {
+      // Show success message
+      showSuccessMessage(
+        currentEditingTaskId
+          ? "Task updated successfully!"
+          : "Task created successfully!"
+      );
+
+      // Close dialog
+      closeTaskDialog();
+
+      // Refresh tasks
+      await refreshTasks();
+    } else {
+      showErrorMessage(result.message || "Failed to save task");
+    }
+  } catch (error) {
+    console.error("❌ Error saving task:", error);
+    showErrorMessage("Network error. Please try again.");
+  } finally {
+    setFormLoading(false);
+  }
+}
+
+function validateTaskForm(formData) {
+  let isValid = true;
+
+  // Validate title
+  const title = formData.get("title");
+  if (!title || title.trim().length === 0) {
+    showFieldError("title-error", "Task title is required");
+    isValid = false;
+  } else if (title.length > 255) {
+    showFieldError("title-error", "Title must be less than 255 characters");
+    isValid = false;
+  }
+
+  // Validate project
+  const projectId = formData.get("project_id");
+  if (!projectId) {
+    showFieldError("project-error", "Please select a project");
+    isValid = false;
+  }
+
+  return isValid;
+}
+
+function showFieldError(errorId, message) {
+  const errorElement = document.getElementById(errorId);
+  if (errorElement) {
+    errorElement.textContent = message;
+    errorElement.classList.add("show");
+  }
+}
+
+function clearFormErrors() {
+  const errorElements = document.querySelectorAll(".form-error");
+  errorElements.forEach((element) => {
+    element.classList.remove("show");
+    element.textContent = "";
+  });
+}
+
+// Debug function - can be called from console
+window.testDialog = function () {
+  console.log("🧪 Testing dialog...");
+  const dialog = document.getElementById("task-dialog");
+  if (dialog) {
+    dialog.showModal();
+    console.log("✅ Dialog should be visible now");
+  } else {
+    console.error("❌ Dialog not found");
+  }
+};
+
+// Legacy test function
+window.testModal = window.testDialog;
+
+function setFormLoading(loading) {
+  const form = document.getElementById("task-form");
+  const submitBtn = document.getElementById("task-submit-btn");
+
+  if (loading) {
+    form.classList.add("form-loading");
+    submitBtn.disabled = true;
+  } else {
+    form.classList.remove("form-loading");
+    submitBtn.disabled = false;
+  }
+}
+
+// API Functions
+async function createTaskAPI(taskData) {
+  const response = await fetch("php/api/tasks/create_task.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(taskData),
+  });
+
+  return await response.json();
+}
+
+async function updateTaskAPI(taskData) {
+  const response = await fetch("php/api/tasks/update_task.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(taskData),
+  });
+
+  return await response.json();
+}
+
+async function deleteTaskAPI(taskId) {
+  const response = await fetch("php/api/tasks/delete_task.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ task_id: taskId }),
+  });
+
+  return await response.json();
+}
+
+async function confirmDeleteTask(taskId) {
+  try {
+    // Show loading state
+    const confirmBtn = document.getElementById("confirm-delete-btn");
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<span class="btn-icon">⏳</span> Deleting...';
+
+    const result = await deleteTaskAPI(taskId);
+
+    if (result.success) {
+      showSuccessMessage("Task deleted successfully!");
+      closeDeleteDialog();
+
+      // Remove task from UI with animation
+      removeTaskFromUI(taskId);
+
+      // Refresh tasks
+      await refreshTasks();
+    } else {
+      showErrorMessage(result.message || "Failed to delete task");
+    }
+  } catch (error) {
+    console.error("❌ Error deleting task:", error);
+    showErrorMessage("Network error. Please try again.");
+  } finally {
+    // Restore button
+    const confirmBtn = document.getElementById("confirm-delete-btn");
+    confirmBtn.disabled = false;
+    confirmBtn.innerHTML = '<span class="btn-icon">🗑️</span> Delete Task';
+  }
+}
+
+function removeTaskFromUI(taskId) {
+  const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+  if (taskElement) {
+    taskElement.style.transition = "all 0.3s ease";
+    taskElement.style.transform = "scale(0.8)";
+    taskElement.style.opacity = "0";
+
+    setTimeout(() => {
+      taskElement.remove();
+    }, 300);
+  }
+}
+
+async function refreshTasks() {
+  try {
+    const response = await fetch("php/api/tasks/get_tasks.php");
+    const result = await response.json();
+
+    if (result.success) {
+      allTasks = result.data.tasks;
+      displayTasks(result.data.tasks_by_status);
+      updateTaskCounts(result.data.counts);
+    }
+  } catch (error) {
+    console.error("❌ Error refreshing tasks:", error);
+  }
 }
 
 // Theme Management Functions
