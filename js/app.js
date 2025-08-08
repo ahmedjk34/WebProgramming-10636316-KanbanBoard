@@ -400,6 +400,9 @@ function openTaskDialog(taskId = null) {
   // Populate project dropdown
   populateTaskProjectDropdown();
 
+  // Lock scrolling
+  lockScroll();
+
   // Show dialog using the native API
   console.log("🎭 Opening dialog with showModal()");
   dialog.showModal();
@@ -412,8 +415,9 @@ function openTaskDialog(taskId = null) {
     }
   }, 100);
 
-  // Handle Escape key to close dialog
+  // Handle Escape key and click outside to close dialog
   dialog.addEventListener("keydown", handleDialogKeydown);
+  dialog.addEventListener("click", handleDialogClickOutside);
 }
 
 function closeTaskDialog() {
@@ -422,6 +426,7 @@ function closeTaskDialog() {
     dialog.close();
     currentEditingTaskId = null;
     clearFormErrors();
+    unlockScroll();
   }
 }
 
@@ -445,17 +450,22 @@ function openDeleteDialog(taskId) {
   const confirmBtn = document.getElementById("confirm-delete-btn");
   confirmBtn.onclick = () => confirmDeleteTask(taskId);
 
+  // Lock scrolling
+  lockScroll();
+
   // Show dialog
   dialog.showModal();
 
-  // Handle Escape key to close dialog
+  // Handle Escape key and click outside to close dialog
   dialog.addEventListener("keydown", handleDialogKeydown);
+  dialog.addEventListener("click", handleDialogClickOutside);
 }
 
 function closeDeleteDialog() {
   const dialog = document.getElementById("delete-dialog");
   if (dialog) {
     dialog.close();
+    unlockScroll();
   }
 }
 
@@ -467,11 +477,419 @@ function handleDialogKeydown(event) {
   }
 }
 
+// Handle click outside dialog to close
+function handleDialogClickOutside(event) {
+  const dialog = event.target;
+  const rect = dialog.getBoundingClientRect();
+
+  // Check if click is outside the dialog content
+  if (
+    event.clientX < rect.left ||
+    event.clientX > rect.right ||
+    event.clientY < rect.top ||
+    event.clientY > rect.bottom
+  ) {
+    dialog.close();
+  }
+}
+
+// Scroll lock functions
+function lockScroll() {
+  const scrollY = window.scrollY;
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.width = "100%";
+  document.body.classList.add("modal-open");
+}
+
+function unlockScroll() {
+  const scrollY = document.body.style.top;
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.width = "";
+  document.body.classList.remove("modal-open");
+  window.scrollTo(0, parseInt(scrollY || "0") * -1);
+}
+
 // Legacy function names for backward compatibility
 const openTaskModal = openTaskDialog;
 const closeTaskModal = closeTaskDialog;
 const openDeleteModal = openDeleteDialog;
 const closeDeleteModal = closeDeleteDialog;
+
+// Project Management Functions - Phase 6
+function openProjectManagementDialog() {
+  console.log("🗂️ Opening project management dialog");
+
+  const dialog = document.getElementById("project-management-dialog");
+  if (!dialog) {
+    console.error("❌ Project management dialog not found!");
+    return;
+  }
+
+  // Load projects and statistics
+  loadProjectsData();
+
+  // Lock scrolling
+  lockScroll();
+
+  // Show dialog
+  dialog.showModal();
+
+  // Setup tab switching
+  setupProjectTabs();
+
+  // Setup color picker
+  setupColorPicker();
+
+  // Setup project form
+  setupProjectForm();
+
+  // Handle click outside to close dialog
+  dialog.addEventListener("click", handleDialogClickOutside);
+}
+
+function closeProjectManagementDialog() {
+  const dialog = document.getElementById("project-management-dialog");
+  if (dialog) {
+    dialog.close();
+    unlockScroll();
+  }
+}
+
+function setupProjectTabs() {
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const tabContents = document.querySelectorAll(".tab-content");
+
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const targetTab = button.getAttribute("data-tab");
+
+      // Remove active class from all tabs and contents
+      tabButtons.forEach((btn) => btn.classList.remove("active"));
+      tabContents.forEach((content) => content.classList.remove("active"));
+
+      // Add active class to clicked tab and corresponding content
+      button.classList.add("active");
+      document.getElementById(`${targetTab}-tab`).classList.add("active");
+
+      // Load data for specific tabs
+      if (targetTab === "projects") {
+        loadProjectsGrid();
+      } else if (targetTab === "statistics") {
+        loadProjectStatistics();
+      }
+    });
+  });
+}
+
+function setupColorPicker() {
+  const colorInput = document.getElementById("project-color");
+  const colorPresets = document.querySelectorAll(".color-preset");
+
+  colorPresets.forEach((preset) => {
+    preset.addEventListener("click", () => {
+      const color = preset.getAttribute("data-color");
+      colorInput.value = color;
+    });
+  });
+}
+
+function setupProjectForm() {
+  const form = document.getElementById("project-form");
+  if (form) {
+    form.addEventListener("submit", handleProjectFormSubmit);
+  }
+}
+
+async function handleProjectFormSubmit(e) {
+  e.preventDefault();
+
+  const formData = new FormData(e.target);
+  const projectData = {
+    name: formData.get("name"),
+    description: formData.get("description"),
+    color: formData.get("color"),
+    status: formData.get("status"),
+  };
+
+  console.log("📝 Creating project:", projectData);
+
+  try {
+    // Here you would call your project creation API
+    // const result = await createProjectAPI(projectData);
+
+    // For now, show success message
+    showSuccessMessage("Project created successfully!");
+
+    // Reset form
+    resetProjectForm();
+
+    // Refresh projects grid
+    loadProjectsGrid();
+  } catch (error) {
+    console.error("❌ Error creating project:", error);
+    showErrorMessage("Failed to create project");
+  }
+}
+
+function resetProjectForm() {
+  const form = document.getElementById("project-form");
+  if (form) {
+    form.reset();
+    document.getElementById("project-color").value = "#667eea";
+  }
+}
+
+async function loadProjectsData() {
+  console.log("📊 Loading projects data...");
+
+  try {
+    // Load projects grid
+    loadProjectsGrid();
+
+    // Load statistics
+    loadProjectStatistics();
+  } catch (error) {
+    console.error("❌ Error loading projects data:", error);
+  }
+}
+
+function loadProjectsGrid() {
+  const projectsGrid = document.getElementById("projects-grid");
+  if (!projectsGrid) return;
+
+  // Clear existing content
+  projectsGrid.innerHTML = "";
+
+  // Create project cards for existing projects
+  allProjects.forEach((project) => {
+    const projectCard = createProjectCard(project);
+    projectsGrid.appendChild(projectCard);
+  });
+
+  // Add "Create New Project" card
+  const createCard = createNewProjectCard();
+  projectsGrid.appendChild(createCard);
+}
+
+function createProjectCard(project) {
+  const card = document.createElement("div");
+  card.className = "project-card";
+  card.style.setProperty("--project-color", project.color || "#667eea");
+
+  // Count tasks for this project
+  const projectTasks = allTasks.filter((task) => task.project_id == project.id);
+  const completedTasks = projectTasks.filter((task) => task.status === "done");
+
+  card.innerHTML = `
+    <div class="project-header">
+      <h4 class="project-title">${project.name}</h4>
+      <span class="project-status">${getProjectStatusIcon(project.status)} ${
+    project.status
+  }</span>
+    </div>
+    <p class="project-description">${
+      project.description || "No description"
+    }</p>
+    <div class="project-stats">
+      <div class="project-stat">
+        <div class="project-stat-number">${projectTasks.length}</div>
+        <div class="project-stat-label">Total Tasks</div>
+      </div>
+      <div class="project-stat">
+        <div class="project-stat-number">${completedTasks.length}</div>
+        <div class="project-stat-label">Completed</div>
+      </div>
+      <div class="project-stat">
+        <div class="project-stat-number">${Math.round(
+          (completedTasks.length / Math.max(projectTasks.length, 1)) * 100
+        )}%</div>
+        <div class="project-stat-label">Progress</div>
+      </div>
+    </div>
+    <div class="project-actions">
+      <button class="project-action-btn" onclick="editProject(${
+        project.id
+      })">✏️ Edit</button>
+      <button class="project-action-btn" onclick="viewProjectTasks(${
+        project.id
+      })">👁️ View</button>
+      <button class="project-action-btn" onclick="deleteProject(${
+        project.id
+      })">🗑️ Delete</button>
+    </div>
+  `;
+
+  return card;
+}
+
+function createNewProjectCard() {
+  const card = document.createElement("div");
+  card.className = "project-card project-card-new";
+  card.innerHTML = `
+    <div style="text-align: center; padding: 40px 20px;">
+      <div style="font-size: 3rem; margin-bottom: 16px;">➕</div>
+      <h4>Create New Project</h4>
+      <p style="color: var(--text-secondary); margin-bottom: 20px;">Start organizing your tasks</p>
+      <button class="btn btn-primary" onclick="openAddProjectDialog()">
+        <span class="btn-icon">🚀</span>
+        Get Started
+      </button>
+    </div>
+  `;
+
+  return card;
+}
+
+function openAddProjectDialog() {
+  console.log("➕ Opening add project dialog");
+
+  const dialog = document.getElementById("add-project-dialog");
+  if (!dialog) {
+    console.error("❌ Add project dialog not found!");
+    return;
+  }
+
+  // Reset form
+  resetAddProjectForm();
+
+  // Setup color picker for add project dialog
+  setupAddProjectColorPicker();
+
+  // Setup form submission
+  setupAddProjectForm();
+
+  // Lock scrolling
+  lockScroll();
+
+  // Show dialog
+  dialog.showModal();
+
+  // Focus on name field
+  setTimeout(() => {
+    const nameField = document.getElementById("add-project-name");
+    if (nameField) {
+      nameField.focus();
+    }
+  }, 100);
+
+  // Handle click outside to close dialog
+  dialog.addEventListener("click", handleDialogClickOutside);
+}
+
+function closeAddProjectDialog() {
+  const dialog = document.getElementById("add-project-dialog");
+  if (dialog) {
+    dialog.close();
+    unlockScroll();
+  }
+}
+
+function setupAddProjectColorPicker() {
+  const colorInput = document.getElementById("add-project-color");
+  const colorPresets = document.querySelectorAll(
+    "#add-project-dialog .color-preset"
+  );
+
+  colorPresets.forEach((preset) => {
+    preset.addEventListener("click", () => {
+      const color = preset.getAttribute("data-color");
+      colorInput.value = color;
+    });
+  });
+}
+
+function setupAddProjectForm() {
+  const form = document.getElementById("add-project-form");
+  if (form) {
+    form.removeEventListener("submit", handleAddProjectFormSubmit); // Remove existing listener
+    form.addEventListener("submit", handleAddProjectFormSubmit);
+  }
+}
+
+async function handleAddProjectFormSubmit(e) {
+  e.preventDefault();
+
+  const formData = new FormData(e.target);
+  const projectData = {
+    name: formData.get("name"),
+    description: formData.get("description"),
+    color: formData.get("color"),
+    status: formData.get("status"),
+  };
+
+  console.log("📝 Creating project:", projectData);
+
+  try {
+    // Here you would call your project creation API
+    // const result = await createProjectAPI(projectData);
+
+    // For now, show success message
+    showSuccessMessage("Project created successfully!");
+
+    // Close add project dialog
+    closeAddProjectDialog();
+
+    // Refresh projects grid in management dialog
+    loadProjectsGrid();
+
+    // Refresh project dropdown in main interface
+    await loadProjects();
+  } catch (error) {
+    console.error("❌ Error creating project:", error);
+    showErrorMessage("Failed to create project");
+  }
+}
+
+function resetAddProjectForm() {
+  const form = document.getElementById("add-project-form");
+  if (form) {
+    form.reset();
+    document.getElementById("add-project-color").value = "#667eea";
+  }
+}
+
+function getProjectStatusIcon(status) {
+  const icons = {
+    active: "🟢",
+    on_hold: "🟡",
+    completed: "✅",
+    archived: "📦",
+  };
+  return icons[status] || "🟢";
+}
+
+function loadProjectStatistics() {
+  // Update statistics
+  document.getElementById("total-projects").textContent = allProjects.length;
+  document.getElementById("completed-projects").textContent =
+    allProjects.filter((p) => p.status === "completed").length;
+  document.getElementById("active-projects").textContent = allProjects.filter(
+    (p) => p.status === "active"
+  ).length;
+  document.getElementById("total-tasks-stat").textContent = allTasks.length;
+}
+
+// Project action functions
+function editProject(projectId) {
+  console.log("✏️ Edit project:", projectId);
+  // Switch to create tab and populate with project data
+  switchToCreateTab();
+  // TODO: Load project data into form
+}
+
+function viewProjectTasks(projectId) {
+  console.log("👁️ View project tasks:", projectId);
+  // Close dialog and filter by project
+  closeProjectManagementDialog();
+  // TODO: Set project filter
+}
+
+function deleteProject(projectId) {
+  console.log("🗑️ Delete project:", projectId);
+  // TODO: Show confirmation and delete project
+}
 
 // Task CRUD Operations
 function editTask(taskId) {
