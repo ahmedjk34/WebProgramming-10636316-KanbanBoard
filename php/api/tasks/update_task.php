@@ -1,7 +1,179 @@
 <?php
 /**
  * Update Task API Endpoint
+ * Kanban Board Project - Web Programming <?php
+/**
+ * Update Task API Endpoint
  * Kanban Board Project - Web Programming 10636316
+ *
+ * Updates an existing task in the database
+ * Method: POST
+ * Required: id, title, project_id
+ * Optional: description, priority, status, due_date
+ */
+
+// Start output buffering to prevent any unwanted output
+ob_start();
+
+// Suppress PHP errors for clean JSON output
+error_reporting(0);
+ini_set('display_errors', 0);
+
+// Set headers for JSON response and CORS
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+// Only allow POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed. Use POST.']);
+    exit();
+}
+
+// Include required files
+require_once '../../config/database.php';
+require_once '../../includes/functions.php';
+require_once '../../includes/security.php';
+
+try {
+    // Get database connection
+    $pdo = getDBConnection();
+
+    // Get POST data
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (!$input) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'No JSON data received']);
+        exit();
+    }
+
+    // Validate required fields
+    if (empty($input['id']) || empty($input['title']) || empty($input['project_id'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'ID, title, and project_id are required']);
+        exit();
+    }
+
+    // Sanitize and validate input
+    $taskId = sanitizeAndValidate($input['id'], 'int');
+    $title = sanitizeAndValidate($input['title'], 'string');
+    $description = isset($input['description']) ? sanitizeAndValidate($input['description'], 'string') : null;
+    $projectId = sanitizeAndValidate($input['project_id'], 'int');
+    $priority = isset($input['priority']) ? sanitizeAndValidate($input['priority'], 'string') : 'medium';
+    $status = isset($input['status']) ? sanitizeAndValidate($input['status'], 'string') : 'todo';
+    $dueDate = isset($input['due_date']) && !empty($input['due_date']) ? $input['due_date'] : null;
+
+    // Validate title length
+    if (strlen($title) > 255) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Title must be less than 255 characters']);
+        exit();
+    }
+
+    // Check if task exists
+    $taskCheck = $pdo->prepare("SELECT id FROM tasks WHERE id = :task_id");
+    $taskCheck->execute([':task_id' => $taskId]);
+
+    if (!$taskCheck->fetch()) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Task not found']);
+        exit();
+    }
+
+    // Validate project exists
+    $projectCheck = $pdo->prepare("SELECT id FROM projects WHERE id = :project_id");
+    $projectCheck->execute([':project_id' => $projectId]);
+
+    if (!$projectCheck->fetch()) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid project ID']);
+        exit();
+    }
+
+    // Validate priority
+    $validPriorities = ['low', 'medium', 'high'];
+    if (!in_array($priority, $validPriorities)) {
+        $priority = 'medium';
+    }
+
+    // Validate status
+    $validStatuses = ['todo', 'in_progress', 'done'];
+    if (!in_array($status, $validStatuses)) {
+        $status = 'todo';
+    }
+
+    // Validate due date format if provided
+    if ($dueDate && !validateDate($dueDate)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid due date format. Use YYYY-MM-DD']);
+        exit();
+    }
+
+    // Update task
+    $sql = "UPDATE tasks
+            SET title = :title,
+                description = :description,
+                project_id = :project_id,
+                priority = :priority,
+                status = :status,
+                due_date = :due_date,
+                updated_at = NOW()
+            WHERE id = :task_id";
+
+    $stmt = $pdo->prepare($sql);
+    $result = $stmt->execute([
+        ':title' => $title,
+        ':description' => $description,
+        ':project_id' => $projectId,
+        ':priority' => $priority,
+        ':status' => $status,
+        ':due_date' => $dueDate,
+        ':task_id' => $taskId
+    ]);
+
+    if ($result) {
+        // Clean any output buffer before sending JSON
+        ob_clean();
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Task updated successfully',
+            'data' => [
+                'task_id' => (int)$taskId
+            ]
+        ]);
+
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Failed to update task']);
+    }
+
+} catch (PDOException $e) {
+    error_log("Database error in update_task.php: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Database error occurred']);
+
+} catch (Exception $e) {
+    error_log("Error in update_task.php: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'An error occurred while updating the task']);
+}
+
+// Helper function to validate date format
+function validateDate($date, $format = 'Y-m-d') {
+    $d = DateTime::createFromFormat($format, $date);
+    return $d && $d->format($format) === $date;
+}
+?>0636316
  * 
  * Updates an existing task in the database
  * Method: PUT
