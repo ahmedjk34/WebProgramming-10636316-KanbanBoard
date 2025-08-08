@@ -34,6 +34,15 @@ function initializeApp() {
       // Initialize drag and drop
       initializeDragAndDrop();
 
+      // Setup task form handling
+      setupTaskFormHandling();
+
+      // Debug: Check if dialogs exist
+      const taskDialog = document.getElementById("task-dialog");
+      const deleteDialog = document.getElementById("delete-dialog");
+      console.log("🔍 Task dialog found:", !!taskDialog);
+      console.log("🔍 Delete dialog found:", !!deleteDialog);
+
       console.log("🎉 Kanban Board initialized successfully");
 
       // Add welcome animation
@@ -354,15 +363,398 @@ function setupCustomDropdowns() {
   });
 }
 
-// Placeholder functions for Phase 5
+// Task Management Functions - Phase 5
+let currentEditingTaskId = null;
+
+// Dialog Management - Modern HTML Dialog API
+function openTaskDialog(taskId = null) {
+  console.log("🎯 Opening task dialog, taskId:", taskId);
+
+  const dialog = document.getElementById("task-dialog");
+  const dialogTitle = document.getElementById("task-dialog-title");
+  const submitText = document.getElementById("task-submit-text");
+  const form = document.getElementById("task-form");
+
+  if (!dialog) {
+    console.error("❌ Task dialog not found!");
+    return;
+  }
+
+  currentEditingTaskId = taskId;
+
+  if (taskId) {
+    // Edit mode
+    console.log("📝 Edit mode for task:", taskId);
+    dialogTitle.textContent = "Edit Task";
+    submitText.textContent = "Update Task";
+    loadTaskForEditing(taskId);
+  } else {
+    // Create mode
+    console.log("➕ Create mode");
+    dialogTitle.textContent = "Add New Task";
+    submitText.textContent = "Create Task";
+    form.reset();
+    clearFormErrors();
+  }
+
+  // Populate project dropdown
+  populateTaskProjectDropdown();
+
+  // Show dialog using the native API
+  console.log("🎭 Opening dialog with showModal()");
+  dialog.showModal();
+
+  // Focus on title field after dialog opens
+  setTimeout(() => {
+    const titleField = document.getElementById("task-title");
+    if (titleField) {
+      titleField.focus();
+    }
+  }, 100);
+
+  // Handle Escape key to close dialog
+  dialog.addEventListener("keydown", handleDialogKeydown);
+}
+
+function closeTaskDialog() {
+  const dialog = document.getElementById("task-dialog");
+  if (dialog) {
+    dialog.close();
+    currentEditingTaskId = null;
+    clearFormErrors();
+  }
+}
+
+function openDeleteDialog(taskId) {
+  const dialog = document.getElementById("delete-dialog");
+  const taskTitleElement = document.getElementById("delete-task-title");
+
+  if (!dialog) {
+    console.error("❌ Delete dialog not found!");
+    return;
+  }
+
+  // Find task title
+  const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+  const taskTitle =
+    taskElement?.querySelector(".task-title")?.textContent || "Unknown Task";
+
+  taskTitleElement.textContent = taskTitle;
+
+  // Set up delete confirmation
+  const confirmBtn = document.getElementById("confirm-delete-btn");
+  confirmBtn.onclick = () => confirmDeleteTask(taskId);
+
+  // Show dialog
+  dialog.showModal();
+
+  // Handle Escape key to close dialog
+  dialog.addEventListener("keydown", handleDialogKeydown);
+}
+
+function closeDeleteDialog() {
+  const dialog = document.getElementById("delete-dialog");
+  if (dialog) {
+    dialog.close();
+  }
+}
+
+// Handle keyboard events for dialogs
+function handleDialogKeydown(event) {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    event.target.close();
+  }
+}
+
+// Legacy function names for backward compatibility
+const openTaskModal = openTaskDialog;
+const closeTaskModal = closeTaskDialog;
+const openDeleteModal = openDeleteDialog;
+const closeDeleteModal = closeDeleteDialog;
+
+// Task CRUD Operations
 function editTask(taskId) {
-  console.log("Edit task:", taskId);
-  alert("Task editing will be implemented in Phase 5");
+  console.log("🖊️ Opening edit modal for task:", taskId);
+  openTaskModal(taskId);
 }
 
 function deleteTask(taskId) {
-  console.log("Delete task:", taskId);
-  alert("Task deletion will be implemented in Phase 5");
+  console.log("🗑️ Opening delete confirmation for task:", taskId);
+  openDeleteModal(taskId);
+}
+
+async function loadTaskForEditing(taskId) {
+  try {
+    // Find task in current data
+    const task = allTasks.find((t) => t.id == taskId);
+
+    if (task) {
+      document.getElementById("task-title").value = task.title;
+      document.getElementById("task-description").value =
+        task.description || "";
+      document.getElementById("task-project").value = task.project_id;
+      document.getElementById("task-priority").value = task.priority;
+      document.getElementById("task-status").value = task.status;
+
+      if (task.due_date) {
+        document.getElementById("task-due-date").value = task.due_date;
+      }
+    }
+  } catch (error) {
+    console.error("❌ Error loading task for editing:", error);
+    showErrorMessage("Failed to load task data");
+  }
+}
+
+function populateTaskProjectDropdown() {
+  const projectSelect = document.getElementById("task-project");
+
+  // Clear existing options except the first one
+  projectSelect.innerHTML = '<option value="">Select a project...</option>';
+
+  // Add project options
+  allProjects.forEach((project) => {
+    const option = document.createElement("option");
+    option.value = project.id;
+    option.textContent = project.name;
+    projectSelect.appendChild(option);
+  });
+}
+
+// Form Handling
+function setupTaskFormHandling() {
+  const form = document.getElementById("task-form");
+
+  if (form) {
+    form.addEventListener("submit", handleTaskFormSubmit);
+  }
+}
+
+async function handleTaskFormSubmit(e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const formData = new FormData(form);
+
+  // Clear previous errors
+  clearFormErrors();
+
+  // Validate form
+  if (!validateTaskForm(formData)) {
+    return;
+  }
+
+  // Show loading state
+  setFormLoading(true);
+
+  try {
+    const taskData = {
+      title: formData.get("title"),
+      description: formData.get("description"),
+      project_id: parseInt(formData.get("project_id")),
+      priority: formData.get("priority"),
+      status: formData.get("status"),
+      due_date: formData.get("due_date") || null,
+    };
+
+    let result;
+
+    if (currentEditingTaskId) {
+      // Update existing task
+      taskData.id = currentEditingTaskId;
+      result = await updateTaskAPI(taskData);
+    } else {
+      // Create new task
+      result = await createTaskAPI(taskData);
+    }
+
+    if (result.success) {
+      // Show success message
+      showSuccessMessage(
+        currentEditingTaskId
+          ? "Task updated successfully!"
+          : "Task created successfully!"
+      );
+
+      // Close dialog
+      closeTaskDialog();
+
+      // Refresh tasks
+      await refreshTasks();
+    } else {
+      showErrorMessage(result.message || "Failed to save task");
+    }
+  } catch (error) {
+    console.error("❌ Error saving task:", error);
+    showErrorMessage("Network error. Please try again.");
+  } finally {
+    setFormLoading(false);
+  }
+}
+
+function validateTaskForm(formData) {
+  let isValid = true;
+
+  // Validate title
+  const title = formData.get("title");
+  if (!title || title.trim().length === 0) {
+    showFieldError("title-error", "Task title is required");
+    isValid = false;
+  } else if (title.length > 255) {
+    showFieldError("title-error", "Title must be less than 255 characters");
+    isValid = false;
+  }
+
+  // Validate project
+  const projectId = formData.get("project_id");
+  if (!projectId) {
+    showFieldError("project-error", "Please select a project");
+    isValid = false;
+  }
+
+  return isValid;
+}
+
+function showFieldError(errorId, message) {
+  const errorElement = document.getElementById(errorId);
+  if (errorElement) {
+    errorElement.textContent = message;
+    errorElement.classList.add("show");
+  }
+}
+
+function clearFormErrors() {
+  const errorElements = document.querySelectorAll(".form-error");
+  errorElements.forEach((element) => {
+    element.classList.remove("show");
+    element.textContent = "";
+  });
+}
+
+// Debug function - can be called from console
+window.testDialog = function () {
+  console.log("🧪 Testing dialog...");
+  const dialog = document.getElementById("task-dialog");
+  if (dialog) {
+    dialog.showModal();
+    console.log("✅ Dialog should be visible now");
+  } else {
+    console.error("❌ Dialog not found");
+  }
+};
+
+// Legacy test function
+window.testModal = window.testDialog;
+
+function setFormLoading(loading) {
+  const form = document.getElementById("task-form");
+  const submitBtn = document.getElementById("task-submit-btn");
+
+  if (loading) {
+    form.classList.add("form-loading");
+    submitBtn.disabled = true;
+  } else {
+    form.classList.remove("form-loading");
+    submitBtn.disabled = false;
+  }
+}
+
+// API Functions
+async function createTaskAPI(taskData) {
+  const response = await fetch("php/api/tasks/create_task.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(taskData),
+  });
+
+  return await response.json();
+}
+
+async function updateTaskAPI(taskData) {
+  const response = await fetch("php/api/tasks/update_task.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(taskData),
+  });
+
+  return await response.json();
+}
+
+async function deleteTaskAPI(taskId) {
+  const response = await fetch("php/api/tasks/delete_task.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ task_id: taskId }),
+  });
+
+  return await response.json();
+}
+
+async function confirmDeleteTask(taskId) {
+  try {
+    // Show loading state
+    const confirmBtn = document.getElementById("confirm-delete-btn");
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<span class="btn-icon">⏳</span> Deleting...';
+
+    const result = await deleteTaskAPI(taskId);
+
+    if (result.success) {
+      showSuccessMessage("Task deleted successfully!");
+      closeDeleteDialog();
+
+      // Remove task from UI with animation
+      removeTaskFromUI(taskId);
+
+      // Refresh tasks
+      await refreshTasks();
+    } else {
+      showErrorMessage(result.message || "Failed to delete task");
+    }
+  } catch (error) {
+    console.error("❌ Error deleting task:", error);
+    showErrorMessage("Network error. Please try again.");
+  } finally {
+    // Restore button
+    const confirmBtn = document.getElementById("confirm-delete-btn");
+    confirmBtn.disabled = false;
+    confirmBtn.innerHTML = '<span class="btn-icon">🗑️</span> Delete Task';
+  }
+}
+
+function removeTaskFromUI(taskId) {
+  const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+  if (taskElement) {
+    taskElement.style.transition = "all 0.3s ease";
+    taskElement.style.transform = "scale(0.8)";
+    taskElement.style.opacity = "0";
+
+    setTimeout(() => {
+      taskElement.remove();
+    }, 300);
+  }
+}
+
+async function refreshTasks() {
+  try {
+    const response = await fetch("php/api/tasks/get_tasks.php");
+    const result = await response.json();
+
+    if (result.success) {
+      allTasks = result.data.tasks;
+      displayTasks(result.data.tasks_by_status);
+      updateTaskCounts(result.data.counts);
+    }
+  } catch (error) {
+    console.error("❌ Error refreshing tasks:", error);
+  }
 }
 
 // Theme Management Functions
