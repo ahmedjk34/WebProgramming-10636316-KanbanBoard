@@ -1060,15 +1060,16 @@ dialog {
   padding: 0;
   max-width: 650px;
   width: 95%;
-  max-height: 85vh;
-  overflow: hidden;
+  max-height: 90vh;
+  overflow: visible;
   position: fixed;
-  top: 50%;
-  left: 50%;
+  top: 50vh;
+  left: 50vw;
   transform: translate(-50%, -50%);
   transition: all 0.3s ease-out;
   opacity: 0;
   scale: 0.9;
+  margin: 0;
 }
 
 dialog[open] {
@@ -1082,10 +1083,19 @@ dialog::backdrop {
   animation: fadeIn 0.3s ease-out;
 }
 
+/* Scroll lock when modal is open */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
 .dialog-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: auto;
+  max-height: 85vh;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-lg);
   overflow: hidden;
@@ -1149,6 +1159,7 @@ dialog::backdrop {
   overflow-y: auto;
   flex: 1;
   background: var(--bg-primary);
+  min-height: 0;
 }
 
 /* Screen reader only text */
@@ -1166,17 +1177,32 @@ dialog::backdrop {
 
 /* Project Management Dialog */
 .project-management-dialog {
-  max-width: 800px;
+  max-width: 900px;
   width: 95%;
-  max-height: 90vh;
+  max-height: 95vh;
+}
+
+.project-management-dialog .dialog-content {
+  max-height: 95vh;
+}
+
+.project-management-dialog .dialog-body {
+  max-height: calc(95vh - 120px);
+  overflow-y: auto;
+}
+
+.project-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
 }
 
 .project-management-tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 16px;
 }
 
 .tab-btn {
@@ -1314,6 +1340,32 @@ dialog::backdrop {
 .project-action-btn:hover {
   background: var(--bg-glass);
   transform: translateY(-1px);
+}
+
+/* New Project Card */
+.project-card-new {
+  border: 2px dashed var(--border-color);
+  background: var(--bg-hover);
+  text-align: center;
+  transition: var(--transition);
+}
+
+.project-card-new:hover {
+  border-color: #667eea;
+  background: var(--bg-glass);
+  transform: translateY(-2px);
+}
+
+.project-card-new h4 {
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+}
+
+/* Add Project Dialog */
+.add-project-dialog {
+  max-width: 600px;
+  width: 95%;
 }
 
 /* Color Picker */
@@ -1658,9 +1710,21 @@ dialog::backdrop {
     width: 98%;
     max-width: none;
     margin: 0;
-    top: 5%;
-    transform: translateX(-50%);
-    max-height: 90vh;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    max-height: 95vh;
+    position: fixed;
+  }
+
+  .dialog-content {
+    max-height: 95vh;
+  }
+
+  .dialog-body {
+    padding: 16px;
+    max-height: calc(95vh - 80px);
+    overflow-y: auto;
   }
 
   .form-row {
@@ -1676,13 +1740,10 @@ dialog::backdrop {
     font-size: 1.2rem;
   }
 
-  .dialog-body {
-    padding: 20px;
-  }
-
   .form-actions {
     flex-direction: column-reverse;
     gap: 12px;
+    margin-top: 20px;
   }
 
   .form-actions .btn {
@@ -1696,6 +1757,27 @@ dialog::backdrop {
 
   .warning-icon {
     font-size: 3rem;
+  }
+
+  /* Project Management Mobile */
+  .project-management-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .project-management-tabs {
+    justify-content: center;
+  }
+
+  .projects-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .statistics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
   }
 }
 
