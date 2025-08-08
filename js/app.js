@@ -31,6 +31,9 @@ function initializeApp() {
       // Set up event listeners
       setupEventListeners();
 
+      // Initialize drag and drop
+      initializeDragAndDrop();
+
       console.log("🎉 Kanban Board initialized successfully");
 
       // Add welcome animation
@@ -444,6 +447,9 @@ function createTaskElementEnhanced(task) {
     taskDiv.style.transition = "all 0.3s ease";
     taskDiv.style.opacity = "1";
     taskDiv.style.transform = "translateY(0)";
+
+    // Setup drag and drop for this new task
+    setupDragAndDropForSingleTask(taskDiv);
   }, 100);
 
   return taskDiv;
@@ -472,6 +478,462 @@ function displayTasksEnhanced(tasksByStatus) {
       container.appendChild(taskElement);
     });
   });
+
+  // Setup drag and drop for all newly created tasks
+  setTimeout(() => {
+    setupDragAndDropForTasks();
+  }, 500);
+}
+
+// Drag and Drop Implementation
+let draggedTask = null;
+let draggedElement = null;
+let dropIndicator = null;
+
+function initializeDragAndDrop() {
+  console.log("🎯 Initializing Drag & Drop functionality...");
+
+  // Create drop indicator
+  dropIndicator = document.createElement("div");
+  dropIndicator.className = "drop-indicator";
+
+  // Add drag and drop event listeners to existing tasks
+  setupDragAndDropForTasks();
+
+  // Add drop zone listeners to columns
+  setupDropZones();
+}
+
+function setupDragAndDropForTasks() {
+  const taskCards = document.querySelectorAll(".task-card");
+  taskCards.forEach((taskCard) => setupDragAndDropForSingleTask(taskCard));
+}
+
+function setupDragAndDropForSingleTask(taskCard) {
+  // Make task draggable
+  taskCard.setAttribute("draggable", "true");
+
+  // Add drag event listeners
+  taskCard.addEventListener("dragstart", handleDragStart);
+  taskCard.addEventListener("dragend", handleDragEnd);
+
+  // Add touch support for mobile
+  taskCard.addEventListener("touchstart", handleTouchStart, {
+    passive: false,
+  });
+  taskCard.addEventListener("touchmove", handleTouchMove, { passive: false });
+  taskCard.addEventListener("touchend", handleTouchEnd);
+}
+
+function setupDropZones() {
+  const taskLists = document.querySelectorAll(".task-list");
+  const columns = document.querySelectorAll(".kanban-column");
+
+  taskLists.forEach((taskList) => {
+    taskList.addEventListener("dragover", handleDragOver);
+    taskList.addEventListener("drop", handleDrop);
+    taskList.addEventListener("dragenter", handleDragEnter);
+    taskList.addEventListener("dragleave", handleDragLeave);
+  });
+
+  columns.forEach((column) => {
+    column.addEventListener("dragenter", handleColumnDragEnter);
+    column.addEventListener("dragleave", handleColumnDragLeave);
+  });
+}
+
+function handleDragStart(e) {
+  draggedTask = {
+    id: this.getAttribute("data-task-id"),
+    element: this,
+    originalParent: this.parentNode,
+    originalStatus: this.parentNode.id.replace("-tasks", ""),
+  };
+
+  draggedElement = this;
+
+  // Add dragging class for visual feedback
+  this.classList.add("dragging");
+
+  // Set drag data
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/html", this.outerHTML);
+
+  // Create custom drag image
+  const dragImage = this.cloneNode(true);
+  dragImage.classList.add("drag-ghost");
+  dragImage.style.position = "absolute";
+  dragImage.style.top = "-1000px";
+  document.body.appendChild(dragImage);
+  e.dataTransfer.setDragImage(dragImage, e.offsetX, e.offsetY);
+
+  // Remove drag image after a short delay
+  setTimeout(() => {
+    document.body.removeChild(dragImage);
+  }, 0);
+
+  console.log("🎯 Drag started for task:", draggedTask.id);
+}
+
+function handleDragEnd() {
+  // Remove dragging class
+  this.classList.remove("dragging");
+
+  // Clean up drop indicators and hover states
+  document.querySelectorAll(".drop-indicator").forEach((indicator) => {
+    indicator.remove();
+  });
+
+  document.querySelectorAll(".drag-over").forEach((element) => {
+    element.classList.remove("drag-over");
+  });
+
+  console.log("🎯 Drag ended");
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+
+  // Show drop indicator at appropriate position
+  showDropIndicator(e, this);
+}
+
+function handleDragEnter(e) {
+  e.preventDefault();
+  this.classList.add("drag-over");
+}
+
+function handleDragLeave(e) {
+  // Only remove drag-over if we're actually leaving the element
+  if (!this.contains(e.relatedTarget)) {
+    this.classList.remove("drag-over");
+    hideDropIndicator();
+  }
+}
+
+function handleColumnDragEnter() {
+  if (draggedTask) {
+    this.classList.add("drag-over");
+  }
+}
+
+function handleColumnDragLeave(e) {
+  if (!this.contains(e.relatedTarget)) {
+    this.classList.remove("drag-over");
+  }
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+
+  if (!draggedTask) return;
+
+  const newStatus = this.id.replace("-tasks", "");
+
+  // Remove drag-over classes
+  document.querySelectorAll(".drag-over").forEach((element) => {
+    element.classList.remove("drag-over");
+  });
+
+  // Hide drop indicator
+  hideDropIndicator();
+
+  // If dropped in the same column, just reorder
+  if (draggedTask.originalStatus === newStatus) {
+    console.log("🎯 Reordering task in same column");
+    // Handle reordering logic here if needed
+    return;
+  }
+
+  // Move task to new column
+  console.log(
+    `🎯 Moving task ${draggedTask.id} from ${draggedTask.originalStatus} to ${newStatus}`
+  );
+
+  // Update task status via API
+  updateTaskStatus(draggedTask.id, newStatus, draggedTask.originalStatus);
+}
+
+// Drop Indicator Helper Functions
+function showDropIndicator(e, container) {
+  hideDropIndicator();
+
+  const afterElement = getDragAfterElement(container, e.clientY);
+
+  if (afterElement == null) {
+    container.appendChild(dropIndicator);
+  } else {
+    container.insertBefore(dropIndicator, afterElement);
+  }
+
+  dropIndicator.classList.add("show");
+}
+
+function hideDropIndicator() {
+  dropIndicator.classList.remove("show");
+  if (dropIndicator.parentNode) {
+    dropIndicator.parentNode.removeChild(dropIndicator);
+  }
+}
+
+function getDragAfterElement(container, y) {
+  const draggableElements = [
+    ...container.querySelectorAll(".task-card:not(.dragging)"),
+  ];
+
+  return draggableElements.reduce(
+    (closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    },
+    { offset: Number.NEGATIVE_INFINITY }
+  ).element;
+}
+
+// Touch Support for Mobile
+let touchStartY = 0;
+let touchStartX = 0;
+let touchDragElement = null;
+
+function handleTouchStart(e) {
+  const touch = e.touches[0];
+  touchStartY = touch.clientY;
+  touchStartX = touch.clientX;
+  touchDragElement = this;
+
+  // Prevent default to avoid scrolling
+  e.preventDefault();
+}
+
+function handleTouchMove(e) {
+  if (!touchDragElement) return;
+
+  const touch = e.touches[0];
+  const deltaY = Math.abs(touch.clientY - touchStartY);
+  const deltaX = Math.abs(touch.clientX - touchStartX);
+
+  // Start drag if moved enough
+  if (deltaY > 10 || deltaX > 10) {
+    touchDragElement.classList.add("touch-dragging");
+    touchDragElement.style.left = touch.clientX - 50 + "px";
+    touchDragElement.style.top = touch.clientY - 50 + "px";
+  }
+
+  e.preventDefault();
+}
+
+function handleTouchEnd(e) {
+  if (!touchDragElement) return;
+
+  touchDragElement.classList.remove("touch-dragging");
+  touchDragElement.style.left = "";
+  touchDragElement.style.top = "";
+
+  // Find drop target
+  const touch = e.changedTouches[0];
+  const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  const dropZone = elementBelow?.closest(".task-list");
+
+  if (dropZone && touchDragElement) {
+    const newStatus = dropZone.id.replace("-tasks", "");
+    const originalStatus = touchDragElement.parentNode.id.replace("-tasks", "");
+    const taskId = touchDragElement.getAttribute("data-task-id");
+
+    if (newStatus !== originalStatus) {
+      updateTaskStatus(taskId, newStatus, originalStatus);
+    }
+  }
+
+  touchDragElement = null;
+}
+
+// API Function to Update Task Status
+async function updateTaskStatus(taskId, newStatus, oldStatus) {
+  try {
+    console.log(
+      `🔄 Updating task ${taskId} status: ${oldStatus} → ${newStatus}`
+    );
+
+    // Show loading state
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (taskElement) {
+      taskElement.style.opacity = "0.6";
+      taskElement.style.pointerEvents = "none";
+    }
+
+    const response = await fetch("php/api/tasks/update_status_simple.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        task_id: parseInt(taskId),
+        status: newStatus,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      console.log("✅ Task status updated successfully");
+
+      // Move task element to new column with animation
+      moveTaskElement(taskId, newStatus);
+
+      // Update task counts
+      updateTaskCountsAfterMove(oldStatus, newStatus);
+
+      // Show success feedback
+      showSuccessMessage(`Task moved to ${newStatus.replace("_", " ")}`);
+    } else {
+      console.error("❌ Failed to update task status:", result.message);
+      showErrorMessage("Failed to move task. Please try again.");
+
+      // Revert the visual change
+      revertTaskMove(taskId, oldStatus);
+    }
+  } catch (error) {
+    console.error("❌ Error updating task status:", error);
+    showErrorMessage("Network error. Please check your connection.");
+
+    // Revert the visual change
+    revertTaskMove(taskId, oldStatus);
+  }
+}
+
+// Helper Functions for Task Movement
+function moveTaskElement(taskId, newStatus) {
+  const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+  const newContainer = document.getElementById(`${newStatus}-tasks`);
+
+  if (taskElement && newContainer) {
+    // Add animation class
+    taskElement.style.transform = "scale(0.8)";
+    taskElement.style.opacity = "0.5";
+
+    setTimeout(() => {
+      // Move to new container
+      newContainer.appendChild(taskElement);
+
+      // Restore appearance with animation
+      taskElement.style.transform = "scale(1)";
+      taskElement.style.opacity = "1";
+      taskElement.style.pointerEvents = "auto";
+
+      // Re-setup drag and drop for the moved element
+      setupDragAndDropForTasks();
+    }, 200);
+  }
+}
+
+function updateTaskCountsAfterMove(oldStatus, newStatus) {
+  // Update the counts in the UI
+  const oldCountElement = document.getElementById(
+    `${oldStatus.replace("_", "_")}-count`
+  );
+  const newCountElement = document.getElementById(
+    `${newStatus.replace("_", "_")}-count`
+  );
+
+  if (oldCountElement) {
+    const oldCount = parseInt(oldCountElement.textContent) - 1;
+    oldCountElement.textContent = Math.max(0, oldCount);
+  }
+
+  if (newCountElement) {
+    const newCount = parseInt(newCountElement.textContent) + 1;
+    newCountElement.textContent = newCount;
+  }
+}
+
+function revertTaskMove(taskId, originalStatus) {
+  const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+  const originalContainer = document.getElementById(`${originalStatus}-tasks`);
+
+  if (taskElement && originalContainer) {
+    originalContainer.appendChild(taskElement);
+    taskElement.style.opacity = "1";
+    taskElement.style.pointerEvents = "auto";
+  }
+}
+
+function showSuccessMessage(message) {
+  // Create and show success toast
+  const toast = document.createElement("div");
+  toast.className = "toast toast-success";
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--success-gradient);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-medium);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+  `;
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateX(0)";
+  }, 100);
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(100%)";
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, 3000);
+}
+
+function showErrorMessage(message) {
+  // Create and show error toast
+  const toast = document.createElement("div");
+  toast.className = "toast toast-error";
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--danger-gradient);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-medium);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+  `;
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateX(0)";
+  }, 100);
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(100%)";
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, 3000);
 }
 
 // Welcome Animation
