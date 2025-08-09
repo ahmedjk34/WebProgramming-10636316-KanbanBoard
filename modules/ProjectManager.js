@@ -346,9 +346,31 @@ class ProjectManager {
   openAddProjectDialog() {
     console.log("➕ Opening add project dialog");
 
-    if (window.workspaceManager) {
-      window.workspaceManager.openCreateWorkspaceDialog();
+    const dialog = document.getElementById("add-project-dialog");
+    if (!dialog) {
+      console.error("❌ Add project dialog not found!");
+      return;
     }
+
+    // Reset form
+    this.resetAddProjectForm();
+
+    // Setup form handlers
+    this.setupAddProjectForm();
+    this.setupProjectColorPicker();
+
+    // Lock scrolling and show dialog
+    lockScroll();
+    dialog.showModal();
+
+    // Focus on name field
+    setTimeout(() => {
+      const nameField = document.getElementById("project-name");
+      if (nameField) nameField.focus();
+    }, 100);
+
+    // Handle dialog events
+    dialog.addEventListener("click", handleDialogClickOutside);
   }
 
   /**
@@ -410,6 +432,94 @@ class ProjectManager {
   async refreshProjects() {
     await this.loadProjects();
     this.loadProjectsGrid();
+  }
+
+  /**
+   * Reset add project form
+   */
+  resetAddProjectForm() {
+    const form = document.getElementById("add-project-form");
+    if (form) {
+      form.reset();
+      document.getElementById("project-color").value = "#667eea";
+    }
+  }
+
+  /**
+   * Setup add project form
+   */
+  setupAddProjectForm() {
+    const form = document.getElementById("add-project-form");
+    if (form) {
+      form.removeEventListener(
+        "submit",
+        this.handleAddProjectSubmit.bind(this)
+      );
+      form.addEventListener("submit", this.handleAddProjectSubmit.bind(this));
+    }
+  }
+
+  /**
+   * Setup project color picker
+   */
+  setupProjectColorPicker() {
+    const colorInput = document.getElementById("project-color");
+    const colorPresets = document.querySelectorAll(
+      "#add-project-dialog .color-preset"
+    );
+
+    colorPresets.forEach((preset) => {
+      preset.addEventListener("click", () => {
+        const color = preset.getAttribute("data-color");
+        colorInput.value = color;
+      });
+    });
+  }
+
+  /**
+   * Handle add project form submission
+   * @param {Event} e - Form submit event
+   */
+  async handleAddProjectSubmit(e) {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const projectData = {
+      name: formData.get("name"),
+      description: formData.get("description"),
+      color: formData.get("color"),
+      status: formData.get("status") || "active",
+    };
+
+    console.log("📝 Creating project:", projectData);
+
+    try {
+      if (window.apiManager) {
+        const result = await window.apiManager.createProject(projectData);
+
+        if (result.success) {
+          showSuccessMessage("Project created successfully!");
+          this.closeAddProjectDialog();
+
+          // Refresh projects
+          await this.refreshProjects();
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error creating project:", error);
+      showErrorMessage("Failed to create project");
+    }
+  }
+
+  /**
+   * Close add project dialog
+   */
+  closeAddProjectDialog() {
+    const dialog = document.getElementById("add-project-dialog");
+    if (dialog) {
+      dialog.close();
+      unlockScroll();
+    }
   }
 }
 
