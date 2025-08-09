@@ -1,9 +1,6 @@
 <?php
 /**
  * Create Task API Endpoint
- * Kanban Board Project - Web Programming <?php
-/**
- * Create Task API Endpoint
  * Kanban Board Project - Web Programming 10636316
  *
  * Creates a new task in the database
@@ -12,18 +9,9 @@
  * Optional: description, priority, status, due_date
  */
 
-// Start output buffering to prevent any unwanted output
-ob_start();
-
-// Suppress PHP errors for clean JSON output
-error_reporting(0);
-ini_set('display_errors', 0);
-
-// Set headers for JSON response and CORS
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Include required files
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../../utils/php-utils.php';
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -32,49 +20,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Only allow POST requests
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed. Use POST.']);
-    exit();
-}
-
-// Include required files
-require_once '../../config/database.php';
-require_once '../../includes/functions.php';
-require_once '../../includes/security.php';
+checkRequestMethod('POST');
 
 try {
     // Get database connection
     $pdo = getDBConnection();
 
-    // Get POST data
-    $input = json_decode(file_get_contents('php://input'), true);
-
-    if (!$input) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'No JSON data received']);
-        exit();
-    }
+    // Get JSON input
+    $input = getJsonInput();
 
     // Validate required fields
     if (empty($input['title']) || empty($input['project_id'])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Title and project_id are required']);
+        echo jsonResponse(false, 'Title and project_id are required', [], 400);
         exit();
     }
 
     // Sanitize and validate input
-    $title = sanitizeAndValidate($input['title'], 'string');
-    $description = isset($input['description']) ? sanitizeAndValidate($input['description'], 'string') : null;
-    $projectId = sanitizeAndValidate($input['project_id'], 'int');
-    $priority = isset($input['priority']) ? sanitizeAndValidate($input['priority'], 'string') : 'medium';
-    $status = isset($input['status']) ? sanitizeAndValidate($input['status'], 'string') : 'todo';
-    $dueDate = isset($input['due_date']) && !empty($input['due_date']) ? $input['due_date'] : null;
+    $title = sanitizeInput($input['title']);
+    $description = sanitizeInput($input['description'] ?? '');
+    $projectId = (int)$input['project_id'];
+    $priority = sanitizeInput($input['priority'] ?? 'medium');
+    $status = sanitizeInput($input['status'] ?? 'todo');
+    $dueDate = !empty($input['due_date']) ? $input['due_date'] : null;
 
     // Validate title length
     if (strlen($title) > 255) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Title must be less than 255 characters']);
+        echo jsonResponse(false, 'Title must be less than 255 characters', [], 400);
         exit();
     }
 

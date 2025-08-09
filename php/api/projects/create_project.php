@@ -9,11 +9,9 @@
  * Optional: description, color
  */
 
-// Set headers for JSON response and CORS
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Include required files
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../../utils/php-utils.php';
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -28,27 +26,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-// Include required files
-require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../../includes/functions.php';
-require_once __DIR__ . '/../../includes/security.php';
-
 try {
     // Get database connection
     $pdo = getDBConnection();
-    
-    // Get POST data
-    $input = json_decode(file_get_contents('php://input'), true);
-    
-    // If JSON decode failed, try form data
-    if ($input === null) {
-        $input = $_POST;
-    }
-    
+
+    // Get JSON input
+    $input = getJsonInput();
+
     // Validate required fields
     if (empty($input['name'])) {
-        http_response_code(400);
-        echo jsonResponse(false, 'Project name is required');
+        echo jsonResponse(false, 'Project name is required', [], 400);
         exit();
     }
     
