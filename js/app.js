@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
   console.log("🎨 Enhanced Kanban Board Application Loaded");
 
   // Initialize theme
-  initializeTheme();
+  initializeTheme(currentTheme);
 
   // Initialize the application
   initializeApp();
@@ -125,12 +125,8 @@ function createTaskElement(task) {
   taskDiv.setAttribute("data-task-id", task.id);
   taskDiv.setAttribute("draggable", "true");
 
-  // Priority indicator
-  const priorityIcon = {
-    high: "🔴",
-    medium: "🟡",
-    low: "🟢",
-  };
+  // Priority indicator (using utility function)
+  const priorityIconValue = getPriorityIcon(task.priority);
 
   // Due date formatting
   let dueDateHtml = "";
@@ -148,7 +144,7 @@ function createTaskElement(task) {
 
   taskDiv.innerHTML = `
         <div class="task-header">
-            <div class="task-priority">${priorityIcon[task.priority]}</div>
+            <div class="task-priority">${priorityIconValue}</div>
             <div class="task-project" style="background-color: ${
               task.project_color
             }">
@@ -171,28 +167,7 @@ function createTaskElement(task) {
   return taskDiv;
 }
 
-// Utility functions
-function showLoading(show) {
-  const loadingIndicator = document.getElementById("loading-indicator");
-  if (loadingIndicator) {
-    loadingIndicator.style.display = show ? "flex" : "none";
-  }
-}
-
-function showEmptyState(show) {
-  const emptyState = document.getElementById("empty-state");
-  const kanbanBoard = document.getElementById("kanban-board");
-
-  if (emptyState && kanbanBoard) {
-    emptyState.style.display = show ? "flex" : "none";
-    kanbanBoard.style.display = show ? "none" : "flex";
-  }
-}
-
-function showError(message) {
-  // Simple error display - can be enhanced later
-  alert("Error: " + message);
-}
+// Utility functions are now in utils/js-utils.js
 
 function updateTaskCounts(counts) {
   document.getElementById("todo-count").textContent = counts.todo;
@@ -236,7 +211,7 @@ function setupEventListeners() {
   // Theme toggle
   const themeToggle = document.getElementById("theme-toggle");
   if (themeToggle) {
-    themeToggle.addEventListener("click", toggleTheme);
+    themeToggle.addEventListener("click", toggleThemeWrapper);
   }
 
   // Setup custom dropdowns
@@ -481,47 +456,9 @@ function closeDeleteDialog() {
   }
 }
 
-// Handle keyboard events for dialogs
-function handleDialogKeydown(event) {
-  if (event.key === "Escape") {
-    event.preventDefault();
-    event.target.close();
-  }
-}
+// Dialog utility functions are now in utils/js-utils.js
 
-// Handle click outside dialog to close
-function handleDialogClickOutside(event) {
-  const dialog = event.target;
-  const rect = dialog.getBoundingClientRect();
-
-  // Check if click is outside the dialog content
-  if (
-    event.clientX < rect.left ||
-    event.clientX > rect.right ||
-    event.clientY < rect.top ||
-    event.clientY > rect.bottom
-  ) {
-    dialog.close();
-  }
-}
-
-// Scroll lock functions
-function lockScroll() {
-  const scrollY = window.scrollY;
-  document.body.style.position = "fixed";
-  document.body.style.top = `-${scrollY}px`;
-  document.body.style.width = "100%";
-  document.body.classList.add("modal-open");
-}
-
-function unlockScroll() {
-  const scrollY = document.body.style.top;
-  document.body.style.position = "";
-  document.body.style.top = "";
-  document.body.style.width = "";
-  document.body.classList.remove("modal-open");
-  window.scrollTo(0, parseInt(scrollY || "0") * -1);
-}
+// Scroll lock functions are now in utils/js-utils.js
 
 // Legacy function names for backward compatibility
 const openTaskModal = openTaskDialog;
@@ -862,15 +799,7 @@ function resetAddProjectForm() {
   }
 }
 
-function getProjectStatusIcon(status) {
-  const icons = {
-    active: "🟢",
-    on_hold: "🟡",
-    completed: "✅",
-    archived: "📦",
-  };
-  return icons[status] || "🟢";
-}
+// getProjectStatusIcon function is now in utils/js-utils.js
 
 function loadProjectStatistics() {
   // Update statistics
@@ -1023,44 +952,7 @@ async function handleTaskFormSubmit(e) {
   }
 }
 
-function validateTaskForm(formData) {
-  let isValid = true;
-
-  // Validate title
-  const title = formData.get("title");
-  if (!title || title.trim().length === 0) {
-    showFieldError("title-error", "Task title is required");
-    isValid = false;
-  } else if (title.length > 255) {
-    showFieldError("title-error", "Title must be less than 255 characters");
-    isValid = false;
-  }
-
-  // Validate project
-  const projectId = formData.get("project_id");
-  if (!projectId) {
-    showFieldError("project-error", "Please select a project");
-    isValid = false;
-  }
-
-  return isValid;
-}
-
-function showFieldError(errorId, message) {
-  const errorElement = document.getElementById(errorId);
-  if (errorElement) {
-    errorElement.textContent = message;
-    errorElement.classList.add("show");
-  }
-}
-
-function clearFormErrors() {
-  const errorElements = document.querySelectorAll(".form-error");
-  errorElements.forEach((element) => {
-    element.classList.remove("show");
-    element.textContent = "";
-  });
-}
+// Form validation functions are now in utils/js-utils.js
 
 // Debug function - can be called from console
 window.testDialog = function () {
@@ -1325,18 +1217,7 @@ function resetCreateWorkspaceForm() {
   }
 }
 
-function setFormLoading(loading) {
-  const form = document.getElementById("task-form");
-  const submitBtn = document.getElementById("task-submit-btn");
-
-  if (loading) {
-    form.classList.add("form-loading");
-    submitBtn.disabled = true;
-  } else {
-    form.classList.remove("form-loading");
-    submitBtn.disabled = false;
-  }
-}
+// setFormLoading function is now in utils/js-utils.js
 
 // API Functions
 async function createTaskAPI(taskData) {
@@ -1435,30 +1316,11 @@ async function refreshTasks() {
   }
 }
 
-// Theme Management Functions
-function initializeTheme() {
-  document.documentElement.setAttribute("data-theme", currentTheme);
-  updateThemeIcon();
-}
-
-function toggleTheme() {
-  currentTheme = currentTheme === "light" ? "dark" : "light";
-  document.documentElement.setAttribute("data-theme", currentTheme);
-  localStorage.setItem("theme", currentTheme);
-  updateThemeIcon();
-
-  // Add smooth transition effect
-  document.body.style.transition = "all 0.3s ease";
-  setTimeout(() => {
-    document.body.style.transition = "";
-  }, 300);
-}
-
-function updateThemeIcon() {
-  const themeIcon = document.getElementById("theme-icon");
-  if (themeIcon) {
-    themeIcon.textContent = currentTheme === "light" ? "🌙" : "☀️";
-  }
+// Theme management functions are now in utils/js-utils.js
+function toggleThemeWrapper() {
+  console.log("🎨 Toggling theme from:", currentTheme);
+  currentTheme = toggleTheme(currentTheme);
+  console.log("🎨 Theme toggled to:", currentTheme);
 }
 
 // Enhanced Task Card Creation with Animations
@@ -1934,106 +1796,9 @@ function revertTaskMove(taskId, originalStatus) {
   }
 }
 
-function showSuccessMessage(message) {
-  // Create and show success toast
-  const toast = document.createElement("div");
-  toast.className = "toast toast-success";
-  toast.textContent = message;
-  toast.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--success-gradient);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    box-shadow: var(--shadow-medium);
-    z-index: 1000;
-    opacity: 0;
-    transform: translateX(100%);
-    transition: all 0.3s ease;
-  `;
+// Toast message functions are now in utils/js-utils.js
 
-  document.body.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.opacity = "1";
-    toast.style.transform = "translateX(0)";
-  }, 100);
-
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform = "translateX(100%)";
-    setTimeout(() => {
-      document.body.removeChild(toast);
-    }, 300);
-  }, 3000);
-}
-
-function showErrorMessage(message) {
-  // Create and show error toast
-  const toast = document.createElement("div");
-  toast.className = "toast toast-error";
-  toast.textContent = message;
-  toast.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--danger-gradient);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    box-shadow: var(--shadow-medium);
-    z-index: 1000;
-    opacity: 0;
-    transform: translateX(100%);
-    transition: all 0.3s ease;
-  `;
-
-  document.body.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.opacity = "1";
-    toast.style.transform = "translateX(0)";
-  }, 100);
-
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform = "translateX(100%)";
-    setTimeout(() => {
-      document.body.removeChild(toast);
-    }, 300);
-  }, 3000);
-}
-
-// Welcome Animation
-function addWelcomeAnimation() {
-  const kanbanBoard = document.querySelector(".kanban-board");
-  const columns = document.querySelectorAll(".kanban-column");
-
-  if (kanbanBoard) {
-    kanbanBoard.style.opacity = "0";
-    kanbanBoard.style.transform = "translateY(30px)";
-
-    setTimeout(() => {
-      kanbanBoard.style.transition = "all 0.6s ease";
-      kanbanBoard.style.opacity = "1";
-      kanbanBoard.style.transform = "translateY(0)";
-    }, 200);
-  }
-
-  // Animate columns with stagger
-  columns.forEach((column, index) => {
-    column.style.opacity = "0";
-    column.style.transform = "translateY(50px)";
-
-    setTimeout(() => {
-      column.style.transition = "all 0.5s ease";
-      column.style.opacity = "1";
-      column.style.transform = "translateY(0)";
-    }, 300 + index * 150);
-  });
-}
+// Welcome animation function is now in utils/js-utils.js
 
 // Add floating particles effect (optional eye candy)
 function createFloatingParticles() {
