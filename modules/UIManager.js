@@ -57,6 +57,9 @@ class UIManager {
    * Setup filter controls
    */
   setupFilterControls() {
+    // Setup custom dropdowns
+    this.setupCustomDropdowns();
+
     const projectFilter = document.getElementById("project-filter");
     const priorityFilter = document.getElementById("priority-filter");
 
@@ -73,6 +76,62 @@ class UIManager {
         this.handleFilterChange.bind(this)
       );
     }
+  }
+
+  /**
+   * Setup custom dropdown functionality
+   */
+  setupCustomDropdowns() {
+    const dropdowns = document.querySelectorAll(".custom-dropdown");
+
+    dropdowns.forEach((dropdown) => {
+      const trigger = dropdown.querySelector(".dropdown-trigger");
+      const menu = dropdown.querySelector(".dropdown-menu");
+
+      if (trigger && menu) {
+        // Toggle dropdown on trigger click
+        trigger.addEventListener("click", (e) => {
+          e.stopPropagation();
+
+          // Close other dropdowns
+          dropdowns.forEach((otherDropdown) => {
+            if (otherDropdown !== dropdown) {
+              otherDropdown.classList.remove("open");
+            }
+          });
+
+          // Toggle current dropdown
+          dropdown.classList.toggle("open");
+        });
+
+        // Handle menu item clicks
+        const menuItems = menu.querySelectorAll(".dropdown-item");
+        menuItems.forEach((item) => {
+          item.addEventListener("click", (e) => {
+            e.preventDefault();
+
+            // Update trigger text
+            const text = trigger.querySelector(".dropdown-text");
+            if (text) {
+              text.textContent = item.textContent;
+            }
+
+            // Close dropdown
+            dropdown.classList.remove("open");
+
+            // Trigger filter change
+            this.handleFilterChange();
+          });
+        });
+      }
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", () => {
+      dropdowns.forEach((dropdown) => {
+        dropdown.classList.remove("open");
+      });
+    });
   }
 
   // ===== EVENT HANDLERS =====
