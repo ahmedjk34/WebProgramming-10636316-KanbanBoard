@@ -113,8 +113,20 @@ class UIManager {
             // Update trigger text
             const text = trigger.querySelector(".dropdown-text");
             if (text) {
-              text.textContent = item.textContent;
+              text.textContent = item.textContent.trim();
             }
+
+            // Update hidden input value
+            const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+            if (hiddenInput) {
+              hiddenInput.value = item.getAttribute("data-value") || "";
+            }
+
+            // Update active state
+            menuItems.forEach((menuItem) =>
+              menuItem.classList.remove("active")
+            );
+            item.classList.add("active");
 
             // Close dropdown
             dropdown.classList.remove("open");
