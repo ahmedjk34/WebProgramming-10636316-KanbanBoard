@@ -421,16 +421,6 @@ class TaskManager {
   // ===== TASK FORM HANDLING =====
 
   /**
-   * Setup task form submission handling
-   */
-  setupTaskFormHandling() {
-    const taskForm = document.getElementById("task-form");
-    if (taskForm) {
-      taskForm.addEventListener("submit", this.handleTaskFormSubmit.bind(this));
-    }
-  }
-
-  /**
    * Handle task form submission
    * @param {Event} e - Form submit event
    */
