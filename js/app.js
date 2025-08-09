@@ -4,6 +4,10 @@
 // Global variables
 let allTasks = [];
 let allProjects = [];
+let allWorkspaces = [];
+let currentWorkspaceId =
+  parseInt(localStorage.getItem("currentWorkspaceId")) || 1;
+let currentEditingTaskId = null;
 let currentTheme = localStorage.getItem("theme") || "light";
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -16,49 +20,55 @@ document.addEventListener("DOMContentLoaded", function () {
   initializeApp();
 });
 
-function initializeApp() {
+async function initializeApp() {
   console.log("Initializing Kanban Board...");
 
-  // Show loading indicator
-  showLoading(true);
+  try {
+    // Show loading indicator
+    showLoading(true);
 
-  // Load data from backend
-  Promise.all([loadProjects(), loadTasks()])
-    .then(() => {
-      // Hide loading indicator
-      showLoading(false);
+    // Initialize workspace system first
+    await loadWorkspaces();
 
-      // Set up event listeners
-      setupEventListeners();
+    // Load data from backend
+    await Promise.all([loadProjects(), loadTasks()]);
 
-      // Initialize drag and drop
-      initializeDragAndDrop();
+    // Hide loading indicator
+    showLoading(false);
 
-      // Setup task form handling
-      setupTaskFormHandling();
+    // Set up event listeners
+    setupEventListeners();
 
-      // Debug: Check if dialogs exist
-      const taskDialog = document.getElementById("task-dialog");
-      const deleteDialog = document.getElementById("delete-dialog");
-      console.log("🔍 Task dialog found:", !!taskDialog);
-      console.log("🔍 Delete dialog found:", !!deleteDialog);
+    // Initialize drag and drop
+    initializeDragAndDrop();
 
-      console.log("🎉 Kanban Board initialized successfully");
+    // Setup task form handling
+    setupTaskFormHandling();
 
-      // Add welcome animation
-      addWelcomeAnimation();
-    })
-    .catch((error) => {
-      console.error("Failed to initialize Kanban Board:", error);
-      showError("Failed to load data. Please refresh the page.");
-      showLoading(false);
-    });
+    // Debug: Check if dialogs exist
+    const taskDialog = document.getElementById("task-dialog");
+    const deleteDialog = document.getElementById("delete-dialog");
+    console.log("🔍 Task dialog found:", !!taskDialog);
+    console.log("🔍 Delete dialog found:", !!deleteDialog);
+
+    console.log("🎉 Kanban Board initialized successfully");
+
+    // Add welcome animation
+    addWelcomeAnimation();
+  } catch (error) {
+    console.error("❌ Failed to initialize Kanban Board:", error);
+    showError("Failed to load data. Please refresh the page.");
+    showLoading(false);
+  }
 }
 
 // Load tasks from backend
 async function loadTasks() {
+  console.log("📊 Loading tasks for workspace:", currentWorkspaceId);
   try {
-    const response = await fetch("php/api/tasks/get_tasks.php");
+    const response = await fetch(
+      `php/api/tasks/get_tasks.php?workspace_id=${currentWorkspaceId}`
+    );
     const result = await response.json();
 
     if (result.success) {
@@ -83,8 +93,11 @@ async function loadTasks() {
 
 // Load projects from backend
 async function loadProjects() {
+  console.log("📊 Loading projects for workspace:", currentWorkspaceId);
   try {
-    const response = await fetch("php/api/projects/get_projects.php");
+    const response = await fetch(
+      `php/api/projects/get_projects.php?workspace_id=${currentWorkspaceId}`
+    );
     const result = await response.json();
 
     if (result.success) {
@@ -364,7 +377,6 @@ function setupCustomDropdowns() {
 }
 
 // Task Management Functions - Phase 5
-let currentEditingTaskId = null;
 
 // Dialog Management - Modern HTML Dialog API
 function openTaskDialog(taskId = null) {
@@ -1064,6 +1076,254 @@ window.testDialog = function () {
 
 // Legacy test function
 window.testModal = window.testDialog;
+
+// ===== WORKSPACE MANAGEMENT FUNCTIONS =====
+
+// Sidebar Functions
+function openSidebar() {
+  console.log("🏢 Opening workspace sidebar");
+
+  const sidebar = document.getElementById("workspace-sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+
+  if (sidebar && overlay) {
+    sidebar.classList.add("open");
+    overlay.classList.add("show");
+    lockScroll();
+
+    // Load workspaces
+    loadWorkspaces();
+  }
+}
+
+function closeSidebar() {
+  console.log("🏢 Closing workspace sidebar");
+
+  const sidebar = document.getElementById("workspace-sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+
+  if (sidebar && overlay) {
+    sidebar.classList.remove("open");
+    overlay.classList.remove("show");
+    unlockScroll();
+  }
+}
+
+// Workspace Management
+async function loadWorkspaces() {
+  console.log("📊 Loading workspaces...");
+
+  try {
+    const response = await fetch("php/api/workspaces/get_workspaces.php");
+    const result = await response.json();
+
+    if (result.success) {
+      allWorkspaces = result.data.workspaces;
+      displayWorkspaces();
+      updateCurrentWorkspaceDisplay();
+      console.log("✅ Workspaces loaded:", allWorkspaces.length);
+    } else {
+      throw new Error(result.message);
+    }
+  } catch (error) {
+    console.error("❌ Error loading workspaces:", error);
+    showErrorMessage("Failed to load workspaces");
+  }
+}
+
+function displayWorkspaces() {
+  const container = document.getElementById("workspaces-container");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  allWorkspaces.forEach((workspace) => {
+    const workspaceElement = createWorkspaceElement(workspace);
+    container.appendChild(workspaceElement);
+  });
+}
+
+function createWorkspaceElement(workspace) {
+  const element = document.createElement("div");
+  element.className = `workspace-item ${
+    workspace.id === currentWorkspaceId ? "active" : ""
+  }`;
+  element.onclick = () => switchWorkspace(workspace.id);
+
+  element.innerHTML = `
+    <div class="workspace-icon" style="color: ${workspace.color}">${workspace.icon}</div>
+    <div class="workspace-details">
+      <div class="workspace-name">${workspace.name}</div>
+      <div class="workspace-description">${workspace.description}</div>
+    </div>
+  `;
+
+  return element;
+}
+
+function updateCurrentWorkspaceDisplay() {
+  const currentWorkspace = allWorkspaces.find(
+    (w) => w.id === currentWorkspaceId
+  );
+  if (!currentWorkspace) return;
+
+  // Update sidebar display
+  const sidebarIcon = document.getElementById("current-workspace-icon");
+  const sidebarName = document.getElementById("current-workspace-name");
+  const sidebarDesc = document.getElementById("current-workspace-description");
+
+  if (sidebarIcon) sidebarIcon.textContent = currentWorkspace.icon;
+  if (sidebarName) sidebarName.textContent = currentWorkspace.name;
+  if (sidebarDesc) sidebarDesc.textContent = currentWorkspace.description;
+
+  // Update header display
+  const headerIcon = document.getElementById("header-workspace-icon");
+  const headerName = document.getElementById("header-workspace-name");
+
+  if (headerIcon) headerIcon.textContent = currentWorkspace.icon;
+  if (headerName) headerName.textContent = currentWorkspace.name;
+}
+
+async function switchWorkspace(workspaceId) {
+  console.log("🔄 Switching to workspace:", workspaceId);
+
+  currentWorkspaceId = workspaceId;
+  localStorage.setItem("currentWorkspaceId", workspaceId.toString());
+
+  // Update displays
+  updateCurrentWorkspaceDisplay();
+  displayWorkspaces();
+
+  // Close sidebar
+  closeSidebar();
+
+  // Reload projects and tasks for new workspace
+  await loadProjects();
+  await loadTasks();
+
+  showSuccessMessage(
+    `Switched to ${allWorkspaces.find((w) => w.id === workspaceId)?.name}`
+  );
+}
+
+// Create Workspace Dialog Functions
+function openCreateWorkspaceDialog() {
+  console.log("➕ Opening create workspace dialog");
+
+  const dialog = document.getElementById("create-workspace-dialog");
+  if (!dialog) {
+    console.error("❌ Create workspace dialog not found!");
+    return;
+  }
+
+  // Reset form
+  resetCreateWorkspaceForm();
+
+  // Setup form handlers
+  setupCreateWorkspaceForm();
+  setupWorkspaceIconPicker();
+  setupWorkspaceColorPicker();
+
+  // Lock scrolling and show dialog
+  lockScroll();
+  dialog.showModal();
+
+  // Focus on name field
+  setTimeout(() => {
+    const nameField = document.getElementById("workspace-name");
+    if (nameField) nameField.focus();
+  }, 100);
+
+  // Handle click outside to close
+  dialog.addEventListener("click", handleDialogClickOutside);
+}
+
+function closeCreateWorkspaceDialog() {
+  const dialog = document.getElementById("create-workspace-dialog");
+  if (dialog) {
+    dialog.close();
+    unlockScroll();
+  }
+}
+
+function setupCreateWorkspaceForm() {
+  const form = document.getElementById("create-workspace-form");
+  if (form) {
+    form.removeEventListener("submit", handleCreateWorkspaceSubmit);
+    form.addEventListener("submit", handleCreateWorkspaceSubmit);
+  }
+}
+
+function setupWorkspaceIconPicker() {
+  const iconInput = document.getElementById("workspace-icon");
+  const iconPresets = document.querySelectorAll(
+    "#create-workspace-dialog .icon-preset"
+  );
+
+  iconPresets.forEach((preset) => {
+    preset.addEventListener("click", () => {
+      const icon = preset.getAttribute("data-icon");
+      iconInput.value = icon;
+    });
+  });
+}
+
+function setupWorkspaceColorPicker() {
+  const colorInput = document.getElementById("workspace-color");
+  const colorPresets = document.querySelectorAll(
+    "#create-workspace-dialog .color-preset"
+  );
+
+  colorPresets.forEach((preset) => {
+    preset.addEventListener("click", () => {
+      const color = preset.getAttribute("data-color");
+      colorInput.value = color;
+    });
+  });
+}
+
+async function handleCreateWorkspaceSubmit(e) {
+  e.preventDefault();
+
+  const formData = new FormData(e.target);
+  const workspaceData = {
+    name: formData.get("name"),
+    description: formData.get("description"),
+    icon: formData.get("icon"),
+    color: formData.get("color"),
+  };
+
+  console.log("📝 Creating workspace:", workspaceData);
+
+  try {
+    // For now, add to local array (will be replaced with API call)
+    const newWorkspace = {
+      id: allWorkspaces.length + 1,
+      ...workspaceData,
+      is_default: false,
+    };
+
+    allWorkspaces.push(newWorkspace);
+
+    showSuccessMessage("Workspace created successfully!");
+    closeCreateWorkspaceDialog();
+
+    // Refresh workspace display
+    displayWorkspaces();
+  } catch (error) {
+    console.error("❌ Error creating workspace:", error);
+    showErrorMessage("Failed to create workspace");
+  }
+}
+
+function resetCreateWorkspaceForm() {
+  const form = document.getElementById("create-workspace-form");
+  if (form) {
+    form.reset();
+    document.getElementById("workspace-icon").value = "🏢";
+    document.getElementById("workspace-color").value = "#667eea";
+  }
+}
 
 function setFormLoading(loading) {
   const form = document.getElementById("task-form");
