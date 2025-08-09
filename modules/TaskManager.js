@@ -222,12 +222,14 @@ class TaskManager {
    */
   updateTaskCounts(counts) {
     const todoCount = document.getElementById("todo-count");
-    const inProgressCount = document.getElementById("in-progress-count");
+    const inProgressCount = document.getElementById("in_progress-count");
     const doneCount = document.getElementById("done-count");
 
     if (todoCount) todoCount.textContent = counts.todo || 0;
     if (inProgressCount) inProgressCount.textContent = counts.in_progress || 0;
     if (doneCount) doneCount.textContent = counts.done || 0;
+
+    console.log("📊 Updated task counts:", counts);
   }
 
   // ===== TASK ACTIONS =====
