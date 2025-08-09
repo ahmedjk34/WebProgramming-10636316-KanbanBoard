@@ -257,6 +257,7 @@ function getPriorityIcon(priority) {
  */
 function getProjectStatusIcon(status) {
   const icons = {
+    planning: "📋",
     active: "🟢",
     on_hold: "🟡",
     completed: "✅",

@@ -55,6 +55,7 @@ try {
             'name' => $project['name'],
             'description' => $project['description'],
             'color' => $project['color'],
+            'status' => $project['status'],
             'created_at' => $project['created_at'],
             'updated_at' => $project['updated_at'],
             'task_count' => (int)$project['task_count'],

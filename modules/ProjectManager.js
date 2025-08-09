@@ -152,7 +152,9 @@ class ProjectManager {
         <h4 style="color: ${project.color};">${project.name}</h4>
         <div class="project-status">
           <span class="status-icon">${statusIcon}</span>
-          <span class="status-text">${project.status.replace("_", " ")}</span>
+          <span class="status-text">${
+            project.status ? project.status.replace("_", " ") : "Active"
+          }</span>
         </div>
       </div>
       

@@ -71,6 +71,7 @@ try {
                 name,
                 description,
                 color,
+                status,
                 workspace_id,
                 created_at,
                 updated_at
@@ -78,6 +79,7 @@ try {
                 :name,
                 :description,
                 :color,
+                :status,
                 :workspace_id,
                 NOW(),
                 NOW()
@@ -87,6 +89,7 @@ try {
         ':name' => $projectData['name'],
         ':description' => $projectData['description'] ?? '',
         ':color' => $color,
+        ':status' => $projectData['status'] ?? 'active',
         ':workspace_id' => (int)$input['workspace_id']
     ];
     
@@ -96,14 +99,15 @@ try {
     
     // Get the created project ID
     $projectId = $pdo->lastInsertId();
-    
+
     // Fetch the complete created project
     $stmt = $pdo->prepare("
-        SELECT 
+        SELECT
             p.id,
             p.name,
             p.description,
             p.color,
+            p.status,
             p.created_at,
             p.updated_at,
             COUNT(t.id) as task_count,
@@ -113,7 +117,7 @@ try {
         FROM projects p
         LEFT JOIN tasks t ON p.id = t.project_id
         WHERE p.id = :project_id
-        GROUP BY p.id, p.name, p.description, p.color, p.created_at, p.updated_at
+        GROUP BY p.id, p.name, p.description, p.color, p.status, p.created_at, p.updated_at
     ");
     
     $stmt->execute([':project_id' => $projectId]);
@@ -125,6 +129,7 @@ try {
         'name' => $project['name'],
         'description' => $project['description'],
         'color' => $project['color'],
+        'status' => $project['status'],
         'created_at' => $project['created_at'],
         'updated_at' => $project['updated_at'],
         'task_count' => (int)$project['task_count'],

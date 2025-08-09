@@ -147,7 +147,7 @@ function validateStatus($status) {
  * @return bool True if valid status, false otherwise
  */
 function validateProjectStatus($status) {
-    $validStatuses = ['active', 'on_hold', 'completed', 'archived'];
+    $validStatuses = ['planning', 'active', 'on_hold', 'completed', 'archived'];
     return in_array($status, $validStatuses);
 }
 
