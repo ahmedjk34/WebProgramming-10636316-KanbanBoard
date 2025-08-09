@@ -284,8 +284,8 @@ function openAddProjectDialog() {
 }
 
 function closeAddProjectDialog() {
-  if (window.workspaceManager) {
-    window.workspaceManager.closeCreateWorkspaceDialog();
+  if (window.projectManager) {
+    window.projectManager.closeAddProjectDialog();
   }
 }
 
