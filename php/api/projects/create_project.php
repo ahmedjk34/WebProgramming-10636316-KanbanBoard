@@ -134,8 +134,8 @@ try {
     ];
     
     // Log the creation
-    debugLog("Project created", ['project_id' => $projectId, 'name' => $project['name']]);
-    
+    error_log("Project created: ID {$projectId}, Name: {$project['name']}");
+
     // Return success response
     echo jsonResponse(true, 'Project created successfully', ['project' => $formattedProject], 201);
 
