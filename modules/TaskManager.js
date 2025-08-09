@@ -344,13 +344,18 @@ class TaskManager {
    */
   async handleTaskFormSubmit(e) {
     e.preventDefault();
+    console.log("📝 Task form submitted!", e.target);
 
     const formData = new FormData(e.target);
+    console.log("📝 Form data:", Object.fromEntries(formData));
 
     // Validate form
     if (!validateTaskForm(formData)) {
+      console.log("❌ Task form validation failed");
       return;
     }
+
+    console.log("✅ Task form validation passed");
 
     // Show loading state
     setFormLoading(true);

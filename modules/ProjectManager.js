@@ -121,7 +121,7 @@ class ProjectManager {
         <div style="font-size: 3rem; margin-bottom: 16px;">➕</div>
         <h4>Create New Project</h4>
         <p style="color: var(--text-secondary); margin-bottom: 20px;">Start organizing your tasks</p>
-        <button class="btn btn-primary" onclick="projectManager.openAddProjectDialog()">
+        <button class="btn btn-primary" onclick="openAddProjectDialog()">
           <span class="btn-icon">🚀</span>
           Get Started
         </button>
@@ -363,6 +363,8 @@ class ProjectManager {
     lockScroll();
     dialog.showModal();
 
+    console.log("✅ Project dialog opened and form handlers setup");
+
     // Focus on name field
     setTimeout(() => {
       const nameField = document.getElementById("project-name");
@@ -441,7 +443,8 @@ class ProjectManager {
     const form = document.getElementById("add-project-form");
     if (form) {
       form.reset();
-      document.getElementById("project-color").value = "#667eea";
+      const colorField = document.getElementById("add-project-color");
+      if (colorField) colorField.value = "#667eea";
     }
   }
 
@@ -451,11 +454,17 @@ class ProjectManager {
   setupAddProjectForm() {
     const form = document.getElementById("add-project-form");
     if (form) {
-      form.removeEventListener(
-        "submit",
-        this.handleAddProjectSubmit.bind(this)
-      );
-      form.addEventListener("submit", this.handleAddProjectSubmit.bind(this));
+      // Create bound handler if not exists
+      if (!this.boundAddProjectHandler) {
+        this.boundAddProjectHandler = this.handleAddProjectSubmit.bind(this);
+      }
+
+      // Remove existing listener to prevent duplicates
+      form.removeEventListener("submit", this.boundAddProjectHandler);
+
+      // Add the event listener
+      form.addEventListener("submit", this.boundAddProjectHandler);
+      console.log("✅ Project form handler setup complete");
     }
   }
 
@@ -463,7 +472,7 @@ class ProjectManager {
    * Setup project color picker
    */
   setupProjectColorPicker() {
-    const colorInput = document.getElementById("project-color");
+    const colorInput = document.getElementById("add-project-color");
     const colorPresets = document.querySelectorAll(
       "#add-project-dialog .color-preset"
     );
@@ -471,7 +480,7 @@ class ProjectManager {
     colorPresets.forEach((preset) => {
       preset.addEventListener("click", () => {
         const color = preset.getAttribute("data-color");
-        colorInput.value = color;
+        if (colorInput) colorInput.value = color;
       });
     });
   }
@@ -482,8 +491,11 @@ class ProjectManager {
    */
   async handleAddProjectSubmit(e) {
     e.preventDefault();
+    console.log("📝 Project form submitted!", e.target);
 
     const formData = new FormData(e.target);
+    console.log("📝 Form data:", Object.fromEntries(formData));
+
     const projectData = {
       name: formData.get("name"),
       description: formData.get("description"),

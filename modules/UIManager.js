@@ -135,6 +135,9 @@ class UIManager {
     // Update dialog title and button text
     this.updateTaskDialogUI(taskId);
 
+    // Setup form submission handler
+    this.setupTaskFormHandler();
+
     // Lock scrolling and show dialog
     lockScroll();
     dialog.showModal();
@@ -423,6 +426,27 @@ class UIManager {
   setCurrentEditingTaskId(taskId) {
     this.currentEditingTaskId = taskId;
     window.currentEditingTaskId = taskId;
+  }
+
+  /**
+   * Setup task form submission handler
+   */
+  setupTaskFormHandler() {
+    const taskForm = document.getElementById("task-form");
+    if (taskForm && window.taskManager) {
+      // Remove existing listener to prevent duplicates
+      taskForm.removeEventListener("submit", this.boundTaskFormHandler);
+
+      // Create bound handler if not exists
+      if (!this.boundTaskFormHandler) {
+        this.boundTaskFormHandler =
+          window.taskManager.handleTaskFormSubmit.bind(window.taskManager);
+      }
+
+      // Add the event listener
+      taskForm.addEventListener("submit", this.boundTaskFormHandler);
+      console.log("✅ Task form handler setup complete");
+    }
   }
 }
 
