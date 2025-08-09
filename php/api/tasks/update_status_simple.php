@@ -1,39 +1,30 @@
 <?php
-// Simple version for debugging
-error_reporting(E_ERROR | E_PARSE);
+/**
+ * Update Task Status API Endpoint (Simple)
+ * For drag & drop functionality
+ */
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Include required files
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../../utils/php-utils.php';
 
+// Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-    exit();
-}
+// Only allow POST requests
+checkRequestMethod('POST');
 
 try {
-    // Get POST data
-    $input = json_decode(file_get_contents('php://input'), true);
-    
-    if (!$input) {
-        echo json_encode(['success' => false, 'message' => 'No JSON data received']);
-        exit();
-    }
-    
+    // Get JSON input
+    $input = getJsonInput();
+
     if (empty($input['task_id']) || empty($input['status'])) {
-        echo json_encode(['success' => false, 'message' => 'task_id and status required']);
+        echo jsonResponse(false, 'task_id and status required', [], 400);
         exit();
     }
-    
-    // Include database config
-    require_once '../../config/database.php';
     
     // Get database connection
     $pdo = getDBConnection();
@@ -44,7 +35,7 @@ try {
     // Validate status
     $validStatuses = ['todo', 'in_progress', 'done'];
     if (!in_array($newStatus, $validStatuses)) {
-        echo json_encode(['success' => false, 'message' => 'Invalid status']);
+        echo jsonResponse(false, 'Invalid status', [], 400);
         exit();
     }
     
@@ -56,17 +47,15 @@ try {
     ]);
     
     if ($result) {
-        echo json_encode([
-            'success' => true, 
-            'message' => 'Task status updated successfully',
+        echo jsonResponse(true, 'Task status updated successfully', [
             'task_id' => $taskId,
             'new_status' => $newStatus
-        ]);
+        ], 200);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to update task']);
+        echo jsonResponse(false, 'Failed to update task', [], 500);
     }
-    
+
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    echo jsonResponse(false, 'Error: ' . $e->getMessage(), [], 500);
 }
 ?>

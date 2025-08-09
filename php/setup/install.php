@@ -27,21 +27,66 @@ function installDatabase() {
         
         // Now connect to the specific database
         $pdo = getDBConnection();
-        
-        // Create projects table
-        $projectsSQL = "
-        CREATE TABLE IF NOT EXISTS projects (
+
+        // Create workspaces table (highest level in hierarchy)
+        $workspacesSQL = "
+        CREATE TABLE IF NOT EXISTS workspaces (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
+            name VARCHAR(100) NOT NULL,
             description TEXT,
-            color VARCHAR(7) DEFAULT '#3498db',
+            color VARCHAR(7) DEFAULT '#667eea',
+            icon VARCHAR(50) DEFAULT '🏢',
+            is_default BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_name (name)
+            INDEX idx_workspace_name (name)
         ) ENGINE=InnoDB";
-        
-        $pdo->exec($projectsSQL);
-        echo "✅ Projects table created successfully.\n";
+
+        $pdo->exec($workspacesSQL);
+        echo "✅ Workspaces table created successfully.\n";
+
+        // Check if projects table exists and if it has workspace_id column
+        $checkProjectsTable = "SHOW TABLES LIKE 'projects'";
+        $tableExists = $pdo->query($checkProjectsTable)->rowCount() > 0;
+
+        if ($tableExists) {
+            // Check if workspace_id column exists
+            $checkColumn = "SHOW COLUMNS FROM projects LIKE 'workspace_id'";
+            $columnExists = $pdo->query($checkColumn)->rowCount() > 0;
+
+            if (!$columnExists) {
+                // Add workspace_id column to existing projects table
+                echo "🔄 Updating existing projects table to add workspace_id column...\n";
+                $alterSQL = "ALTER TABLE projects
+                            ADD COLUMN workspace_id INT NOT NULL DEFAULT 1 AFTER id,
+                            ADD COLUMN status ENUM('active', 'on_hold', 'completed', 'archived') DEFAULT 'active' AFTER color,
+                            ADD FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+                            ADD INDEX idx_project_workspace (workspace_id)";
+                $pdo->exec($alterSQL);
+                echo "✅ Projects table updated successfully.\n";
+            } else {
+                echo "✅ Projects table already has workspace_id column.\n";
+            }
+        } else {
+            // Create new projects table with workspace support
+            $projectsSQL = "
+            CREATE TABLE projects (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                workspace_id INT NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                color VARCHAR(7) DEFAULT '#3498db',
+                status ENUM('active', 'on_hold', 'completed', 'archived') DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+                INDEX idx_project_workspace (workspace_id),
+                INDEX idx_project_name (name)
+            ) ENGINE=InnoDB";
+
+            $pdo->exec($projectsSQL);
+            echo "✅ Projects table created successfully.\n";
+        }
         
         // Create tasks table
         $tasksSQL = "
@@ -67,13 +112,38 @@ function installDatabase() {
         $pdo->exec($tasksSQL);
         echo "✅ Tasks table created successfully.\n";
         
-        // Insert default projects
+        // Insert default workspaces
+        $insertWorkspaces = "
+        INSERT IGNORE INTO workspaces (id, name, description, color, icon, is_default) VALUES
+        (1, 'Personal Workspace', 'Your personal tasks and projects', '#667eea', '👤', TRUE),
+        (2, 'Work Workspace', 'Professional work and business projects', '#2ecc71', '💼', FALSE),
+        (3, 'Creative Projects', 'Creative and artistic endeavors', '#f093fb', '🎨', FALSE)";
+
+        $pdo->exec($insertWorkspaces);
+        echo "✅ Default workspaces inserted successfully.\n";
+
+        // Insert default projects (now with workspace associations)
+        // First, check if we need to update existing projects to have workspace_id
+        $checkExistingProjects = "SELECT COUNT(*) as count FROM projects WHERE workspace_id IS NULL OR workspace_id = 0";
+        $result = $pdo->query($checkExistingProjects);
+        $needsUpdate = $result->fetch()['count'] > 0;
+
+        if ($needsUpdate) {
+            // Update existing projects to belong to default workspace
+            $updateExisting = "UPDATE projects SET workspace_id = 1 WHERE workspace_id IS NULL OR workspace_id = 0";
+            $pdo->exec($updateExisting);
+            echo "✅ Updated existing projects to belong to default workspace.\n";
+        }
+
+        // Insert default projects if they don't exist
         $insertProjects = "
-        INSERT IGNORE INTO projects (id, name, description, color) VALUES 
-        (1, 'Default Project', 'Default project for organizing tasks', '#3498db'),
-        (2, 'Personal', 'Personal tasks and reminders', '#e74c3c'),
-        (3, 'Work', 'Work-related tasks and projects', '#2ecc71')";
-        
+        INSERT IGNORE INTO projects (id, workspace_id, name, description, color, status) VALUES
+        (1, 1, 'Personal Tasks', 'Daily personal tasks and reminders', '#3498db', 'active'),
+        (2, 1, 'Home Projects', 'Home improvement and maintenance', '#e74c3c', 'active'),
+        (3, 2, 'Work Projects', 'Professional work assignments', '#2ecc71', 'active'),
+        (4, 2, 'Team Collaboration', 'Team-based projects and meetings', '#f39c12', 'active'),
+        (5, 3, 'Art & Design', 'Creative design projects', '#9b59b6', 'active')";
+
         $pdo->exec($insertProjects);
         echo "✅ Default projects inserted successfully.\n";
         

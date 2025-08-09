@@ -21,10 +21,77 @@
     <link rel="preload" href="js/app.js" as="script" />
   </head>
   <body>
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- Workspace Sidebar -->
+    <div id="workspace-sidebar" class="workspace-sidebar">
+      <div class="sidebar-header">
+        <h3>🏢 Workspaces</h3>
+        <button class="sidebar-close" onclick="closeSidebar()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="current-workspace">
+          <div class="workspace-info">
+            <div class="workspace-icon" id="current-workspace-icon">👤</div>
+            <div class="workspace-details">
+              <div class="workspace-name" id="current-workspace-name">
+                Personal Workspace
+              </div>
+              <div
+                class="workspace-description"
+                id="current-workspace-description"
+              >
+                Your personal tasks and projects
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workspace-actions">
+          <button
+            class="btn btn-primary btn-small"
+            onclick="openCreateWorkspaceDialog()"
+          >
+            <span class="btn-icon">➕</span>
+            New Workspace
+          </button>
+        </div>
+
+        <div class="workspaces-list">
+          <h4>Switch Workspace</h4>
+          <div id="workspaces-container">
+            <!-- Workspaces will be loaded dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div
+      id="sidebar-overlay"
+      class="sidebar-overlay"
+      onclick="closeSidebar()"
+    ></div>
+
     <!-- Header Section -->
     <header class="app-header">
       <div class="header-container">
         <div class="header-left">
+          <button
+            id="workspace-toggle"
+            class="workspace-toggle"
+            onclick="openSidebar()"
+          >
+            <span class="workspace-icon" id="header-workspace-icon">👤</span>
+            <span class="workspace-name" id="header-workspace-name"
+              >Personal Workspace</span
+            >
+            <span class="toggle-arrow">▼</span>
+          </button>
           <h1 class="app-title">
             <span class="app-icon">📋</span>
             Kanban Task Board
@@ -63,6 +130,7 @@
                 </div>
                 <!-- Projects will be loaded dynamically -->
               </div>
+              <input type="hidden" id="project-filter" value="" />
             </div>
 
             <div class="custom-dropdown" id="priority-dropdown">
@@ -84,6 +152,7 @@
                   🟢 Low Priority
                 </div>
               </div>
+              <input type="hidden" id="priority-filter" value="" />
             </div>
 
             <div class="custom-dropdown" id="status-dropdown">
@@ -274,7 +343,7 @@
           </button>
         </div>
         <div class="dialog-body">
-          <form id="task-form" method="dialog">
+          <form id="task-form">
             <div class="form-group">
               <label for="task-title">Task Title *</label>
               <input
@@ -573,6 +642,7 @@
               <div class="form-group">
                 <label for="add-project-status">Status</label>
                 <select id="add-project-status" name="status">
+                  <option value="planning">📋 Planning</option>
                   <option value="active" selected>🟢 Active</option>
                   <option value="on_hold">🟡 On Hold</option>
                   <option value="completed">✅ Completed</option>
@@ -604,7 +674,191 @@
       </div>
     </dialog>
 
-    <!-- JavaScript -->
+    <!-- Create Workspace Dialog -->
+    <dialog id="create-workspace-dialog" class="create-workspace-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>🏢 Create New Workspace</h3>
+          <button
+            type="button"
+            class="dialog-close"
+            onclick="closeCreateWorkspaceDialog()"
+          >
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Close</span>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <form id="create-workspace-form">
+            <div class="form-group">
+              <label for="workspace-name">Workspace Name *</label>
+              <input
+                type="text"
+                id="workspace-name"
+                name="name"
+                required
+                maxlength="100"
+                placeholder="Enter workspace name..."
+                autocomplete="off"
+              />
+              <div class="form-error" id="workspace-name-error"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="workspace-description">Description</label>
+              <textarea
+                id="workspace-description"
+                name="description"
+                rows="3"
+                placeholder="Enter workspace description..."
+              ></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="workspace-icon">Icon</label>
+                <div class="icon-picker">
+                  <input
+                    type="text"
+                    id="workspace-icon"
+                    name="icon"
+                    value="🏢"
+                    maxlength="2"
+                    placeholder="🏢"
+                  />
+                  <div class="icon-presets">
+                    <button type="button" class="icon-preset" data-icon="🏢">
+                      🏢
+                    </button>
+                    <button type="button" class="icon-preset" data-icon="👤">
+                      👤
+                    </button>
+                    <button type="button" class="icon-preset" data-icon="💼">
+                      💼
+                    </button>
+                    <button type="button" class="icon-preset" data-icon="🎨">
+                      🎨
+                    </button>
+                    <button type="button" class="icon-preset" data-icon="🚀">
+                      🚀
+                    </button>
+                    <button type="button" class="icon-preset" data-icon="⚡">
+                      ⚡
+                    </button>
+                    <button type="button" class="icon-preset" data-icon="🌟">
+                      🌟
+                    </button>
+                    <button type="button" class="icon-preset" data-icon="🔥">
+                      🔥
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="workspace-color">Color</label>
+                <div class="color-picker">
+                  <input
+                    type="color"
+                    id="workspace-color"
+                    name="color"
+                    value="#667eea"
+                  />
+                  <div class="color-presets">
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#667eea"
+                      style="background: #667eea"
+                    ></button>
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#f093fb"
+                      style="background: #f093fb"
+                    ></button>
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#4facfe"
+                      style="background: #4facfe"
+                    ></button>
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#43e97b"
+                      style="background: #43e97b"
+                    ></button>
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#fa709a"
+                      style="background: #fa709a"
+                    ></button>
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#ffecd2"
+                      style="background: #ffecd2"
+                    ></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeCreateWorkspaceDialog()"
+              >
+                <span class="btn-icon">❌</span>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                id="create-workspace-submit-btn"
+              >
+                <span class="btn-icon">🚀</span>
+                Create Workspace
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- JavaScript Utilities -->
+    <script src="utils/js-utils.js"></script>
+
+    <!-- JavaScript Modules -->
+    <script
+      src="modules/APIManager.js"
+      onload="console.log('✅ APIManager.js loaded')"
+    ></script>
+    <script
+      src="modules/TaskManager.js"
+      onload="console.log('✅ TaskManager.js loaded')"
+    ></script>
+    <script
+      src="modules/ProjectManager.js"
+      onload="console.log('✅ ProjectManager.js loaded')"
+    ></script>
+    <script
+      src="modules/WorkspaceManager.js"
+      onload="console.log('✅ WorkspaceManager.js loaded')"
+    ></script>
+    <script
+      src="modules/DragDropManager.js"
+      onload="console.log('✅ DragDropManager.js loaded')"
+    ></script>
+    <script
+      src="modules/UIManager.js"
+      onload="console.log('✅ UIManager.js loaded')"
+    ></script>
+
+    <!-- Main Application JavaScript -->
     <script src="js/app.js"></script>
 
     <!-- Development helpers (remove in production) -->

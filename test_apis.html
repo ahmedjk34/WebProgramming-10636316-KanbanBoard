@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Test Suite</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .test-result {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 3px;
+      }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+      button {
+        padding: 10px 15px;
+        margin: 5px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      pre {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 3px;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 Kanban Board API Test Suite</h1>
+
+    <div class="test-section">
+      <h2>📋 Workspace APIs</h2>
+      <button onclick="testGetWorkspaces()">Test Get Workspaces</button>
+      <button onclick="testCreateWorkspace()">Test Create Workspace</button>
+      <div id="workspace-results"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>📁 Project APIs</h2>
+      <button onclick="testGetProjects()">Test Get Projects</button>
+      <button onclick="testCreateProject()">Test Create Project</button>
+      <div id="project-results"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>📝 Task APIs</h2>
+      <button onclick="testGetTasks()">Test Get Tasks</button>
+      <button onclick="testCreateTask()">Test Create Task</button>
+      <button onclick="testUpdateTask()">Test Update Task</button>
+      <button onclick="testUpdateTaskStatus()">Test Update Task Status</button>
+      <button onclick="testDeleteTask()">Test Delete Task</button>
+      <div id="task-results"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>🔄 Run All Tests</h2>
+      <button onclick="runAllTests()">Run Complete Test Suite</button>
+      <div id="all-results"></div>
+    </div>
+
+    <script>
+      let testTaskId = null;
+      let testProjectId = null;
+      let testWorkspaceId = null;
+
+      function logResult(containerId, message, type = "info") {
+        const container = document.getElementById(containerId);
+        const div = document.createElement("div");
+        div.className = `test-result ${type}`;
+        div.innerHTML = message;
+        container.appendChild(div);
+      }
+
+      function clearResults(containerId) {
+        document.getElementById(containerId).innerHTML = "";
+      }
+
+      async function safeApiCall(url, options = {}) {
+        try {
+          const response = await fetch(url, options);
+          const text = await response.text();
+
+          // Check if response is HTML (error page)
+          if (text.trim().startsWith("<") || text.includes("<html>")) {
+            return {
+              success: false,
+              message: "Server returned HTML error page",
+              error_type: "html_response",
+              html_preview: text.substring(0, 200) + "...",
+            };
+          }
+
+          return JSON.parse(text);
+        } catch (error) {
+          return {
+            success: false,
+            message: "Network or parsing error: " + error.message,
+            error_type: "network_error",
+          };
+        }
+      }
+
+      // Workspace Tests
+      async function testGetWorkspaces() {
+        clearResults("workspace-results");
+        logResult("workspace-results", "🔄 Testing Get Workspaces...", "info");
+
+        const result = await safeApiCall(
+          "php/api/workspaces/get_workspaces.php"
+        );
+
+        if (result.success) {
+          logResult(
+            "workspace-results",
+            `✅ Get Workspaces: ${result.message}`,
+            "success"
+          );
+          logResult(
+            "workspace-results",
+            `📊 Found ${result.data.workspaces.length} workspaces`,
+            "info"
+          );
+          if (result.data.workspaces.length > 0) {
+            testWorkspaceId = result.data.workspaces[0].id;
+          }
+        } else {
+          logResult(
+            "workspace-results",
+            `❌ Get Workspaces Failed: ${result.message}`,
+            "error"
+          );
+          if (result.html_preview) {
+            logResult(
+              "workspace-results",
+              `<pre>${result.html_preview}</pre>`,
+              "error"
+            );
+          }
+        }
+      }
+
+      async function testCreateWorkspace() {
+        logResult(
+          "workspace-results",
+          "🔄 Testing Create Workspace...",
+          "info"
+        );
+
+        const workspaceData = {
+          name: "Test Workspace " + Date.now(),
+          description: "Test workspace created by API test suite",
+          icon: "🧪",
+          color: "#ff6b6b",
+        };
+
+        const result = await safeApiCall(
+          "php/api/workspaces/create_workspace.php",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(workspaceData),
+          }
+        );
+
+        if (result.success) {
+          logResult(
+            "workspace-results",
+            `✅ Create Workspace: ${result.message}`,
+            "success"
+          );
+          testWorkspaceId = result.data.workspace.id;
+          logResult(
+            "workspace-results",
+            `📝 Created workspace ID: ${testWorkspaceId}`,
+            "info"
+          );
+        } else {
+          logResult(
+            "workspace-results",
+            `❌ Create Workspace Failed: ${result.message}`,
+            "error"
+          );
+        }
+      }
+
+      // Project Tests
+      async function testGetProjects() {
+        clearResults("project-results");
+        logResult("project-results", "🔄 Testing Get Projects...", "info");
+
+        const workspaceId = testWorkspaceId || 1;
+        const result = await safeApiCall(
+          `php/api/projects/get_projects.php?workspace_id=${workspaceId}`
+        );
+
+        if (result.success) {
+          logResult(
+            "project-results",
+            `✅ Get Projects: ${result.message}`,
+            "success"
+          );
+          logResult(
+            "project-results",
+            `📊 Found ${result.data.projects.length} projects`,
+            "info"
+          );
+          if (result.data.projects.length > 0) {
+            testProjectId = result.data.projects[0].id;
+          }
+        } else {
+          logResult(
+            "project-results",
+            `❌ Get Projects Failed: ${result.message}`,
+            "error"
+          );
+        }
+      }
+
+      async function testCreateProject() {
+        logResult("project-results", "🔄 Testing Create Project...", "info");
+
+        const projectData = {
+          name: "Test Project " + Date.now(),
+          description: "Test project created by API test suite",
+          color: "#4ecdc4",
+          workspace_id: testWorkspaceId || 1,
+        };
+
+        const result = await safeApiCall(
+          "php/api/projects/create_project.php",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(projectData),
+          }
+        );
+
+        if (result.success) {
+          logResult(
+            "project-results",
+            `✅ Create Project: ${result.message}`,
+            "success"
+          );
+          testProjectId = result.data.project.id;
+          logResult(
+            "project-results",
+            `📝 Created project ID: ${testProjectId}`,
+            "info"
+          );
+
+          // Refresh project list to show updated count
+          logResult("project-results", "🔄 Refreshing project list...", "info");
+          await testGetProjects();
+        } else {
+          logResult(
+            "project-results",
+            `❌ Create Project Failed: ${result.message}`,
+            "error"
+          );
+        }
+      }
+
+      // Task Tests
+      async function testGetTasks() {
+        clearResults("task-results");
+        logResult("task-results", "🔄 Testing Get Tasks...", "info");
+
+        const workspaceId = testWorkspaceId || 1;
+        const result = await safeApiCall(
+          `php/api/tasks/get_tasks.php?workspace_id=${workspaceId}`
+        );
+
+        if (result.success) {
+          logResult(
+            "task-results",
+            `✅ Get Tasks: ${result.message}`,
+            "success"
+          );
+          logResult(
+            "task-results",
+            `📊 Found ${result.data.tasks.length} tasks`,
+            "info"
+          );
+          if (result.data.tasks.length > 0) {
+            testTaskId = result.data.tasks[0].id;
+          }
+        } else {
+          logResult(
+            "task-results",
+            `❌ Get Tasks Failed: ${result.message}`,
+            "error"
+          );
+        }
+      }
+
+      async function testCreateTask() {
+        logResult("task-results", "🔄 Testing Create Task...", "info");
+
+        if (!testProjectId) {
+          logResult(
+            "task-results",
+            "⚠️ No project ID available, creating project first...",
+            "info"
+          );
+          await testCreateProject();
+        }
+
+        const taskData = {
+          title: "Test Task " + Date.now(),
+          description: "Test task created by API test suite",
+          project_id: testProjectId || 1,
+          priority: "high",
+          status: "todo",
+          due_date: "2024-12-31",
+        };
+
+        const result = await safeApiCall("php/api/tasks/create_task.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(taskData),
+        });
+
+        if (result.success) {
+          logResult(
+            "task-results",
+            `✅ Create Task: ${result.message}`,
+            "success"
+          );
+          testTaskId = result.data.task_id;
+          logResult(
+            "task-results",
+            `📝 Created task ID: ${testTaskId}`,
+            "info"
+          );
+        } else {
+          logResult(
+            "task-results",
+            `❌ Create Task Failed: ${result.message}`,
+            "error"
+          );
+        }
+      }
+
+      async function testUpdateTask() {
+        logResult("task-results", "🔄 Testing Update Task...", "info");
+
+        if (!testTaskId) {
+          logResult(
+            "task-results",
+            "⚠️ No task ID available, creating task first...",
+            "info"
+          );
+          await testCreateTask();
+        }
+
+        const updateData = {
+          id: testTaskId,
+          title: "Updated Test Task " + Date.now(),
+          description: "Updated description",
+          project_id: testProjectId || 1,
+          priority: "medium",
+          status: "in_progress",
+        };
+
+        const result = await safeApiCall("php/api/tasks/update_task.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updateData),
+        });
+
+        if (result.success) {
+          logResult(
+            "task-results",
+            `✅ Update Task: ${result.message}`,
+            "success"
+          );
+        } else {
+          logResult(
+            "task-results",
+            `❌ Update Task Failed: ${result.message}`,
+            "error"
+          );
+        }
+      }
+
+      async function testUpdateTaskStatus() {
+        logResult("task-results", "🔄 Testing Update Task Status...", "info");
+
+        if (!testTaskId) {
+          logResult(
+            "task-results",
+            "⚠️ No task ID available, creating task first...",
+            "info"
+          );
+          await testCreateTask();
+        }
+
+        const statusData = {
+          task_id: testTaskId,
+          status: "done",
+        };
+
+        const result = await safeApiCall(
+          "php/api/tasks/update_status_simple.php",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(statusData),
+          }
+        );
+
+        if (result.success) {
+          logResult(
+            "task-results",
+            `✅ Update Task Status: ${result.message}`,
+            "success"
+          );
+        } else {
+          logResult(
+            "task-results",
+            `❌ Update Task Status Failed: ${result.message}`,
+            "error"
+          );
+        }
+      }
+
+      async function testDeleteTask() {
+        logResult("task-results", "🔄 Testing Delete Task...", "info");
+
+        if (!testTaskId) {
+          logResult(
+            "task-results",
+            "⚠️ No task ID available, creating task first...",
+            "info"
+          );
+          await testCreateTask();
+        }
+
+        const deleteData = {
+          task_id: testTaskId,
+        };
+
+        const result = await safeApiCall("php/api/tasks/delete_task.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(deleteData),
+        });
+
+        if (result.success) {
+          logResult(
+            "task-results",
+            `✅ Delete Task: ${result.message}`,
+            "success"
+          );
+          testTaskId = null; // Reset for next tests
+        } else {
+          logResult(
+            "task-results",
+            `❌ Delete Task Failed: ${result.message}`,
+            "error"
+          );
+        }
+      }
+
+      async function runAllTests() {
+        clearResults("all-results");
+        logResult(
+          "all-results",
+          "🚀 Starting Complete API Test Suite...",
+          "info"
+        );
+
+        // Test in logical order
+        await testGetWorkspaces();
+        await testCreateWorkspace();
+        await testGetProjects();
+        await testCreateProject();
+        await testGetTasks();
+        await testCreateTask();
+        await testUpdateTask();
+        await testUpdateTaskStatus();
+        await testDeleteTask();
+
+        logResult(
+          "all-results",
+          "✅ Complete API Test Suite Finished!",
+          "success"
+        );
+      }
+    </script>
+  </body>
+</html>

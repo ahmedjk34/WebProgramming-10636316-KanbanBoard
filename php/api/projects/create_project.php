@@ -9,11 +9,9 @@
  * Optional: description, color
  */
 
-// Set headers for JSON response and CORS
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Include required files
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../../utils/php-utils.php';
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -28,36 +26,29 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-// Include required files
-require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../../includes/functions.php';
-require_once __DIR__ . '/../../includes/security.php';
-
 try {
     // Get database connection
     $pdo = getDBConnection();
-    
-    // Get POST data
-    $input = json_decode(file_get_contents('php://input'), true);
-    
-    // If JSON decode failed, try form data
-    if ($input === null) {
-        $input = $_POST;
-    }
-    
+
+    // Get JSON input
+    $input = getJsonInput();
+
     // Validate required fields
     if (empty($input['name'])) {
-        http_response_code(400);
-        echo jsonResponse(false, 'Project name is required');
+        echo jsonResponse(false, 'Project name is required', [], 400);
         exit();
+    }
+
+    // Set default workspace_id if not provided
+    if (empty($input['workspace_id'])) {
+        $input['workspace_id'] = 1; // Default workspace
     }
     
     // Validate project data
     $validation = validateProjectData($input);
-    
+
     if (!$validation['valid']) {
-        http_response_code(400);
-        echo jsonResponse(false, 'Validation failed', ['errors' => $validation['errors']]);
+        echo jsonResponse(false, 'Validation failed', ['errors' => $validation['errors']], 400);
         exit();
     }
     
@@ -68,8 +59,7 @@ try {
     $stmt->execute([':name' => $projectData['name']]);
     
     if ($stmt->fetch()) {
-        http_response_code(400);
-        echo jsonResponse(false, 'Project name already exists');
+        echo jsonResponse(false, 'Project name already exists', [], 400);
         exit();
     }
     
@@ -78,23 +68,29 @@ try {
     
     // Prepare SQL for project insertion
     $sql = "INSERT INTO projects (
-                name, 
-                description, 
+                name,
+                description,
                 color,
+                status,
+                workspace_id,
                 created_at,
                 updated_at
             ) VALUES (
-                :name, 
-                :description, 
+                :name,
+                :description,
                 :color,
+                :status,
+                :workspace_id,
                 NOW(),
                 NOW()
             )";
-    
+
     $params = [
         ':name' => $projectData['name'],
         ':description' => $projectData['description'] ?? '',
-        ':color' => $color
+        ':color' => $color,
+        ':status' => $projectData['status'] ?? 'active',
+        ':workspace_id' => (int)$input['workspace_id']
     ];
     
     // Execute insertion
@@ -103,14 +99,15 @@ try {
     
     // Get the created project ID
     $projectId = $pdo->lastInsertId();
-    
+
     // Fetch the complete created project
     $stmt = $pdo->prepare("
-        SELECT 
+        SELECT
             p.id,
             p.name,
             p.description,
             p.color,
+            p.status,
             p.created_at,
             p.updated_at,
             COUNT(t.id) as task_count,
@@ -120,7 +117,7 @@ try {
         FROM projects p
         LEFT JOIN tasks t ON p.id = t.project_id
         WHERE p.id = :project_id
-        GROUP BY p.id, p.name, p.description, p.color, p.created_at, p.updated_at
+        GROUP BY p.id, p.name, p.description, p.color, p.status, p.created_at, p.updated_at
     ");
     
     $stmt->execute([':project_id' => $projectId]);
@@ -132,6 +129,7 @@ try {
         'name' => $project['name'],
         'description' => $project['description'],
         'color' => $project['color'],
+        'status' => $project['status'],
         'created_at' => $project['created_at'],
         'updated_at' => $project['updated_at'],
         'task_count' => (int)$project['task_count'],
@@ -141,22 +139,19 @@ try {
     ];
     
     // Log the creation
-    debugLog("Project created", ['project_id' => $projectId, 'name' => $project['name']]);
-    
+    error_log("Project created: ID {$projectId}, Name: {$project['name']}");
+
     // Return success response
-    http_response_code(201);
-    echo jsonResponse(true, 'Project created successfully', ['project' => $formattedProject]);
-    
+    echo jsonResponse(true, 'Project created successfully', ['project' => $formattedProject], 201);
+
 } catch (PDOException $e) {
     // Database error
     error_log("Database error in create_project.php: " . $e->getMessage());
-    http_response_code(500);
-    echo jsonResponse(false, 'Database error occurred');
-    
+    echo jsonResponse(false, 'Database error occurred', [], 500);
+
 } catch (Exception $e) {
     // General error
     error_log("Error in create_project.php: " . $e->getMessage());
-    http_response_code(500);
-    echo jsonResponse(false, 'An error occurred while creating the project');
+    echo jsonResponse(false, 'An error occurred while creating the project', [], 500);
 }
 ?>
