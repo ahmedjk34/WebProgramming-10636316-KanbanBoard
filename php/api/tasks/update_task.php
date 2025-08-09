@@ -125,10 +125,4 @@ try {
     error_log("Error in update_task.php: " . $e->getMessage());
     echo jsonResponse(false, 'An error occurred while updating the task', [], 500);
 }
-
-// Helper function to validate date format
-function validateDate($date, $format = 'Y-m-d') {
-    $d = DateTime::createFromFormat($format, $date);
-    return $d && $d->format($format) === $date;
-}
 ?>
