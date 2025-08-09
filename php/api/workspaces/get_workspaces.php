@@ -4,15 +4,11 @@
  * Returns all workspaces for the current user
  */
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET');
-header('Access-Control-Allow-Headers: Content-Type');
+// Headers are set in php-utils.php
 
 // Include required files
 require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../../includes/functions.php';
-require_once __DIR__ . '/../../includes/security.php';
+require_once __DIR__ . '/../../../utils/php-utils.php';
 
 try {
     // Get database connection
@@ -50,21 +46,12 @@ try {
         ];
     }
 
-    echo json_encode([
-        'success' => true,
-        'data' => [
-            'workspaces' => $formattedWorkspaces,
-            'total_count' => count($formattedWorkspaces)
-        ],
-        'message' => 'Workspaces loaded successfully'
+    echo jsonResponse(true, 'Workspaces loaded successfully', [
+        'workspaces' => $formattedWorkspaces,
+        'total_count' => count($formattedWorkspaces)
     ]);
 
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error loading workspaces: ' . $e->getMessage(),
-        'data' => null
-    ]);
+    echo jsonResponse(false, 'Error loading workspaces: ' . $e->getMessage(), [], 500);
 }
 ?>

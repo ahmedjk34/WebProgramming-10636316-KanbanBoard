@@ -11,16 +11,11 @@
 // Suppress any PHP notices/warnings for clean JSON output
 error_reporting(E_ERROR | E_PARSE);
 
-// Set headers for JSON response and CORS
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET');
-header('Access-Control-Allow-Headers: Content-Type');
+// Headers are set in php-utils.php
 
 // Include required files
 require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../../includes/functions.php';
-require_once __DIR__ . '/../../includes/security.php';
+require_once __DIR__ . '/../../../utils/php-utils.php';
 
 try {
     // Get database connection
@@ -109,27 +104,18 @@ try {
     }
 
     // Return success response
-    echo json_encode([
-        'success' => true,
-        'data' => [
-            'tasks' => $formattedTasks,
-            'tasks_by_status' => $tasksByStatus,
-            'total_count' => count($formattedTasks),
-            'counts' => [
-                'todo' => count($tasksByStatus['todo']),
-                'in_progress' => count($tasksByStatus['in_progress']),
-                'done' => count($tasksByStatus['done'])
-            ]
-        ],
-        'message' => 'Tasks loaded successfully'
+    echo jsonResponse(true, 'Tasks loaded successfully', [
+        'tasks' => $formattedTasks,
+        'tasks_by_status' => $tasksByStatus,
+        'total_count' => count($formattedTasks),
+        'counts' => [
+            'todo' => count($tasksByStatus['todo']),
+            'in_progress' => count($tasksByStatus['in_progress']),
+            'done' => count($tasksByStatus['done'])
+        ]
     ]);
 
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error loading tasks: ' . $e->getMessage(),
-        'data' => null
-    ]);
+    echo jsonResponse(false, 'Error loading tasks: ' . $e->getMessage(), [], 500);
 }
 ?>
