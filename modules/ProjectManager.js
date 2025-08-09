@@ -510,7 +510,10 @@ class ProjectManager {
         const result = await window.apiManager.createProject(projectData);
 
         if (result.success) {
-          showSuccessMessage("Project created successfully!");
+          showSuccessMessage(
+            "Project created successfully!",
+            "Project Created"
+          );
           this.closeAddProjectDialog();
 
           // Refresh projects
@@ -519,7 +522,10 @@ class ProjectManager {
       }
     } catch (error) {
       console.error("❌ Error creating project:", error);
-      showErrorMessage("Failed to create project");
+      showErrorMessage(
+        "Failed to create project. Please try again.",
+        "Creation Failed"
+      );
     }
   }
 

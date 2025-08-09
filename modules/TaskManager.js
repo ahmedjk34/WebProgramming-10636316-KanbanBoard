@@ -468,7 +468,8 @@ class TaskManager {
         showSuccessMessage(
           window.currentEditingTaskId
             ? "Task updated successfully!"
-            : "Task created successfully!"
+            : "Task created successfully!",
+          window.currentEditingTaskId ? "Task Updated" : "Task Created"
         );
 
         // Close dialog and refresh
@@ -481,7 +482,7 @@ class TaskManager {
       }
     } catch (error) {
       console.error("❌ Error saving task:", error);
-      showErrorMessage("Failed to save task");
+      showErrorMessage("Failed to save task. Please try again.", "Save Failed");
     } finally {
       setFormLoading(false);
     }
