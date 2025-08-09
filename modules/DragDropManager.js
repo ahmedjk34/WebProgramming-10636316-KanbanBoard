@@ -31,6 +31,7 @@ class DragDropManager {
     this.setupDropZones();
 
     this.isInitialized = true;
+    console.log("✅ Drag & Drop initialized successfully");
   }
 
   /**
@@ -62,13 +63,19 @@ class DragDropManager {
    * @param {HTMLElement} taskCard - Task card element
    */
   setupDragAndDropForSingleTask(taskCard) {
+    // Store bound methods to avoid creating new functions each time
+    if (!this.boundHandleDragStart) {
+      this.boundHandleDragStart = this.handleDragStart.bind(this);
+      this.boundHandleDragEnd = this.handleDragEnd.bind(this);
+    }
+
     // Remove existing listeners to prevent duplicates
-    taskCard.removeEventListener("dragstart", this.handleDragStart.bind(this));
-    taskCard.removeEventListener("dragend", this.handleDragEnd.bind(this));
+    taskCard.removeEventListener("dragstart", this.boundHandleDragStart);
+    taskCard.removeEventListener("dragend", this.boundHandleDragEnd);
 
     // Add drag event listeners
-    taskCard.addEventListener("dragstart", this.handleDragStart.bind(this));
-    taskCard.addEventListener("dragend", this.handleDragEnd.bind(this));
+    taskCard.addEventListener("dragstart", this.boundHandleDragStart);
+    taskCard.addEventListener("dragend", this.boundHandleDragEnd);
 
     // Add visual feedback for draggable items
     taskCard.addEventListener("mouseenter", () => {
@@ -88,25 +95,29 @@ class DragDropManager {
    * Setup drop zones for columns
    */
   setupDropZones() {
+    // Store bound methods
+    if (!this.boundHandleDragOver) {
+      this.boundHandleDragOver = this.handleDragOver.bind(this);
+      this.boundHandleDrop = this.handleDrop.bind(this);
+      this.boundHandleDragEnter = this.handleDragEnter.bind(this);
+      this.boundHandleDragLeave = this.handleDragLeave.bind(this);
+      this.boundHandleColumnDragEnter = this.handleColumnDragEnter.bind(this);
+      this.boundHandleColumnDragLeave = this.handleColumnDragLeave.bind(this);
+    }
+
     const taskLists = document.querySelectorAll(".task-list");
     const columns = document.querySelectorAll(".kanban-column");
 
     taskLists.forEach((taskList) => {
-      taskList.addEventListener("dragover", this.handleDragOver.bind(this));
-      taskList.addEventListener("drop", this.handleDrop.bind(this));
-      taskList.addEventListener("dragenter", this.handleDragEnter.bind(this));
-      taskList.addEventListener("dragleave", this.handleDragLeave.bind(this));
+      taskList.addEventListener("dragover", this.boundHandleDragOver);
+      taskList.addEventListener("drop", this.boundHandleDrop);
+      taskList.addEventListener("dragenter", this.boundHandleDragEnter);
+      taskList.addEventListener("dragleave", this.boundHandleDragLeave);
     });
 
     columns.forEach((column) => {
-      column.addEventListener(
-        "dragenter",
-        this.handleColumnDragEnter.bind(this)
-      );
-      column.addEventListener(
-        "dragleave",
-        this.handleColumnDragLeave.bind(this)
-      );
+      column.addEventListener("dragenter", this.boundHandleColumnDragEnter);
+      column.addEventListener("dragleave", this.boundHandleColumnDragLeave);
     });
   }
 
@@ -117,22 +128,25 @@ class DragDropManager {
    * @param {Event} e - Drag start event
    */
   handleDragStart(e) {
+    const taskElement = e.target.closest(".task-card");
+    if (!taskElement) return;
+
     this.draggedTask = {
-      id: this.getAttribute("data-task-id"),
-      element: this,
-      originalParent: this.parentNode,
-      originalStatus: this.parentNode.id.replace("-tasks", ""),
+      id: taskElement.getAttribute("data-task-id"),
+      element: taskElement,
+      originalParent: taskElement.parentNode,
+      originalStatus: taskElement.parentNode.id.replace("-tasks", ""),
     };
 
-    this.draggedElement = this;
+    this.draggedElement = taskElement;
 
     // Add dragging class for visual feedback
-    this.classList.add("dragging");
+    taskElement.classList.add("dragging");
     document.body.classList.add("dragging-active");
 
     // Set drag effect
     e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/html", this.outerHTML);
+    e.dataTransfer.setData("text/html", taskElement.outerHTML);
 
     // Add subtle opacity to original element
     setTimeout(() => {
@@ -151,12 +165,15 @@ class DragDropManager {
    * @param {Event} e - Drag end event
    */
   handleDragEnd(e) {
+    const taskElement = e.target.closest(".task-card");
+    if (!taskElement) return;
+
     // Remove dragging classes
-    this.classList.remove("dragging");
+    taskElement.classList.remove("dragging");
     document.body.classList.remove("dragging-active");
 
     // Restore opacity
-    this.style.opacity = "1";
+    taskElement.style.opacity = "1";
 
     // Remove drag-over classes from all elements
     document.querySelectorAll(".drag-over").forEach((element) => {

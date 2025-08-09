@@ -146,21 +146,6 @@ function initializeModules() {
     window.uiManager = uiManager;
 
     console.log("✅ All modules initialized successfully");
-
-    // Test module functionality
-    console.log("🧪 Testing module methods...");
-    console.log(
-      "- APIManager methods:",
-      Object.getOwnPropertyNames(Object.getPrototypeOf(apiManager))
-    );
-    console.log(
-      "- TaskManager methods:",
-      Object.getOwnPropertyNames(Object.getPrototypeOf(taskManager))
-    );
-    console.log(
-      "- UIManager methods:",
-      Object.getOwnPropertyNames(Object.getPrototypeOf(uiManager))
-    );
   } catch (error) {
     console.error("❌ Error initializing modules:", error);
     console.log("🔄 Falling back to basic functionality...");
