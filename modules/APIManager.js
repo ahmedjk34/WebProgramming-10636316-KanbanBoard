@@ -60,7 +60,7 @@ class APIManager {
   async loadWorkspaces() {
     try {
       const response = await fetch("php/api/workspaces/get_workspaces.php");
-      const result = await response.json();
+      const result = await this.safeJsonParse(response);
 
       if (!result.success) {
         throw new Error(result.message);
@@ -88,7 +88,7 @@ class APIManager {
         body: JSON.stringify(workspaceData),
       });
 
-      const result = await response.json();
+      const result = await this.safeJsonParse(response);
 
       if (!result.success) {
         throw new Error(result.message);
@@ -112,7 +112,7 @@ class APIManager {
       const response = await fetch(
         `php/api/projects/get_projects.php?workspace_id=${this.currentWorkspaceId}`
       );
-      const result = await response.json();
+      const result = await this.safeJsonParse(response);
 
       if (!result.success) {
         throw new Error(result.message);
@@ -175,7 +175,7 @@ class APIManager {
         }),
       });
 
-      const result = await response.json();
+      const result = await this.safeJsonParse(response);
 
       if (!result.success) {
         throw new Error(result.message);
@@ -203,7 +203,7 @@ class APIManager {
         body: JSON.stringify({ id: projectId }),
       });
 
-      const result = await response.json();
+      const result = await this.safeJsonParse(response);
 
       if (!result.success) {
         throw new Error(result.message);
@@ -227,7 +227,7 @@ class APIManager {
       const response = await fetch(
         `php/api/tasks/get_tasks.php?workspace_id=${this.currentWorkspaceId}`
       );
-      const result = await response.json();
+      const result = await this.safeJsonParse(response);
 
       if (!result.success) {
         throw new Error(result.message);
@@ -287,7 +287,7 @@ class APIManager {
         }),
       });
 
-      const result = await response.json();
+      const result = await this.safeJsonParse(response);
 
       if (!result.success) {
         throw new Error(result.message);
@@ -319,7 +319,7 @@ class APIManager {
         }),
       });
 
-      const result = await response.json();
+      const result = await this.safeJsonParse(response);
 
       if (!result.success) {
         throw new Error(result.message);
@@ -344,10 +344,10 @@ class APIManager {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: taskId }),
+        body: JSON.stringify({ task_id: taskId }),
       });
 
-      const result = await response.json();
+      const result = await this.safeJsonParse(response);
 
       if (!result.success) {
         throw new Error(result.message);
