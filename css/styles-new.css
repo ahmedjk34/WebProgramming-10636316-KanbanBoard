@@ -850,29 +850,43 @@ body {
   opacity: 1;
 }
 
-.task-edit-btn,
-.task-delete-btn {
+.task-action-btn {
   background: var(--bg-glass);
   border: 1px solid var(--border-color);
-  font-size: 1rem;
+  font-size: 1.2rem;
   cursor: pointer;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: 8px;
   transition: var(--transition);
   backdrop-filter: blur(10px);
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
 }
 
-.task-edit-btn:hover {
+.task-action-btn:hover {
+  transform: scale(1.1);
+  border-color: var(--primary-color);
+}
+
+.task-action-btn.edit-btn:hover {
   background: var(--success-gradient);
   color: white;
-  transform: scale(1.1);
+  border-color: var(--success-color);
 }
 
-.task-delete-btn:hover {
+.task-action-btn.delete-btn:hover {
   background: var(--danger-gradient);
   color: white;
-  transform: scale(1.1);
+  border-color: var(--danger-color);
+}
+
+.action-icon {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 /* Enhanced Priority & Due Date Indicators */
@@ -2116,7 +2130,7 @@ body.modal-open {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 99999; /* Above everything including modals */
+  z-index: 2147483647; /* Maximum z-index value - above everything */
   display: flex;
   flex-direction: column;
   gap: 10px;
