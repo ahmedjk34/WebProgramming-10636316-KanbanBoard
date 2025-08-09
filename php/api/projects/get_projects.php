@@ -25,12 +25,17 @@ try {
     // Get database connection
     $pdo = getDBConnection();
 
-    // Get all projects with task counts
+    // Get workspace_id from query parameter (default to 1)
+    $workspaceId = isset($_GET['workspace_id']) ? (int)$_GET['workspace_id'] : 1;
+
+    // Get all projects with task counts for the current workspace
     $sql = "SELECT
                 p.id,
+                p.workspace_id,
                 p.name,
                 p.description,
                 p.color,
+                p.status,
                 p.created_at,
                 p.updated_at,
                 COUNT(t.id) as task_count,
@@ -39,11 +44,12 @@ try {
                 SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END) as done_count
             FROM projects p
             LEFT JOIN tasks t ON p.id = t.project_id
-            GROUP BY p.id, p.name, p.description, p.color, p.created_at, p.updated_at
+            WHERE p.workspace_id = :workspace_id
+            GROUP BY p.id, p.workspace_id, p.name, p.description, p.color, p.status, p.created_at, p.updated_at
             ORDER BY p.created_at ASC";
 
     $stmt = $pdo->prepare($sql);
-    $stmt->execute();
+    $stmt->execute([':workspace_id' => $workspaceId]);
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Format projects for frontend

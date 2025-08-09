@@ -27,6 +27,7 @@ try {
     $pdo = getDBConnection();
 
     // Get query parameters
+    $workspaceId = isset($_GET['workspace_id']) ? sanitizeAndValidate($_GET['workspace_id'], 'int') : 1;
     $projectId = isset($_GET['project_id']) ? sanitizeAndValidate($_GET['project_id'], 'int') : null;
     $status = isset($_GET['status']) ? sanitizeAndValidate($_GET['status'], 'string') : null;
     $priority = isset($_GET['priority']) ? sanitizeAndValidate($_GET['priority'], 'string') : null;
@@ -44,12 +45,13 @@ try {
                 t.created_at,
                 t.updated_at,
                 p.name as project_name,
-                p.color as project_color
+                p.color as project_color,
+                p.workspace_id
             FROM tasks t
             LEFT JOIN projects p ON t.project_id = p.id
-            WHERE 1=1";
+            WHERE p.workspace_id = :workspace_id";
 
-    $params = [];
+    $params = [':workspace_id' => $workspaceId];
 
     // Add filters if provided
     if ($projectId !== null && $projectId !== false) {
@@ -107,27 +109,27 @@ try {
     }
 
     // Return success response
-    echo jsonResponse(true, 'Tasks retrieved successfully', [
-        'tasks' => $formattedTasks,
-        'tasks_by_status' => $tasksByStatus,
-        'total_count' => count($formattedTasks),
-        'counts' => [
-            'todo' => count($tasksByStatus['todo']),
-            'in_progress' => count($tasksByStatus['in_progress']),
-            'done' => count($tasksByStatus['done'])
-        ]
+    echo json_encode([
+        'success' => true,
+        'data' => [
+            'tasks' => $formattedTasks,
+            'tasks_by_status' => $tasksByStatus,
+            'total_count' => count($formattedTasks),
+            'counts' => [
+                'todo' => count($tasksByStatus['todo']),
+                'in_progress' => count($tasksByStatus['in_progress']),
+                'done' => count($tasksByStatus['done'])
+            ]
+        ],
+        'message' => 'Tasks loaded successfully'
     ]);
 
-} catch (PDOException $e) {
-    // Database error
-    error_log("Database error in get_tasks.php: " . $e->getMessage());
-    http_response_code(500);
-    echo jsonResponse(false, 'Database error occurred');
-
 } catch (Exception $e) {
-    // General error
-    error_log("Error in get_tasks.php: " . $e->getMessage());
     http_response_code(500);
-    echo jsonResponse(false, 'An error occurred while retrieving tasks');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error loading tasks: ' . $e->getMessage(),
+        'data' => null
+    ]);
 }
 ?>
