@@ -41,10 +41,9 @@ try {
     
     // Validate project data
     $validation = validateProjectData($input);
-    
+
     if (!$validation['valid']) {
-        http_response_code(400);
-        echo jsonResponse(false, 'Validation failed', ['errors' => $validation['errors']]);
+        echo jsonResponse(false, 'Validation failed', ['errors' => $validation['errors']], 400);
         exit();
     }
     
@@ -55,8 +54,7 @@ try {
     $stmt->execute([':name' => $projectData['name']]);
     
     if ($stmt->fetch()) {
-        http_response_code(400);
-        echo jsonResponse(false, 'Project name already exists');
+        echo jsonResponse(false, 'Project name already exists', [], 400);
         exit();
     }
     
@@ -131,19 +129,16 @@ try {
     debugLog("Project created", ['project_id' => $projectId, 'name' => $project['name']]);
     
     // Return success response
-    http_response_code(201);
-    echo jsonResponse(true, 'Project created successfully', ['project' => $formattedProject]);
-    
+    echo jsonResponse(true, 'Project created successfully', ['project' => $formattedProject], 201);
+
 } catch (PDOException $e) {
     // Database error
     error_log("Database error in create_project.php: " . $e->getMessage());
-    http_response_code(500);
-    echo jsonResponse(false, 'Database error occurred');
-    
+    echo jsonResponse(false, 'Database error occurred', [], 500);
+
 } catch (Exception $e) {
     // General error
     error_log("Error in create_project.php: " . $e->getMessage());
-    http_response_code(500);
-    echo jsonResponse(false, 'An error occurred while creating the project');
+    echo jsonResponse(false, 'An error occurred while creating the project', [], 500);
 }
 ?>
