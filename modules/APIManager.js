@@ -12,6 +12,45 @@ class APIManager {
       parseInt(localStorage.getItem("currentWorkspaceId")) || 1;
   }
 
+  /**
+   * Safely parse JSON response, handling HTML error responses
+   * @param {Response} response - Fetch response object
+   * @returns {Object} Parsed JSON or error object
+   */
+  async safeJsonParse(response) {
+    try {
+      const text = await response.text();
+
+      // Check if response is HTML (PHP error page)
+      if (
+        text.trim().startsWith("<") ||
+        text.includes("<html>") ||
+        text.includes("<!DOCTYPE")
+      ) {
+        console.error(
+          "❌ PHP returned HTML instead of JSON:",
+          text.substring(0, 200) + "..."
+        );
+        return {
+          success: false,
+          message:
+            "Server returned an error page instead of JSON. Check server logs.",
+          error_type: "html_response",
+        };
+      }
+
+      // Try to parse as JSON
+      return JSON.parse(text);
+    } catch (error) {
+      console.error("❌ Failed to parse response as JSON:", error);
+      return {
+        success: false,
+        message: "Invalid JSON response from server",
+        error_type: "json_parse_error",
+      };
+    }
+  }
+
   // ===== WORKSPACE API CALLS =====
 
   /**
@@ -104,7 +143,7 @@ class APIManager {
         body: JSON.stringify(projectData),
       });
 
-      const result = await response.json();
+      const result = await this.safeJsonParse(response);
 
       if (!result.success) {
         throw new Error(result.message);
@@ -216,7 +255,7 @@ class APIManager {
         body: JSON.stringify(taskData),
       });
 
-      const result = await response.json();
+      const result = await this.safeJsonParse(response);
 
       if (!result.success) {
         throw new Error(result.message);

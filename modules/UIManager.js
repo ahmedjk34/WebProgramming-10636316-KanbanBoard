@@ -168,10 +168,17 @@ class UIManager {
     const projectId = projectFilter ? projectFilter.value : "";
     const priority = priorityFilter ? priorityFilter.value : "";
 
-    console.log("🔍 Applying filters:", { projectId, priority });
+    console.log("🔍 Applying filters:", {
+      projectId,
+      priority,
+      projectFilterElement: !!projectFilter,
+      priorityFilterElement: !!priorityFilter,
+    });
 
     if (window.taskManager) {
       window.taskManager.filterTasks(projectId, priority);
+    } else {
+      console.warn("⚠️ TaskManager not available for filtering");
     }
   }
 
