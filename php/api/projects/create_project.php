@@ -38,6 +38,11 @@ try {
         echo jsonResponse(false, 'Project name is required', [], 400);
         exit();
     }
+
+    // Set default workspace_id if not provided
+    if (empty($input['workspace_id'])) {
+        $input['workspace_id'] = 1; // Default workspace
+    }
     
     // Validate project data
     $validation = validateProjectData($input);
@@ -63,23 +68,26 @@ try {
     
     // Prepare SQL for project insertion
     $sql = "INSERT INTO projects (
-                name, 
-                description, 
+                name,
+                description,
                 color,
+                workspace_id,
                 created_at,
                 updated_at
             ) VALUES (
-                :name, 
-                :description, 
+                :name,
+                :description,
                 :color,
+                :workspace_id,
                 NOW(),
                 NOW()
             )";
-    
+
     $params = [
         ':name' => $projectData['name'],
         ':description' => $projectData['description'] ?? '',
-        ':color' => $color
+        ':color' => $color,
+        ':workspace_id' => (int)$input['workspace_id']
     ];
     
     // Execute insertion

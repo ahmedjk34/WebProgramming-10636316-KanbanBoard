@@ -421,12 +421,14 @@ function getJsonInput() {
 }
 
 /**
- * Check if request method matches expected method
+ * Check if request method matches expected method and exit if not
  * @param string $expectedMethod Expected HTTP method
- * @return bool True if method matches
  */
 function checkRequestMethod($expectedMethod) {
-    return $_SERVER['REQUEST_METHOD'] === strtoupper($expectedMethod);
+    if ($_SERVER['REQUEST_METHOD'] !== strtoupper($expectedMethod)) {
+        echo jsonResponse(false, "Method not allowed. Use {$expectedMethod}.", [], 405);
+        exit();
+    }
 }
 
 /**

@@ -34,27 +34,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 checkRequestMethod('POST');
 
 // Include required files
-require_once '../../config/database.php';
-require_once '../../includes/functions.php';
-require_once '../../includes/security.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../../utils/php-utils.php';
 
 try {
     // Get database connection
     $pdo = getDBConnection();
 
-    // Get POST data
-    $input = json_decode(file_get_contents('php://input'), true);
-
-    if (!$input) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'No JSON data received']);
-        exit();
-    }
+    // Get JSON input
+    $input = getJsonInput();
 
     // Validate required fields
     if (empty($input['task_id'])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'task_id is required']);
+        echo jsonResponse(false, 'task_id is required', [], 400);
         exit();
     }
 
@@ -66,8 +58,7 @@ try {
     $task = $taskCheck->fetch(PDO::FETCH_ASSOC);
 
     if (!$task) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'message' => 'Task not found']);
+        echo jsonResponse(false, 'Task not found', [], 404);
         exit();
     }
 
