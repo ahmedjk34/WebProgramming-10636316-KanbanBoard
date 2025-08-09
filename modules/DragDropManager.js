@@ -1,0 +1,351 @@
+/**
+ * Drag & Drop Manager Module
+ * Handles all drag and drop functionality for tasks
+ */
+
+class DragDropManager {
+  constructor() {
+    this.draggedTask = null;
+    this.draggedElement = null;
+    this.dropIndicator = null;
+    this.isInitialized = false;
+  }
+
+  // ===== INITIALIZATION =====
+
+  /**
+   * Initialize drag and drop functionality
+   */
+  initializeDragAndDrop() {
+    if (this.isInitialized) return;
+
+    console.log("🎯 Initializing Drag & Drop functionality...");
+
+    // Create drop indicator
+    this.createDropIndicator();
+
+    // Add drag and drop event listeners to existing tasks
+    this.setupDragAndDropForTasks();
+
+    // Add drop zone listeners to columns
+    this.setupDropZones();
+
+    this.isInitialized = true;
+  }
+
+  /**
+   * Create drop indicator element
+   */
+  createDropIndicator() {
+    this.dropIndicator = document.createElement("div");
+    this.dropIndicator.className = "drop-indicator";
+    this.dropIndicator.innerHTML = `
+      <div class="drop-indicator-line"></div>
+      <div class="drop-indicator-text">Drop here</div>
+    `;
+  }
+
+  // ===== TASK DRAG SETUP =====
+
+  /**
+   * Setup drag and drop for all task cards
+   */
+  setupDragAndDropForTasks() {
+    const taskCards = document.querySelectorAll(".task-card");
+    taskCards.forEach((taskCard) =>
+      this.setupDragAndDropForSingleTask(taskCard)
+    );
+  }
+
+  /**
+   * Setup drag and drop for a single task card
+   * @param {HTMLElement} taskCard - Task card element
+   */
+  setupDragAndDropForSingleTask(taskCard) {
+    // Remove existing listeners to prevent duplicates
+    taskCard.removeEventListener("dragstart", this.handleDragStart.bind(this));
+    taskCard.removeEventListener("dragend", this.handleDragEnd.bind(this));
+
+    // Add drag event listeners
+    taskCard.addEventListener("dragstart", this.handleDragStart.bind(this));
+    taskCard.addEventListener("dragend", this.handleDragEnd.bind(this));
+
+    // Add visual feedback for draggable items
+    taskCard.addEventListener("mouseenter", () => {
+      if (!this.draggedTask) {
+        taskCard.style.cursor = "grab";
+      }
+    });
+
+    taskCard.addEventListener("mouseleave", () => {
+      taskCard.style.cursor = "default";
+    });
+  }
+
+  // ===== DROP ZONE SETUP =====
+
+  /**
+   * Setup drop zones for columns
+   */
+  setupDropZones() {
+    const taskLists = document.querySelectorAll(".task-list");
+    const columns = document.querySelectorAll(".kanban-column");
+
+    taskLists.forEach((taskList) => {
+      taskList.addEventListener("dragover", this.handleDragOver.bind(this));
+      taskList.addEventListener("drop", this.handleDrop.bind(this));
+      taskList.addEventListener("dragenter", this.handleDragEnter.bind(this));
+      taskList.addEventListener("dragleave", this.handleDragLeave.bind(this));
+    });
+
+    columns.forEach((column) => {
+      column.addEventListener(
+        "dragenter",
+        this.handleColumnDragEnter.bind(this)
+      );
+      column.addEventListener(
+        "dragleave",
+        this.handleColumnDragLeave.bind(this)
+      );
+    });
+  }
+
+  // ===== DRAG EVENT HANDLERS =====
+
+  /**
+   * Handle drag start event
+   * @param {Event} e - Drag start event
+   */
+  handleDragStart(e) {
+    this.draggedTask = {
+      id: this.getAttribute("data-task-id"),
+      element: this,
+      originalParent: this.parentNode,
+      originalStatus: this.parentNode.id.replace("-tasks", ""),
+    };
+
+    this.draggedElement = this;
+
+    // Add dragging class for visual feedback
+    this.classList.add("dragging");
+    document.body.classList.add("dragging-active");
+
+    // Set drag effect
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", this.outerHTML);
+
+    // Add subtle opacity to original element
+    setTimeout(() => {
+      if (this.draggedElement) {
+        this.draggedElement.style.opacity = "0.5";
+      }
+    }, 0);
+
+    console.log(
+      `🎯 Started dragging task ${this.draggedTask.id} from ${this.draggedTask.originalStatus}`
+    );
+  }
+
+  /**
+   * Handle drag end event
+   * @param {Event} e - Drag end event
+   */
+  handleDragEnd(e) {
+    // Remove dragging classes
+    this.classList.remove("dragging");
+    document.body.classList.remove("dragging-active");
+
+    // Restore opacity
+    this.style.opacity = "1";
+
+    // Remove drag-over classes from all elements
+    document.querySelectorAll(".drag-over").forEach((element) => {
+      element.classList.remove("drag-over");
+    });
+
+    // Hide drop indicator
+    this.hideDropIndicator();
+
+    // Reset dragged task
+    this.draggedTask = null;
+    this.draggedElement = null;
+
+    console.log("🎯 Drag operation ended");
+  }
+
+  // ===== DROP EVENT HANDLERS =====
+
+  /**
+   * Handle drag over event
+   * @param {Event} e - Drag over event
+   */
+  handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+
+    // Show drop indicator
+    this.showDropIndicator(e.currentTarget);
+  }
+
+  /**
+   * Handle drag enter event
+   * @param {Event} e - Drag enter event
+   */
+  handleDragEnter(e) {
+    e.preventDefault();
+    if (this.draggedTask) {
+      e.currentTarget.classList.add("drag-over");
+    }
+  }
+
+  /**
+   * Handle drag leave event
+   * @param {Event} e - Drag leave event
+   */
+  handleDragLeave(e) {
+    // Only remove drag-over if we're actually leaving the element
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      e.currentTarget.classList.remove("drag-over");
+    }
+  }
+
+  /**
+   * Handle column drag enter event
+   * @param {Event} e - Drag enter event
+   */
+  handleColumnDragEnter(e) {
+    if (this.draggedTask) {
+      e.currentTarget.classList.add("column-drag-over");
+    }
+  }
+
+  /**
+   * Handle column drag leave event
+   * @param {Event} e - Drag leave event
+   */
+  handleColumnDragLeave(e) {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      e.currentTarget.classList.remove("column-drag-over");
+    }
+  }
+
+  /**
+   * Handle drop event
+   * @param {Event} e - Drop event
+   */
+  handleDrop(e) {
+    e.preventDefault();
+
+    if (!this.draggedTask) return;
+
+    const newStatus = e.currentTarget.id.replace("-tasks", "");
+
+    // Remove drag-over classes
+    document.querySelectorAll(".drag-over").forEach((element) => {
+      element.classList.remove("drag-over");
+    });
+
+    document.querySelectorAll(".column-drag-over").forEach((element) => {
+      element.classList.remove("column-drag-over");
+    });
+
+    // Hide drop indicator
+    this.hideDropIndicator();
+
+    // If dropped in the same column, just reorder
+    if (this.draggedTask.originalStatus === newStatus) {
+      console.log("🎯 Reordering task in same column");
+      // Handle reordering logic here if needed
+      return;
+    }
+
+    // Move task to new column
+    console.log(
+      `🎯 Moving task ${this.draggedTask.id} from ${this.draggedTask.originalStatus} to ${newStatus}`
+    );
+
+    // Update task status via TaskManager
+    if (window.taskManager) {
+      window.taskManager.updateTaskStatus(
+        this.draggedTask.id,
+        newStatus,
+        this.draggedTask.originalStatus
+      );
+    }
+  }
+
+  // ===== DROP INDICATOR MANAGEMENT =====
+
+  /**
+   * Show drop indicator
+   * @param {HTMLElement} container - Container element
+   */
+  showDropIndicator(container) {
+    if (!this.dropIndicator || !container) return;
+
+    // Remove indicator from previous position
+    this.hideDropIndicator();
+
+    // Add indicator to current container
+    container.appendChild(this.dropIndicator);
+    this.dropIndicator.style.display = "block";
+  }
+
+  /**
+   * Hide drop indicator
+   */
+  hideDropIndicator() {
+    if (this.dropIndicator && this.dropIndicator.parentNode) {
+      this.dropIndicator.parentNode.removeChild(this.dropIndicator);
+    }
+  }
+
+  // ===== UTILITY METHODS =====
+
+  /**
+   * Refresh drag and drop setup (call after tasks are updated)
+   */
+  refreshDragAndDrop() {
+    this.setupDragAndDropForTasks();
+  }
+
+  /**
+   * Enable/disable drag and drop
+   * @param {boolean} enabled - Whether to enable drag and drop
+   */
+  setDragDropEnabled(enabled) {
+    const taskCards = document.querySelectorAll(".task-card");
+    taskCards.forEach((taskCard) => {
+      taskCard.draggable = enabled;
+      if (enabled) {
+        taskCard.style.cursor = "grab";
+      } else {
+        taskCard.style.cursor = "default";
+      }
+    });
+  }
+
+  /**
+   * Get current dragged task
+   * @returns {Object|null} Dragged task object
+   */
+  getDraggedTask() {
+    return this.draggedTask;
+  }
+
+  /**
+   * Check if drag operation is in progress
+   * @returns {boolean} Whether drag is in progress
+   */
+  isDragging() {
+    return this.draggedTask !== null;
+  }
+}
+
+// Export for use in other modules
+window.DragDropManager = DragDropManager;
+
+// Also make it globally available immediately
+if (typeof DragDropManager !== "undefined") {
+  console.log("✅ DragDropManager loaded successfully");
+}
