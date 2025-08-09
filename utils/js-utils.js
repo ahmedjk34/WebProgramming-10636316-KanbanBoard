@@ -1,7 +1,7 @@
 /**
  * JavaScript Utility Functions
  * Kanban Board Project - Web Programming 10636316
- * 
+ *
  * This file contains reusable utility functions used across the application
  */
 
@@ -44,60 +44,16 @@ function showError(message) {
  * Show success toast message
  * @param {string} message - Success message to display
  */
-function showSuccessMessage(message) {
-  const toast = document.createElement("div");
-  toast.className = "toast toast-success";
-  toast.innerHTML = `
-    <div class="toast-content">
-      <span class="toast-icon">✅</span>
-      <span class="toast-message">${message}</span>
-    </div>
-  `;
-
-  document.body.appendChild(toast);
-
-  // Trigger animation
-  setTimeout(() => toast.classList.add("show"), 100);
-
-  // Auto remove after 3 seconds
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 300);
-  }, 3000);
+function showSuccessMessage(message, title = "") {
+  showNotification(message, "success", title);
 }
 
 /**
  * Show error toast message
  * @param {string} message - Error message to display
  */
-function showErrorMessage(message) {
-  const toast = document.createElement("div");
-  toast.className = "toast toast-error";
-  toast.innerHTML = `
-    <div class="toast-content">
-      <span class="toast-icon">❌</span>
-      <span class="toast-message">${message}</span>
-    </div>
-  `;
-
-  document.body.appendChild(toast);
-
-  // Trigger animation
-  setTimeout(() => toast.classList.add("show"), 100);
-
-  // Auto remove after 4 seconds (longer for errors)
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => {
-      if (toast.parentNode) {
-        toast.parentNode.removeChild(toast);
-      }
-    }, 300);
-  }, 4000);
+function showErrorMessage(message, title = "") {
+  showNotification(message, "error", title);
 }
 
 // ===== FORM UTILITIES =====
@@ -132,7 +88,11 @@ function clearFormErrors() {
  * @param {string} formId - ID of the form element (default: 'task-form')
  * @param {string} submitBtnId - ID of the submit button (default: 'task-submit-btn')
  */
-function setFormLoading(loading, formId = "task-form", submitBtnId = "task-submit-btn") {
+function setFormLoading(
+  loading,
+  formId = "task-form",
+  submitBtnId = "task-submit-btn"
+) {
   const form = document.getElementById(formId);
   const submitBtn = document.getElementById(submitBtnId);
 
@@ -338,8 +298,80 @@ function addWelcomeAnimation() {
   }
 }
 
+/**
+ * Show notification to user (new system)
+ * @param {string} message - Message to display
+ * @param {string} type - Type of notification (success, error, warning, info)
+ * @param {string} title - Optional title for the notification
+ * @param {number} duration - Duration in milliseconds (default: 5000)
+ */
+function showNotification(message, type = "info", title = "", duration = 5000) {
+  const container = document.getElementById("notification-container");
+  if (!container) {
+    console.error("Notification container not found");
+    return;
+  }
+
+  // Create notification element
+  const notification = document.createElement("div");
+  notification.className = `notification ${type}`;
+
+  // Get icon based on type
+  const icons = {
+    success: "✅",
+    error: "❌",
+    warning: "⚠️",
+    info: "ℹ️",
+  };
+
+  const icon = icons[type] || icons.info;
+
+  // Create notification content
+  notification.innerHTML = `
+    <div class="notification-content">
+      <div class="notification-icon">${icon}</div>
+      <div class="notification-text">
+        ${title ? `<div class="notification-title">${title}</div>` : ""}
+        <div class="notification-message">${message}</div>
+      </div>
+    </div>
+    <button class="notification-close" onclick="closeNotification(this)">&times;</button>
+  `;
+
+  // Add to container
+  container.appendChild(notification);
+
+  // Trigger animation
+  setTimeout(() => {
+    notification.classList.add("show");
+  }, 10);
+
+  // Auto-remove after duration
+  if (duration > 0) {
+    setTimeout(() => {
+      closeNotification(notification.querySelector(".notification-close"));
+    }, duration);
+  }
+
+  console.log(`${icon} ${type.toUpperCase()}: ${message}`);
+}
+
+/**
+ * Close notification
+ * @param {HTMLElement} closeBtn - Close button element
+ */
+function closeNotification(closeBtn) {
+  const notification = closeBtn.closest(".notification");
+  if (notification) {
+    notification.classList.remove("show");
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }
+}
+
 // Export functions for module usage (if needed)
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     showLoading,
     showEmptyState,
@@ -359,6 +391,6 @@ if (typeof module !== 'undefined' && module.exports) {
     updateThemeIcon,
     getPriorityIcon,
     getProjectStatusIcon,
-    addWelcomeAnimation
+    addWelcomeAnimation,
   };
 }
