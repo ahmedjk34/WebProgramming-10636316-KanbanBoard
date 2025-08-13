@@ -3,11 +3,22 @@
  * Handles workspace switching, creation, and management
  */
 
+console.log("📦 Loading WorkspaceManager module...");
+
 class WorkspaceManager {
-  constructor() {
+  constructor(dependencies = {}) {
     this.workspaces = [];
     this.currentWorkspaceId =
       parseInt(localStorage.getItem("currentWorkspaceId")) || 1;
+
+    // Store dependencies
+    this.dependencies = dependencies;
+    this.apiManager = dependencies.apiManager;
+
+    console.log(
+      "🔧 WorkspaceManager initialized with dependencies:",
+      Object.keys(dependencies)
+    );
   }
 
   // ===== WORKSPACE DATA MANAGEMENT =====
@@ -47,8 +58,8 @@ class WorkspaceManager {
     localStorage.setItem("currentWorkspaceId", workspaceId.toString());
 
     // Update API manager
-    if (window.apiManager) {
-      window.apiManager.setCurrentWorkspaceId(workspaceId);
+    if (this.apiManager) {
+      this.apiManager.setCurrentWorkspaceId(workspaceId);
     }
   }
 
@@ -61,8 +72,8 @@ class WorkspaceManager {
     console.log("📊 Loading workspaces...");
 
     try {
-      if (window.apiManager) {
-        const result = await window.apiManager.loadWorkspaces();
+      if (this.apiManager) {
+        const result = await this.apiManager.loadWorkspaces();
 
         this.setWorkspaces(result.data.workspaces);
         this.displayWorkspaces();
@@ -326,9 +337,9 @@ class WorkspaceManager {
     console.log("📝 Creating workspace:", workspaceData);
 
     try {
-      if (window.apiManager) {
+      if (this.apiManager) {
         // Try to create via API
-        const result = await window.apiManager.createWorkspace(workspaceData);
+        const result = await this.apiManager.createWorkspace(workspaceData);
 
         if (result.success) {
           showSuccessMessage("Workspace created successfully!");
