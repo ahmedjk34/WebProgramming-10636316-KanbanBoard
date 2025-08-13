@@ -1,0 +1,10 @@
+/* Combined Kanban Board styles entrypoint
+   Priority: DO NOT BREAK EXISTING STYLES
+   Strategy: load legacy first, then modern so the current UI (styles-new.css) wins */
+
+/* Legacy Phase 2 base styles */
+@import url("./styles.css");
+
+/* Modern Phase 3+ enhanced styles (overrides legacy where needed) */
+@import url("./styles-new.css");
+
