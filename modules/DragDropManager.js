@@ -3,12 +3,23 @@
  * Handles all drag and drop functionality for tasks
  */
 
+console.log("📦 Loading DragDropManager module...");
+
 class DragDropManager {
-  constructor() {
+  constructor(dependencies = {}) {
     this.draggedTask = null;
     this.draggedElement = null;
     this.dropIndicator = null;
     this.isInitialized = false;
+
+    // Store dependencies
+    this.dependencies = dependencies;
+    this.taskManager = dependencies.taskManager;
+
+    console.log(
+      "🔧 DragDropManager initialized with dependencies:",
+      Object.keys(dependencies)
+    );
   }
 
   // ===== INITIALIZATION =====
@@ -282,8 +293,8 @@ class DragDropManager {
     );
 
     // Update task status via TaskManager
-    if (window.taskManager) {
-      window.taskManager.updateTaskStatus(
+    if (this.taskManager) {
+      this.taskManager.updateTaskStatus(
         this.draggedTask.id,
         newStatus,
         this.draggedTask.originalStatus

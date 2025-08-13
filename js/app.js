@@ -6,11 +6,141 @@
  * drag & drop functionality, project management, workspace organization, and beautiful UI/UX
  */
 
+// ===== MODULE FACTORY PATTERN =====
+
+/**
+ * Module Factory - Manages module dependencies and initialization
+ */
+class ModuleFactory {
+  constructor() {
+    this.modules = new Map();
+    this.dependencies = new Map();
+    this.initialized = new Set();
+    this.loading = new Set();
+  }
+
+  /**
+   * Register a module with its dependencies
+   * @param {string} name - Module name
+   * @param {Function} moduleClass - Module constructor
+   * @param {Array} dependencies - Array of dependency module names
+   */
+  register(name, moduleClass, dependencies = []) {
+    this.modules.set(name, moduleClass);
+    this.dependencies.set(name, dependencies);
+    console.log(
+      `📦 Registered module: ${name} with dependencies: [${dependencies.join(
+        ", "
+      )}]`
+    );
+  }
+
+  /**
+   * Get or create a module instance
+   * @param {string} name - Module name
+   * @returns {Promise<Object>} Module instance
+   */
+  async get(name) {
+    if (this.initialized.has(name)) {
+      return this.modules.get(name + "_instance");
+    }
+
+    if (this.loading.has(name)) {
+      // Wait for module to finish loading
+      return new Promise((resolve) => {
+        const checkLoaded = () => {
+          if (this.initialized.has(name)) {
+            resolve(this.modules.get(name + "_instance"));
+          } else {
+            setTimeout(checkLoaded, 10);
+          }
+        };
+        checkLoaded();
+      });
+    }
+
+    return this.initialize(name);
+  }
+
+  /**
+   * Initialize a module and its dependencies
+   * @param {string} name - Module name
+   * @returns {Promise<Object>} Module instance
+   */
+  async initialize(name) {
+    if (this.initialized.has(name)) {
+      return this.modules.get(name + "_instance");
+    }
+
+    if (!this.modules.has(name)) {
+      throw new Error(`Module ${name} not registered`);
+    }
+
+    this.loading.add(name);
+    console.log(`🔧 Initializing module: ${name}`);
+
+    try {
+      // Initialize dependencies first
+      const dependencies = this.dependencies.get(name) || [];
+      const dependencyInstances = {};
+
+      for (const dep of dependencies) {
+        dependencyInstances[dep] = await this.initialize(dep);
+      }
+
+      // Create module instance
+      const ModuleClass = this.modules.get(name);
+      const instance = new ModuleClass(dependencyInstances);
+
+      // Store instance
+      this.modules.set(name + "_instance", instance);
+      this.initialized.add(name);
+      this.loading.delete(name);
+
+      console.log(`✅ Module ${name} initialized successfully`);
+      return instance;
+    } catch (error) {
+      this.loading.delete(name);
+      console.error(`❌ Failed to initialize module ${name}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Initialize all registered modules
+   * @returns {Promise<Object>} Object containing all module instances
+   */
+  async initializeAll() {
+    const moduleNames = Array.from(this.modules.keys()).filter(
+      (name) => !name.endsWith("_instance")
+    );
+    const instances = {};
+
+    for (const name of moduleNames) {
+      instances[name] = await this.get(name);
+    }
+
+    return instances;
+  }
+
+  /**
+   * Check if all required modules are available
+   * @param {Array} requiredModules - Array of required module names
+   * @returns {boolean} True if all modules are available
+   */
+  areModulesAvailable(requiredModules) {
+    return requiredModules.every((name) => typeof window[name] !== "undefined");
+  }
+}
+
+// Global module factory instance
+const moduleFactory = new ModuleFactory();
+
 // Global variables
 let currentTheme = localStorage.getItem("theme") || "light";
 let currentEditingTaskId = null; // For backward compatibility
 
-// Module instances
+// Module instances (will be populated by factory)
 let apiManager;
 let taskManager;
 let projectManager;
@@ -29,16 +159,62 @@ document.addEventListener("DOMContentLoaded", function () {
   // Wait a moment for all modules to load, then initialize
   setTimeout(() => {
     console.log("🔍 Checking module availability...");
-    console.log("APIManager available:", typeof window.APIManager);
-    console.log("TaskManager available:", typeof window.TaskManager);
-    console.log("ProjectManager available:", typeof window.ProjectManager);
-    console.log("WorkspaceManager available:", typeof window.WorkspaceManager);
-    console.log("DragDropManager available:", typeof window.DragDropManager);
-    console.log("UIManager available:", typeof window.UIManager);
 
+    // Register modules with their dependencies
+    registerModules();
+
+    // Initialize the application
     initializeApp();
   }, 100);
 });
+
+/**
+ * Register all modules with the factory
+ */
+function registerModules() {
+  console.log("📋 Registering modules with factory...");
+
+  // Check if modules are available
+  const requiredModules = [
+    "APIManager",
+    "TaskManager",
+    "ProjectManager",
+    "WorkspaceManager",
+    "DragDropManager",
+    "UIManager",
+  ];
+
+  const missingModules = requiredModules.filter(
+    (moduleName) => typeof window[moduleName] === "undefined"
+  );
+
+  if (missingModules.length > 0) {
+    console.error("❌ Missing modules:", missingModules);
+    throw new Error(
+      `Required modules not loaded: ${missingModules.join(", ")}`
+    );
+  }
+
+  // Register modules with their dependencies
+  moduleFactory.register("apiManager", window.APIManager, []);
+  moduleFactory.register("taskManager", window.TaskManager, ["apiManager"]);
+  moduleFactory.register("projectManager", window.ProjectManager, [
+    "apiManager",
+  ]);
+  moduleFactory.register("workspaceManager", window.WorkspaceManager, [
+    "apiManager",
+  ]);
+  moduleFactory.register("dragDropManager", window.DragDropManager, [
+    "taskManager",
+  ]);
+  moduleFactory.register("uiManager", window.UIManager, [
+    "taskManager",
+    "projectManager",
+    "workspaceManager",
+  ]);
+
+  console.log("✅ All modules registered successfully");
+}
 
 // Main initialization function - Modular Architecture
 async function initializeApp() {
@@ -48,8 +224,24 @@ async function initializeApp() {
     // Show loading indicator
     showLoading(true);
 
-    // Initialize all modules
-    initializeModules();
+    // Initialize all modules using factory
+    const modules = await moduleFactory.initializeAll();
+
+    // Assign module instances to global variables for backward compatibility
+    apiManager = modules.apiManager;
+    taskManager = modules.taskManager;
+    projectManager = modules.projectManager;
+    workspaceManager = modules.workspaceManager;
+    dragDropManager = modules.dragDropManager;
+    uiManager = modules.uiManager;
+
+    // Make modules globally accessible for backward compatibility
+    window.apiManager = apiManager;
+    window.taskManager = taskManager;
+    window.projectManager = projectManager;
+    window.workspaceManager = workspaceManager;
+    window.dragDropManager = dragDropManager;
+    window.uiManager = uiManager;
 
     // Initialize workspace system first
     await workspaceManager.loadWorkspaces();
@@ -76,6 +268,10 @@ async function initializeApp() {
     console.error("❌ Failed to initialize Kanban Board:", error);
     showError("Failed to load data. Please refresh the page.");
     showLoading(false);
+
+    // Fallback to old initialization method
+    console.log("🔄 Attempting fallback initialization...");
+    initializeFallbackMode();
   }
 }
 

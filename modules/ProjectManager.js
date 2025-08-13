@@ -3,9 +3,20 @@
  * Handles project management, statistics, and project-related functionality
  */
 
+console.log("📦 Loading ProjectManager module...");
+
 class ProjectManager {
-  constructor() {
+  constructor(dependencies = {}) {
     this.projects = [];
+
+    // Store dependencies
+    this.dependencies = dependencies;
+    this.apiManager = dependencies.apiManager;
+
+    console.log(
+      "🔧 ProjectManager initialized with dependencies:",
+      Object.keys(dependencies)
+    );
   }
 
   // ===== PROJECT DATA MANAGEMENT =====
@@ -43,12 +54,12 @@ class ProjectManager {
   async loadProjects() {
     console.log(
       "📊 Loading projects for workspace:",
-      window.apiManager?.getCurrentWorkspaceId()
+      this.apiManager?.getCurrentWorkspaceId()
     );
 
     try {
-      if (window.apiManager) {
-        const result = await window.apiManager.loadProjects();
+      if (this.apiManager) {
+        const result = await this.apiManager.loadProjects();
 
         if (result.success) {
           this.setProjects(result.data.projects);
@@ -406,8 +417,8 @@ class ProjectManager {
     if (!confirmed) return;
 
     try {
-      if (window.apiManager) {
-        const result = await window.apiManager.deleteProject(projectId);
+      if (this.apiManager) {
+        const result = await this.apiManager.deleteProject(projectId);
 
         if (result.success) {
           showSuccessMessage("Project deleted successfully!");
@@ -508,8 +519,8 @@ class ProjectManager {
     console.log("📝 Creating project:", projectData);
 
     try {
-      if (window.apiManager) {
-        const result = await window.apiManager.createProject(projectData);
+      if (this.apiManager) {
+        const result = await this.apiManager.createProject(projectData);
 
         if (result.success) {
           showSuccessMessage(

@@ -6,9 +6,18 @@
 console.log("📦 Loading TaskManager module...");
 
 class TaskManager {
-  constructor() {
+  constructor(dependencies = {}) {
     this.tasks = [];
     this.filteredTasks = [];
+
+    // Store dependencies
+    this.dependencies = dependencies;
+    this.apiManager = dependencies.apiManager;
+
+    console.log(
+      "🔧 TaskManager initialized with dependencies:",
+      Object.keys(dependencies)
+    );
   }
 
   // ===== TASK DATA MANAGEMENT =====
@@ -276,8 +285,8 @@ class TaskManager {
       }
 
       // Update via API
-      if (window.apiManager) {
-        const result = await window.apiManager.updateTaskStatus(
+      if (this.apiManager) {
+        const result = await this.apiManager.updateTaskStatus(
           taskId,
           newStatus
         );
@@ -314,9 +323,9 @@ class TaskManager {
    * Refresh tasks from API
    */
   async refreshTasks() {
-    if (window.apiManager) {
+    if (this.apiManager) {
       try {
-        const result = await window.apiManager.loadTasks();
+        const result = await this.apiManager.loadTasks();
         if (result.success) {
           this.setTasks(result.data.tasks);
           this.displayTasks(result.data.tasks_by_status);
@@ -337,24 +346,6 @@ class TaskManager {
     const taskForm = document.getElementById("task-form");
     if (taskForm) {
       taskForm.addEventListener("submit", this.handleTaskFormSubmit.bind(this));
-    }
-  }
-
-  /**
-   * Refresh tasks from API
-   */
-  async refreshTasks() {
-    if (window.apiManager) {
-      try {
-        const result = await window.apiManager.loadTasks();
-        if (result.success) {
-          this.setTasks(result.data.tasks);
-          this.displayTasks(result.data.tasks_by_status);
-          this.updateTaskCounts(result.data.counts);
-        }
-      } catch (error) {
-        console.error("❌ Error refreshing tasks:", error);
-      }
     }
   }
 
@@ -390,13 +381,13 @@ class TaskManager {
       let result;
       if (window.currentEditingTaskId) {
         // Update existing task
-        result = await window.apiManager.updateTask(
+        result = await this.apiManager.updateTask(
           window.currentEditingTaskId,
           taskData
         );
       } else {
         // Create new task
-        result = await window.apiManager.createTask(taskData);
+        result = await this.apiManager.createTask(taskData);
       }
 
       if (result.success) {

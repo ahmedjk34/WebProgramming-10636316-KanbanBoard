@@ -3,10 +3,23 @@
  * Handles all UI interactions, dialogs, forms, and event listeners
  */
 
+console.log("📦 Loading UIManager module...");
+
 class UIManager {
-  constructor() {
+  constructor(dependencies = {}) {
     this.currentEditingTaskId = null;
     this.currentEditingProjectId = null;
+
+    // Store dependencies
+    this.dependencies = dependencies;
+    this.taskManager = dependencies.taskManager;
+    this.projectManager = dependencies.projectManager;
+    this.workspaceManager = dependencies.workspaceManager;
+
+    console.log(
+      "🔧 UIManager initialized with dependencies:",
+      Object.keys(dependencies)
+    );
   }
 
   // ===== INITIALIZATION =====
@@ -36,8 +49,8 @@ class UIManager {
     const workspaceToggle = document.getElementById("workspace-toggle");
     if (workspaceToggle) {
       workspaceToggle.addEventListener("click", () => {
-        if (window.workspaceManager) {
-          window.workspaceManager.openSidebar();
+        if (this.workspaceManager) {
+          this.workspaceManager.openSidebar();
         }
       });
     }
@@ -175,8 +188,8 @@ class UIManager {
       priorityFilterElement: !!priorityFilter,
     });
 
-    if (window.taskManager) {
-      window.taskManager.filterTasks(projectId, priority);
+    if (this.taskManager) {
+      this.taskManager.filterTasks(projectId, priority);
     } else {
       console.warn("⚠️ TaskManager not available for filtering");
     }
@@ -263,9 +276,9 @@ class UIManager {
    * @param {number} taskId - Task ID
    */
   populateTaskForm(taskId) {
-    if (!window.taskManager) return;
+    if (!this.taskManager) return;
 
-    const task = window.taskManager.findTaskById(taskId);
+    const task = this.taskManager.findTaskById(taskId);
     if (!task) {
       console.error("❌ Task not found:", taskId);
       return;
@@ -334,8 +347,8 @@ class UIManager {
     this.currentDeletingTaskId = taskId;
 
     // Get task details for confirmation
-    const task = window.taskManager
-      ? window.taskManager.findTaskById(taskId)
+    const task = this.taskManager
+      ? this.taskManager.findTaskById(taskId)
       : null;
     const taskTitle = task ? task.title : `Task ${taskId}`;
 
@@ -388,8 +401,8 @@ class UIManager {
           this.closeDeleteDialog();
 
           // Refresh tasks
-          if (window.taskManager) {
-            await window.taskManager.refreshTasks();
+          if (this.taskManager) {
+            await this.taskManager.refreshTasks();
           }
         } else {
           throw new Error(result.message);
@@ -445,8 +458,8 @@ class UIManager {
     this.setupProjectTabs();
 
     // Load projects grid
-    if (window.projectManager) {
-      window.projectManager.loadProjectsGrid();
+    if (this.projectManager) {
+      this.projectManager.loadProjectsGrid();
     }
   }
 
@@ -478,10 +491,10 @@ class UIManager {
         });
 
         // Load content based on tab
-        if (targetTab === "projects" && window.projectManager) {
-          window.projectManager.loadProjectsGrid();
-        } else if (targetTab === "statistics" && window.projectManager) {
-          window.projectManager.loadProjectStatistics();
+        if (targetTab === "projects" && this.projectManager) {
+          this.projectManager.loadProjectsGrid();
+        } else if (targetTab === "statistics" && this.projectManager) {
+          this.projectManager.loadProjectStatistics();
         }
       });
     });
@@ -511,14 +524,15 @@ class UIManager {
    */
   setupTaskFormHandler() {
     const taskForm = document.getElementById("task-form");
-    if (taskForm && window.taskManager) {
+    if (taskForm && this.taskManager) {
       // Remove existing listener to prevent duplicates
       taskForm.removeEventListener("submit", this.boundTaskFormHandler);
 
       // Create bound handler if not exists
       if (!this.boundTaskFormHandler) {
-        this.boundTaskFormHandler =
-          window.taskManager.handleTaskFormSubmit.bind(window.taskManager);
+        this.boundTaskFormHandler = this.taskManager.handleTaskFormSubmit.bind(
+          this.taskManager
+        );
       }
 
       // Add the event listener

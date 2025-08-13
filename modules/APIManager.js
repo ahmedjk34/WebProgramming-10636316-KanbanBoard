@@ -6,10 +6,18 @@
 console.log("📦 Loading APIManager module...");
 
 class APIManager {
-  constructor() {
+  constructor(dependencies = {}) {
     this.baseUrl = "";
     this.currentWorkspaceId =
       parseInt(localStorage.getItem("currentWorkspaceId")) || 1;
+
+    // Store dependencies (none for APIManager as it's a base module)
+    this.dependencies = dependencies;
+
+    console.log(
+      "🔧 APIManager initialized with dependencies:",
+      Object.keys(dependencies)
+    );
   }
 
   /**
