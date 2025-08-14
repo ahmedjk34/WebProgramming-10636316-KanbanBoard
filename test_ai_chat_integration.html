@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Integration Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2d3748;
+            border-bottom: 3px solid #4299e1;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f7fafc;
+        }
+        .success {
+            background: #f0fff4;
+            border-color: #68d391;
+            color: #22543d;
+        }
+        .error {
+            background: #fed7d7;
+            border-color: #fc8181;
+            color: #742a2a;
+        }
+        button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #3182ce;
+        }
+        .ai-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .ai-button:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Chat Integration Test</h1>
+        <p>Test the AI chat functionality integration with the main Kanban board</p>
+
+        <div class="test-section">
+            <h2>🧪 Integration Tests</h2>
+            <p>Click the buttons below to test different aspects of the AI chat integration:</p>
+            
+            <button onclick="testMainPage()" class="ai-button">
+                🔗 Open Main Kanban Board
+            </button>
+            
+            <button onclick="testAIAPI()" class="ai-button">
+                🤖 Test AI API Directly
+            </button>
+            
+            <button onclick="testDatabaseConnection()">
+                🗄️ Test Database Connection
+            </button>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Test Scenarios</h2>
+            <p>Try these scenarios in the main application:</p>
+            
+            <ol>
+                <li><strong>Open AI Chat:</strong> Click the "🤖 AI Planner" button in the header</li>
+                <li><strong>Send a Message:</strong> Type a daily plan like "I want to study ML and workout today"</li>
+                <li><strong>Review Preview:</strong> Check the generated plan preview</li>
+                <li><strong>Confirm Plan:</strong> Click "Confirm & Create Tasks" to add to your board</li>
+                <li><strong>Verify Tasks:</strong> Check that tasks appear in your Kanban board</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Troubleshooting</h2>
+            <p>If something doesn't work:</p>
+            <ul>
+                <li>Check browser console for errors (F12)</li>
+                <li>Verify GROQ API key is set in .env file</li>
+                <li>Ensure database is properly set up</li>
+                <li>Test individual components using the buttons above</li>
+            </ul>
+        </div>
+
+        <div id="test-results" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        function testMainPage() {
+            window.open('index.html', '_blank');
+        }
+
+        function testAIAPI() {
+            window.open('test_groq_api.php', '_blank');
+        }
+
+        function testDatabaseConnection() {
+            window.open('test_connection.php', '_blank');
+        }
+
+        // Test if we can access the AI API
+        async function quickAPITest() {
+            try {
+                const response = await fetch('php/api/ai/get_workspaces.php');
+                const result = await response.json();
+                
+                const resultsDiv = document.getElementById('test-results');
+                if (result.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section success">
+                            <h3>✅ API Connection Successful</h3>
+                            <p>Found ${result.data.total_count} workspaces available for AI planning.</p>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section error">
+                            <h3>❌ API Connection Failed</h3>
+                            <p>Error: ${result.message}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                const resultsDiv = document.getElementById('test-results');
+                resultsDiv.innerHTML = `
+                    <div class="test-section error">
+                        <h3>❌ Network Error</h3>
+                        <p>Could not connect to API: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Run quick test on page load
+        document.addEventListener('DOMContentLoaded', quickAPITest);
+    </script>
+</body>
+</html>
