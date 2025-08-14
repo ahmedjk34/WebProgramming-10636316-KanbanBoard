@@ -104,6 +104,7 @@ let projectManager;
 let workspaceManager;
 let dragDropManager;
 let uiManager;
+let aiChatManager;
 
 document.addEventListener("DOMContentLoaded", function () {
   console.log("🎨 Enhanced Kanban Board Application Loaded");
@@ -156,6 +157,10 @@ function registerModules() {
     "projectManager",
     "workspaceManager",
   ]);
+  moduleFactory.register("aiChatManager", window.AIChatManager, [
+    "taskManager",
+    "uiManager",
+  ]);
 
   console.log("✅ All modules registered successfully");
 }
@@ -174,6 +179,7 @@ async function initializeApp() {
     workspaceManager = modules.workspaceManager;
     dragDropManager = modules.dragDropManager;
     uiManager = modules.uiManager;
+    aiChatManager = modules.aiChatManager;
 
     window.apiManager = apiManager;
     window.taskManager = taskManager;
@@ -181,6 +187,7 @@ async function initializeApp() {
     window.workspaceManager = workspaceManager;
     window.dragDropManager = dragDropManager;
     window.uiManager = uiManager;
+    window.aiChatManager = aiChatManager;
 
     await workspaceManager.loadWorkspaces();
 
@@ -315,6 +322,11 @@ function initializeFallbackMode() {
     setupEventListeners: () => console.log("UIManager not available"),
     openTaskModal: () => console.log("UIManager not available"),
     openDeleteModal: () => console.log("UIManager not available"),
+  };
+
+  window.aiChatManager = {
+    open: () => console.log("AIChatManager not available"),
+    close: () => console.log("AIChatManager not available"),
   };
 
   console.log("⚠️ Running in fallback mode - some features may not work");
