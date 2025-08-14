@@ -7,6 +7,23 @@ class AIChatManager {
     this.currentPlan = null;
     this.messageId = 0;
 
+    // Debug dependency injection
+    console.log(
+      "🤖 AIChatManager initializing with dependencies:",
+      Object.keys(dependencies)
+    );
+    if (dependencies.taskManager) {
+      console.log("✅ TaskManager dependency available");
+      console.log(
+        "TaskManager methods:",
+        Object.getOwnPropertyNames(
+          Object.getPrototypeOf(dependencies.taskManager)
+        )
+      );
+    } else {
+      console.warn("⚠️ TaskManager dependency not found");
+    }
+
     this.initializeElements();
     this.setupEventListeners();
 
@@ -268,18 +285,50 @@ class AIChatManager {
       );
 
       // Refresh the task list in the main application
-      if (this.dependencies.taskManager) {
-        await this.dependencies.taskManager.loadTasks();
+      if (
+        this.dependencies.taskManager &&
+        typeof this.dependencies.taskManager.refreshTasks === "function"
+      ) {
+        console.log("🔄 Refreshing tasks after AI plan confirmation...");
+        await this.dependencies.taskManager.refreshTasks();
+        console.log("✅ Tasks refreshed successfully");
+      } else {
+        console.warn(
+          "⚠️ TaskManager not available or refreshTasks method not found"
+        );
+        console.log("Available dependencies:", Object.keys(this.dependencies));
+        if (this.dependencies.taskManager) {
+          console.log(
+            "TaskManager methods:",
+            Object.getOwnPropertyNames(
+              Object.getPrototypeOf(this.dependencies.taskManager)
+            )
+          );
+        }
+
+        // Fallback: try to refresh the page or reload tasks manually
+        if (
+          window.taskManager &&
+          typeof window.taskManager.refreshTasks === "function"
+        ) {
+          console.log("🔄 Using global taskManager as fallback...");
+          await window.taskManager.refreshTasks();
+        }
       }
 
       // Close preview
       this.closePlanPreview();
       this.updateStatus("Tasks created successfully");
 
-      // Show success message
+      // Show success message with manual refresh option
       this.showNotification(
         "✅ Tasks created successfully! Check your Kanban board.",
         "success"
+      );
+
+      // Add a message with manual refresh option
+      this.addMessage(
+        "If you don't see the new tasks immediately, you can refresh the page or click the workspace/project to reload the tasks."
       );
     } catch (error) {
       this.addMessage(
