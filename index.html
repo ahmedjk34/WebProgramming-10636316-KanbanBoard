@@ -101,6 +101,16 @@
 
         <div class="header-controls">
           <button
+            id="ai-chat-btn"
+            class="btn btn-ai"
+            onclick="openAIChat()"
+            title="Talk to our Planner AI"
+          >
+            <span class="btn-icon">🤖</span>
+            AI Planner
+          </button>
+
+          <button
             id="add-task-btn"
             class="btn btn-primary"
             onclick="openTaskDialog()"
@@ -829,6 +839,104 @@
       </div>
     </dialog>
 
+    <!-- AI Chat Panel -->
+    <div id="ai-chat-panel" class="ai-chat-panel">
+      <div class="ai-chat-overlay" onclick="closeAIChat()"></div>
+      <div class="ai-chat-container">
+        <div class="ai-chat-header">
+          <div class="ai-chat-title">
+            <span class="ai-icon">🤖</span>
+            <h3>AI Task Planner</h3>
+            <span class="ai-status" id="ai-status">Ready to help</span>
+          </div>
+          <button class="ai-chat-close" onclick="closeAIChat()">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <div class="ai-chat-content">
+          <div class="ai-chat-messages" id="ai-chat-messages">
+            <div class="ai-message">
+              <div class="message-avatar">🤖</div>
+              <div class="message-content">
+                <div class="message-text">
+                  Hi! I'm your AI Task Planner. Tell me about your daily plan
+                  and I'll help you organize it into structured tasks and
+                  projects.
+                  <br /><br />
+                  For example: "I want to study 3 chapters of ML, then workout,
+                  and work on my homework which is due in 2 days."
+                </div>
+                <div class="message-time">Just now</div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="ai-plan-preview"
+            id="ai-plan-preview"
+            style="display: none"
+          >
+            <div class="preview-header">
+              <h4>📋 Generated Plan Preview</h4>
+              <button class="preview-close" onclick="closePlanPreview()">
+                ×
+              </button>
+            </div>
+            <div class="preview-content" id="preview-content">
+              <!-- Plan preview will be inserted here -->
+            </div>
+            <div class="preview-actions">
+              <button class="btn btn-secondary" onclick="editPlan()">
+                <span class="btn-icon">✏️</span>
+                Edit Plan
+              </button>
+              <button
+                class="btn btn-primary"
+                onclick="confirmPlan()"
+                id="confirm-plan-btn"
+              >
+                <span class="btn-icon">✅</span>
+                Confirm & Create Tasks
+              </button>
+            </div>
+          </div>
+
+          <div class="ai-chat-input-container">
+            <div class="ai-chat-input-wrapper">
+              <textarea
+                id="ai-chat-input"
+                placeholder="Describe your daily plan..."
+                rows="3"
+                maxlength="2000"
+              ></textarea>
+              <button
+                class="ai-send-btn"
+                onclick="sendMessage()"
+                id="ai-send-btn"
+              >
+                <span class="send-icon">📤</span>
+              </button>
+            </div>
+            <div class="input-footer">
+              <span class="char-count" id="char-count">0/2000</span>
+              <div class="quick-actions">
+                <button class="quick-btn" onclick="insertQuickText('study')">
+                  📚 Study
+                </button>
+                <button class="quick-btn" onclick="insertQuickText('workout')">
+                  💪 Workout
+                </button>
+                <button class="quick-btn" onclick="insertQuickText('work')">
+                  💼 Work
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- JavaScript Utilities -->
     <script src="utils/js-utils.js"></script>
 
@@ -839,6 +947,7 @@
     <script src="modules/WorkspaceManager.js"></script>
     <script src="modules/DragDropManager.js"></script>
     <script src="modules/UIManager.js"></script>
+    <script src="modules/AIChatManager.js"></script>
 
     <!-- Main Application JavaScript -->
     <script src="js/app.js"></script>
