@@ -1,33 +1,16 @@
 <?php
-/**
- * Get Tasks API Endpoint
- * Kanban Board Project - Web Programming 10636316
- *
- * Retrieves tasks from the database with optional filtering
- * Method: GET
- * Parameters: project_id (optional), status (optional), priority (optional)
- */
-
-// Suppress any PHP notices/warnings for clean JSON output
 error_reporting(E_ERROR | E_PARSE);
 
-// Headers are set in php-utils.php
-
-// Include required files
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../../utils/php-utils.php';
 
 try {
-    // Get database connection
     $pdo = getDBConnection();
 
-    // Get query parameters
     $workspaceId = isset($_GET['workspace_id']) ? sanitizeAndValidate($_GET['workspace_id'], 'int') : 1;
     $projectId = isset($_GET['project_id']) ? sanitizeAndValidate($_GET['project_id'], 'int') : null;
     $status = isset($_GET['status']) ? sanitizeAndValidate($_GET['status'], 'string') : null;
     $priority = isset($_GET['priority']) ? sanitizeAndValidate($_GET['priority'], 'string') : null;
-
-    // Build SQL query with optional filters
     $sql = "SELECT
                 t.id,
                 t.project_id,

@@ -1,16 +1,3 @@
-/**
- * JavaScript Utility Functions
- * Kanban Board Project - Web Programming 10636316
- *
- * This file contains reusable utility functions used across the application
- */
-
-// ===== DOM MANIPULATION UTILITIES =====
-
-/**
- * Show or hide loading indicator
- * @param {boolean} show - Whether to show or hide the loading indicator
- */
 function showLoading(show) {
   const loadingIndicator = document.getElementById("loading-indicator");
   if (loadingIndicator) {
@@ -18,10 +5,6 @@ function showLoading(show) {
   }
 }
 
-/**
- * Show or hide empty state
- * @param {boolean} show - Whether to show or hide the empty state
- */
 function showEmptyState(show) {
   const emptyState = document.getElementById("empty-state");
   const kanbanBoard = document.getElementById("kanban-board");
@@ -32,37 +15,18 @@ function showEmptyState(show) {
   }
 }
 
-/**
- * Show error message (simple alert - can be enhanced)
- * @param {string} message - Error message to display
- */
 function showError(message) {
   alert("Error: " + message);
 }
 
-/**
- * Show success toast message
- * @param {string} message - Success message to display
- */
 function showSuccessMessage(message, title = "") {
   showNotification(message, "success", title);
 }
 
-/**
- * Show error toast message
- * @param {string} message - Error message to display
- */
 function showErrorMessage(message, title = "") {
   showNotification(message, "error", title);
 }
 
-// ===== FORM UTILITIES =====
-
-/**
- * Show field error message
- * @param {string} errorId - ID of the error element
- * @param {string} message - Error message to display
- */
 function showFieldError(errorId, message) {
   const errorElement = document.getElementById(errorId);
   if (errorElement) {
@@ -71,9 +35,6 @@ function showFieldError(errorId, message) {
   }
 }
 
-/**
- * Clear all form errors
- */
 function clearFormErrors() {
   const errorElements = document.querySelectorAll(".form-error");
   errorElements.forEach((element) => {
@@ -82,12 +43,6 @@ function clearFormErrors() {
   });
 }
 
-/**
- * Set form loading state
- * @param {boolean} loading - Whether form is in loading state
- * @param {string} formId - ID of the form element (default: 'task-form')
- * @param {string} submitBtnId - ID of the submit button (default: 'task-submit-btn')
- */
 function setFormLoading(
   loading,
   formId = "task-form",
@@ -105,11 +60,6 @@ function setFormLoading(
   }
 }
 
-// ===== SCROLL UTILITIES =====
-
-/**
- * Lock page scrolling (for modals)
- */
 function lockScroll() {
   const scrollY = window.scrollY;
   document.body.style.position = "fixed";
@@ -118,9 +68,6 @@ function lockScroll() {
   document.body.classList.add("modal-open");
 }
 
-/**
- * Unlock page scrolling (for modals)
- */
 function unlockScroll() {
   const scrollY = document.body.style.top;
   document.body.style.position = "";
@@ -130,12 +77,6 @@ function unlockScroll() {
   window.scrollTo(0, parseInt(scrollY || "0") * -1);
 }
 
-// ===== DIALOG UTILITIES =====
-
-/**
- * Handle keyboard events for dialogs (ESC to close)
- * @param {Event} event - Keyboard event
- */
 function handleDialogKeydown(event) {
   if (event.key === "Escape") {
     event.preventDefault();
@@ -143,15 +84,10 @@ function handleDialogKeydown(event) {
   }
 }
 
-/**
- * Handle click outside dialog to close
- * @param {Event} event - Click event
- */
 function handleDialogClickOutside(event) {
   const dialog = event.target;
   const rect = dialog.getBoundingClientRect();
 
-  // Check if click is outside the dialog content
   if (
     event.clientX < rect.left ||
     event.clientX > rect.right ||

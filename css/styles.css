@@ -1,10 +1,6 @@
-/* Combined Kanban Board Styles - All Phases */
-/* Modern Glassmorphism Design with Advanced Animations */
-
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 
 :root {
-  /* Light Theme Colors */
   --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
@@ -78,7 +74,6 @@ body {
   transition: var(--transition);
 }
 
-/* Glassmorphism Header */
 .app-header {
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
@@ -170,7 +165,6 @@ body {
   align-items: center;
 }
 
-/* Custom Dropdown Styling */
 .custom-dropdown {
   position: relative;
   display: inline-block;
@@ -323,7 +317,6 @@ body {
   background: var(--secondary-gradient);
 }
 
-/* Modern Button Styles */
 .btn {
   padding: 12px 24px;
   border: none;
@@ -481,7 +474,6 @@ body {
   transition: var(--transition);
 }
 
-/* Stunning Kanban Board */
 .kanban-board {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -644,7 +636,6 @@ body {
   scrollbar-color: rgba(102, 126, 234, 0.5) rgba(255, 255, 255, 0.1);
 }
 
-/* Stunning Task Cards */
 .task-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);

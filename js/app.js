@@ -1,16 +1,5 @@
-/**
- * Enhanced Kanban Board Application - Modular Architecture
- * Web Programming 10636316 - An-Najah National University
- *
- * A modern, feature-rich Kanban board with modular architecture,
- * drag & drop functionality, project management, workspace organization, and beautiful UI/UX
- */
+// Enhanced Kanban Board Application - Modular Architecture
 
-// ===== MODULE FACTORY PATTERN =====
-
-/**
- * Module Factory - Manages module dependencies and initialization
- */
 class ModuleFactory {
   constructor() {
     this.modules = new Map();
@@ -19,12 +8,6 @@ class ModuleFactory {
     this.loading = new Set();
   }
 
-  /**
-   * Register a module with its dependencies
-   * @param {string} name - Module name
-   * @param {Function} moduleClass - Module constructor
-   * @param {Array} dependencies - Array of dependency module names
-   */
   register(name, moduleClass, dependencies = []) {
     this.modules.set(name, moduleClass);
     this.dependencies.set(name, dependencies);
@@ -35,18 +18,12 @@ class ModuleFactory {
     );
   }
 
-  /**
-   * Get or create a module instance
-   * @param {string} name - Module name
-   * @returns {Promise<Object>} Module instance
-   */
   async get(name) {
     if (this.initialized.has(name)) {
       return this.modules.get(name + "_instance");
     }
 
     if (this.loading.has(name)) {
-      // Wait for module to finish loading
       return new Promise((resolve) => {
         const checkLoaded = () => {
           if (this.initialized.has(name)) {
@@ -62,11 +39,6 @@ class ModuleFactory {
     return this.initialize(name);
   }
 
-  /**
-   * Initialize a module and its dependencies
-   * @param {string} name - Module name
-   * @returns {Promise<Object>} Module instance
-   */
   async initialize(name) {
     if (this.initialized.has(name)) {
       return this.modules.get(name + "_instance");
@@ -80,7 +52,6 @@ class ModuleFactory {
     console.log(`🔧 Initializing module: ${name}`);
 
     try {
-      // Initialize dependencies first
       const dependencies = this.dependencies.get(name) || [];
       const dependencyInstances = {};
 
@@ -88,11 +59,9 @@ class ModuleFactory {
         dependencyInstances[dep] = await this.initialize(dep);
       }
 
-      // Create module instance
       const ModuleClass = this.modules.get(name);
       const instance = new ModuleClass(dependencyInstances);
 
-      // Store instance
       this.modules.set(name + "_instance", instance);
       this.initialized.add(name);
       this.loading.delete(name);
@@ -106,10 +75,6 @@ class ModuleFactory {
     }
   }
 
-  /**
-   * Initialize all registered modules
-   * @returns {Promise<Object>} Object containing all module instances
-   */
   async initializeAll() {
     const moduleNames = Array.from(this.modules.keys()).filter(
       (name) => !name.endsWith("_instance")
@@ -123,24 +88,16 @@ class ModuleFactory {
     return instances;
   }
 
-  /**
-   * Check if all required modules are available
-   * @param {Array} requiredModules - Array of required module names
-   * @returns {boolean} True if all modules are available
-   */
   areModulesAvailable(requiredModules) {
     return requiredModules.every((name) => typeof window[name] !== "undefined");
   }
 }
 
-// Global module factory instance
 const moduleFactory = new ModuleFactory();
 
-// Global variables
 let currentTheme = localStorage.getItem("theme") || "light";
-let currentEditingTaskId = null; // For backward compatibility
+let currentEditingTaskId = null;
 
-// Module instances (will be populated by factory)
 let apiManager;
 let taskManager;
 let projectManager;
@@ -149,32 +106,20 @@ let dragDropManager;
 let uiManager;
 
 document.addEventListener("DOMContentLoaded", function () {
-  console.log(
-    "🎨 Enhanced Kanban Board Application Loaded - Modular Architecture"
-  );
+  console.log("🎨 Enhanced Kanban Board Application Loaded");
 
-  // Initialize theme
   initializeTheme(currentTheme);
 
-  // Wait a moment for all modules to load, then initialize
   setTimeout(() => {
     console.log("🔍 Checking module availability...");
-
-    // Register modules with their dependencies
     registerModules();
-
-    // Initialize the application
     initializeApp();
   }, 100);
 });
 
-/**
- * Register all modules with the factory
- */
 function registerModules() {
   console.log("📋 Registering modules with factory...");
 
-  // Check if modules are available
   const requiredModules = [
     "APIManager",
     "TaskManager",
@@ -195,7 +140,6 @@ function registerModules() {
     );
   }
 
-  // Register modules with their dependencies
   moduleFactory.register("apiManager", window.APIManager, []);
   moduleFactory.register("taskManager", window.TaskManager, ["apiManager"]);
   moduleFactory.register("projectManager", window.ProjectManager, [
@@ -216,18 +160,14 @@ function registerModules() {
   console.log("✅ All modules registered successfully");
 }
 
-// Main initialization function - Modular Architecture
 async function initializeApp() {
   console.log("🚀 Initializing Modular Kanban Board...");
 
   try {
-    // Show loading indicator
     showLoading(true);
 
-    // Initialize all modules using factory
     const modules = await moduleFactory.initializeAll();
 
-    // Assign module instances to global variables for backward compatibility
     apiManager = modules.apiManager;
     taskManager = modules.taskManager;
     projectManager = modules.projectManager;
@@ -235,7 +175,6 @@ async function initializeApp() {
     dragDropManager = modules.dragDropManager;
     uiManager = modules.uiManager;
 
-    // Make modules globally accessible for backward compatibility
     window.apiManager = apiManager;
     window.taskManager = taskManager;
     window.projectManager = projectManager;
@@ -243,43 +182,35 @@ async function initializeApp() {
     window.dragDropManager = dragDropManager;
     window.uiManager = uiManager;
 
-    // Initialize workspace system first
     await workspaceManager.loadWorkspaces();
 
-    // Load data from backend
     await Promise.all([
       projectManager.loadProjects(),
       taskManager.refreshTasks(),
     ]);
 
-    // Setup UI and interactions
     uiManager.setupEventListeners();
     dragDropManager.initializeDragAndDrop();
     taskManager.setupTaskFormHandling();
 
-    // Hide loading indicator
     showLoading(false);
 
     console.log("🎉 Modular Kanban Board initialized successfully");
 
-    // Add welcome animation
     addWelcomeAnimation();
   } catch (error) {
     console.error("❌ Failed to initialize Kanban Board:", error);
     showError("Failed to load data. Please refresh the page.");
     showLoading(false);
 
-    // Fallback to old initialization method
     console.log("🔄 Attempting fallback initialization...");
     initializeFallbackMode();
   }
 }
 
-// Initialize all module instances
 function initializeModules() {
   console.log("🔧 Initializing modules...");
 
-  // Check if all module classes are available
   const requiredModules = [
     "APIManager",
     "TaskManager",
@@ -300,7 +231,6 @@ function initializeModules() {
       Object.keys(window).filter((key) => key.includes("Manager"))
     );
 
-    // Try to wait a bit more and retry
     console.log("⏳ Retrying module initialization in 500ms...");
     setTimeout(() => {
       try {
@@ -314,7 +244,6 @@ function initializeModules() {
   }
 
   try {
-    // Create module instances with error handling
     console.log("📦 Creating APIManager...");
     apiManager = new window.APIManager();
 
@@ -333,7 +262,6 @@ function initializeModules() {
     console.log("📦 Creating UIManager...");
     uiManager = new window.UIManager();
 
-    // Make modules globally accessible
     window.apiManager = apiManager;
     window.taskManager = taskManager;
     window.projectManager = projectManager;
@@ -349,11 +277,9 @@ function initializeModules() {
   }
 }
 
-// Fallback mode for when modules fail to load
 function initializeFallbackMode() {
   console.log("🔄 Initializing fallback mode...");
 
-  // Create basic functionality without modules
   window.apiManager = {
     loadWorkspaces: async () => ({
       success: false,
@@ -394,17 +320,14 @@ function initializeFallbackMode() {
   console.log("⚠️ Running in fallback mode - some features may not work");
 }
 
-// Theme toggle wrapper for backward compatibility
 function toggleThemeWrapper() {
   console.log("🎨 Toggling theme from:", currentTheme);
   currentTheme = toggleTheme(currentTheme);
   console.log("🎨 Theme toggled to:", currentTheme);
 }
 
-// ===== BACKWARD COMPATIBILITY FUNCTIONS =====
-// These functions maintain compatibility with existing HTML onclick handlers
+// Backward compatibility functions
 
-// Sidebar functions (delegated to WorkspaceManager)
 function openSidebar() {
   if (window.workspaceManager) {
     window.workspaceManager.openSidebar();
@@ -429,7 +352,6 @@ function closeCreateWorkspaceDialog() {
   }
 }
 
-// Task functions (delegated to TaskManager and UIManager)
 function editTask(taskId) {
   if (window.uiManager) {
     window.uiManager.openTaskModal(taskId);
@@ -460,7 +382,6 @@ function closeDeleteDialog() {
   }
 }
 
-// Project functions (delegated to ProjectManager and UIManager)
 function openProjectManagementDialog() {
   if (window.uiManager) {
     window.uiManager.openProjectManagementDialog();
@@ -485,7 +406,6 @@ function closeAddProjectDialog() {
   }
 }
 
-// Filter functions (delegated to TaskManager)
 function filterTasks() {
   const projectFilter = document.getElementById("project-filter");
   const priorityFilter = document.getElementById("priority-filter");
@@ -498,17 +418,12 @@ function filterTasks() {
   }
 }
 
-// ===== LEGACY SUPPORT =====
-// Keep some essential functions for any remaining direct calls
-
-// Console welcome message
 console.log("🗂️ Kanban Board Application");
 console.log("📚 Course: Web Programming 10636316");
 console.log("🏫 University: An-Najah National University");
 console.log("🔧 Tech Stack: HTML5, CSS3, JavaScript, PHP, MySQL");
 console.log("📅 Version: 1.0.0 - Modular Architecture");
 
-// Test functions for debugging
 window.testModal = function () {
   console.log("🧪 Testing modal system...");
   if (window.uiManager) {
@@ -518,13 +433,11 @@ window.testModal = function () {
 
 window.testDialog = window.testModal;
 
-// Legacy aliases for backward compatibility
 window.openTaskDialog = openTaskModal;
 window.closeTaskModal = closeTaskDialog;
 window.openDeleteModal = deleteTask;
 window.closeDeleteModal = closeDeleteDialog;
 
-// Additional compatibility functions for buttons
 function switchWorkspace(workspaceId) {
   if (window.workspaceManager) {
     window.workspaceManager.switchWorkspace(workspaceId);
@@ -537,6 +450,5 @@ function confirmDeleteTask(taskId) {
   }
 }
 
-// Make sure these are globally available
 window.switchWorkspace = switchWorkspace;
 window.confirmDeleteTask = confirmDeleteTask;

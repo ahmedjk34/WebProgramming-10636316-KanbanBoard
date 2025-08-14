@@ -1,8 +1,3 @@
-/**
- * API Manager Module
- * Handles all API calls and data management
- */
-
 console.log("📦 Loading APIManager module...");
 
 class APIManager {
@@ -11,7 +6,6 @@ class APIManager {
     this.currentWorkspaceId =
       parseInt(localStorage.getItem("currentWorkspaceId")) || 1;
 
-    // Store dependencies (none for APIManager as it's a base module)
     this.dependencies = dependencies;
 
     console.log(
@@ -20,16 +14,10 @@ class APIManager {
     );
   }
 
-  /**
-   * Safely parse JSON response, handling HTML error responses
-   * @param {Response} response - Fetch response object
-   * @returns {Object} Parsed JSON or error object
-   */
   async safeJsonParse(response) {
     try {
       const text = await response.text();
 
-      // Check if response is HTML (PHP error page)
       if (
         text.trim().startsWith("<") ||
         text.includes("<html>") ||
@@ -46,8 +34,6 @@ class APIManager {
           error_type: "html_response",
         };
       }
-
-      // Try to parse as JSON
       return JSON.parse(text);
     } catch (error) {
       console.error("❌ Failed to parse response as JSON:", error);
@@ -59,12 +45,6 @@ class APIManager {
     }
   }
 
-  // ===== WORKSPACE API CALLS =====
-
-  /**
-   * Load all workspaces
-   * @returns {Promise<Object>} API response
-   */
   async loadWorkspaces() {
     try {
       const response = await fetch("php/api/workspaces/get_workspaces.php");
@@ -81,11 +61,6 @@ class APIManager {
     }
   }
 
-  /**
-   * Create new workspace
-   * @param {Object} workspaceData - Workspace data
-   * @returns {Promise<Object>} API response
-   */
   async createWorkspace(workspaceData) {
     try {
       const response = await fetch("php/api/workspaces/create_workspace.php", {
@@ -109,12 +84,6 @@ class APIManager {
     }
   }
 
-  // ===== PROJECT API CALLS =====
-
-  /**
-   * Load projects for current workspace
-   * @returns {Promise<Object>} API response
-   */
   async loadProjects() {
     try {
       const response = await fetch(
@@ -133,14 +102,8 @@ class APIManager {
     }
   }
 
-  /**
-   * Create new project
-   * @param {Object} projectData - Project data
-   * @returns {Promise<Object>} API response
-   */
   async createProject(projectData) {
     try {
-      // Add current workspace ID to project data
       projectData.workspace_id = this.currentWorkspaceId;
 
       const response = await fetch("php/api/projects/create_project.php", {
@@ -164,12 +127,6 @@ class APIManager {
     }
   }
 
-  /**
-   * Update project
-   * @param {number} projectId - Project ID
-   * @param {Object} projectData - Project data
-   * @returns {Promise<Object>} API response
-   */
   async updateProject(projectId, projectData) {
     try {
       const response = await fetch("php/api/projects/update_project.php", {

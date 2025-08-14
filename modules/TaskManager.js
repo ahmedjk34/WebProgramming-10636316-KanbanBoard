@@ -1,8 +1,3 @@
-/**
- * Task Manager Module
- * Handles all task-related functionality including CRUD operations, display, and filtering
- */
-
 console.log("📦 Loading TaskManager module...");
 
 class TaskManager {
@@ -10,7 +5,6 @@ class TaskManager {
     this.tasks = [];
     this.filteredTasks = [];
 
-    // Store dependencies
     this.dependencies = dependencies;
     this.apiManager = dependencies.apiManager;
 
@@ -20,29 +14,15 @@ class TaskManager {
     );
   }
 
-  // ===== TASK DATA MANAGEMENT =====
-
-  /**
-   * Set tasks data
-   * @param {Array} tasks - Array of task objects
-   */
   setTasks(tasks) {
     this.tasks = tasks;
     this.filteredTasks = tasks;
   }
 
-  /**
-   * Get all tasks
-   * @returns {Array} Array of task objects
-   */
   getTasks() {
     return this.tasks;
   }
 
-  /**
-   * Get filtered tasks
-   * @returns {Array} Array of filtered task objects
-   */
   getFilteredTasks() {
     return this.filteredTasks;
   }
