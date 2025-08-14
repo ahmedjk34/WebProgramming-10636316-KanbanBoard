@@ -2468,6 +2468,9 @@ body.modal-open {
   backdrop-filter: blur(10px);
   overflow: hidden;
   animation: slideDown 0.3s ease-out;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .preview-header {
@@ -2498,6 +2501,71 @@ body.modal-open {
 
 .preview-content {
   padding: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  max-height: 50vh;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #43e97b rgba(0, 0, 0, 0.05);
+}
+
+.preview-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.preview-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+  margin: 4px 0;
+}
+
+.preview-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.preview-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #38d9a9 0%, #20c997 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.preview-content::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%);
+}
+
+/* Scroll indicator for better UX */
+.preview-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(67, 233, 123, 0.2) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.preview-content:hover::before {
+  opacity: 1;
+}
+
+/* Ensure content is properly contained */
+.ai-plan-preview {
+  position: relative;
+}
+
+.preview-content {
+  position: relative;
 }
 
 .preview-project {
@@ -2573,11 +2641,14 @@ body.modal-open {
 }
 
 .preview-actions {
-  padding: 16px 20px;
+  padding: 18px 20px;
   border-top: 1px solid var(--border-color);
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  flex-shrink: 0;
 }
 
 /* Input Container */
