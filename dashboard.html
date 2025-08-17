@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analytics Dashboard - Kanban Board</title>
+    <meta
+      name="description"
+      content="Comprehensive analytics dashboard for task and project management"
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico" />
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="js/app.js" as="script" />
+  </head>
+  <body data-theme="light">
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- Header Section -->
+    <header class="app-header">
+      <div class="header-container">
+        <div class="header-left">
+          <h1 class="app-title">
+            <span class="app-icon">📊</span>
+            Analytics Dashboard
+          </h1>
+          <span class="app-subtitle">Task & Project Analytics</span>
+        </div>
+
+        <div class="header-controls">
+          <div class="analytics-controls">
+            <div class="custom-dropdown" id="workspace-filter">
+              <button class="dropdown-trigger" type="button">
+                <span class="dropdown-text">All Workspaces</span>
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="dropdown-menu">
+                <div class="dropdown-item active" data-value="">
+                  All Workspaces
+                </div>
+                <!-- Workspaces will be loaded dynamically -->
+              </div>
+              <input type="hidden" id="workspace-filter-value" value="" />
+            </div>
+
+            <div class="custom-dropdown" id="time-range-filter">
+              <button class="dropdown-trigger" type="button">
+                <span class="dropdown-text">Last 30 Days</span>
+                <span class="dropdown-arrow">▼</span>
+              </button>
+              <div class="dropdown-menu">
+                <div class="dropdown-item" data-value="7">Last 7 Days</div>
+                <div class="dropdown-item active" data-value="30">
+                  Last 30 Days
+                </div>
+                <div class="dropdown-item" data-value="90">Last 90 Days</div>
+                <div class="dropdown-item" data-value="365">Last Year</div>
+              </div>
+              <input type="hidden" id="time-range-value" value="30" />
+            </div>
+
+            <button
+              id="refresh-analytics"
+              class="btn btn-secondary"
+              title="Refresh Analytics"
+            >
+              <span class="btn-icon">🔄</span>
+              Refresh
+            </button>
+
+            <button
+              id="export-data"
+              class="btn btn-secondary"
+              title="Export Data"
+            >
+              <span class="btn-icon">📥</span>
+              Export
+            </button>
+          </div>
+
+          <a href="index.html" class="btn btn-primary">
+            <span class="btn-icon">📋</span>
+            Back to Board
+          </a>
+
+          <button
+            id="theme-toggle"
+            class="theme-toggle"
+            title="Toggle Dark/Light Mode"
+          >
+            <span id="theme-icon">🌙</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="analytics-main">
+      <!-- Loading Indicator -->
+      <div id="analytics-loading" class="loading-indicator">
+        <div class="spinner"></div>
+        <p>Loading analytics data...</p>
+      </div>
+
+      <!-- Analytics Dashboard -->
+      <div
+        id="analytics-dashboard"
+        class="analytics-dashboard"
+        style="display: none"
+      >
+        <!-- Overview Statistics -->
+        <section class="analytics-section">
+          <div class="section-header">
+            <h2>📈 Overview Statistics</h2>
+            <div class="section-actions">
+              <button
+                class="btn btn-small btn-secondary"
+                onclick="refreshOverview()"
+              >
+                <span class="btn-icon">🔄</span>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <div class="stats-grid" id="overview-stats">
+            <!-- Stats cards will be populated dynamically -->
+          </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="analytics-section">
+          <div class="section-header">
+            <h2>📊 Activity Trends</h2>
+            <div class="chart-controls">
+              <button class="chart-toggle active" data-chart="activity">
+                Activity
+              </button>
+              <button class="chart-toggle" data-chart="completion">
+                Completion
+              </button>
+              <button class="chart-toggle" data-chart="priority">
+                Priority
+              </button>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <canvas id="main-chart" width="400" height="200"></canvas>
+          </div>
+        </section>
+
+        <!-- Project Performance -->
+        <section class="analytics-section">
+          <div class="section-header">
+            <h2>🗂️ Project Performance</h2>
+            <div class="section-actions">
+              <button
+                class="btn btn-small btn-secondary"
+                onclick="toggleProjectView()"
+              >
+                <span class="btn-icon">🔄</span>
+                Toggle View
+              </button>
+            </div>
+          </div>
+
+          <div class="projects-analytics" id="projects-analytics">
+            <!-- Project analytics will be populated dynamically -->
+          </div>
+        </section>
+
+        <!-- Productivity Heatmap -->
+        <section class="analytics-section">
+          <div class="section-header">
+            <h2>🔥 Productivity Heatmap</h2>
+            <div class="heatmap-legend">
+              <span class="legend-item">
+                <span class="legend-color low"></span>
+                Low Activity
+              </span>
+              <span class="legend-item">
+                <span class="legend-color medium"></span>
+                Medium Activity
+              </span>
+              <span class="legend-item">
+                <span class="legend-color high"></span>
+                High Activity
+              </span>
+            </div>
+          </div>
+
+          <div class="heatmap-container" id="productivity-heatmap">
+            <!-- Heatmap will be generated dynamically -->
+          </div>
+        </section>
+
+        <!-- Recent Activity Feed -->
+        <section class="analytics-section">
+          <div class="section-header">
+            <h2>📋 Recent Activity</h2>
+            <div class="section-actions">
+              <button
+                class="btn btn-small btn-secondary"
+                onclick="loadMoreActivity()"
+              >
+                <span class="btn-icon">⬇️</span>
+                Load More
+              </button>
+            </div>
+          </div>
+
+          <div class="activity-feed" id="activity-feed">
+            <!-- Activity items will be populated dynamically -->
+          </div>
+        </section>
+
+        <!-- Workspace Comparison -->
+        <section class="analytics-section" id="workspace-comparison-section">
+          <div class="section-header">
+            <h2>🏢 Workspace Comparison</h2>
+            <div class="section-actions">
+              <button
+                class="btn btn-small btn-secondary"
+                onclick="exportWorkspaceData()"
+              >
+                <span class="btn-icon">📊</span>
+                Export
+              </button>
+            </div>
+          </div>
+
+          <div class="workspace-comparison" id="workspace-comparison">
+            <!-- Workspace comparison will be populated dynamically -->
+          </div>
+        </section>
+      </div>
+
+      <!-- Error State -->
+      <div id="analytics-error" class="error-state" style="display: none">
+        <div class="error-content">
+          <div class="error-icon">⚠️</div>
+          <h3>Unable to Load Analytics</h3>
+          <p>
+            There was an error loading the analytics data. Please check your
+            connection and try again.
+          </p>
+          <button class="btn btn-primary" onclick="initializeAnalytics()">
+            <span class="btn-icon">🔄</span>
+            Retry
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p>
+          &copy; 2025 Web Programming 10636316 Project | An-Najah National
+          University
+        </p>
+        <p>Analytics Dashboard - Real-time Task & Project Insights</p>
+      </div>
+    </footer>
+
+    <!-- JavaScript Utilities -->
+    <script src="utils/js-utils.js"></script>
+
+    <!-- Analytics Modules -->
+    <script src="modules/APIManager.js"></script>
+    <script src="modules/AnalyticsDataManager.js"></script>
+    <script src="modules/ChartManager.js"></script>
+    <script src="modules/UIManager.js"></script>
+
+    <!-- Main Analytics Application -->
+    <script src="js/analytics-app.js"></script>
+  </body>
+</html>
