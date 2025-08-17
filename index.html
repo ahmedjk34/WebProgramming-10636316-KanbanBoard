@@ -92,7 +92,7 @@
             >
             <span class="toggle-arrow">▼</span>
           </button>
-          <h1 class="app-title">
+          <h1 class="app-title" id="app-title">
             <span class="app-icon">📋</span>
             Kanban Task Board
           </h1>
@@ -939,6 +939,48 @@
 
     <!-- JavaScript Utilities -->
     <script src="utils/js-utils.js"></script>
+
+    <!-- Fix for app title visibility -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const appTitle = document.getElementById("app-title");
+        if (appTitle) {
+          // Test if gradient text is properly supported
+          const testElement = document.createElement("div");
+          testElement.style.background = "linear-gradient(45deg, red, blue)";
+          testElement.style.webkitBackgroundClip = "text";
+          testElement.style.webkitTextFillColor = "transparent";
+          testElement.style.backgroundClip = "text";
+          testElement.textContent = "test";
+          testElement.style.position = "absolute";
+          testElement.style.left = "-9999px";
+          document.body.appendChild(testElement);
+
+          // Check if the gradient is working
+          const computedStyle = window.getComputedStyle(testElement);
+          const isGradientSupported =
+            computedStyle.webkitTextFillColor === "transparent" ||
+            computedStyle.webkitTextFillColor === "rgba(0, 0, 0, 0)";
+
+          if (isGradientSupported) {
+            appTitle.classList.add("gradient-supported");
+          } else {
+            // Force visible text color
+            appTitle.style.color = "#4299e1";
+            appTitle.style.background = "none";
+            appTitle.style.webkitTextFillColor = "#4299e1";
+          }
+
+          // Clean up test element
+          document.body.removeChild(testElement);
+
+          console.log(
+            "🎨 App title visibility fix applied. Gradient supported:",
+            isGradientSupported
+          );
+        }
+      });
+    </script>
 
     <!-- JavaScript Modules -->
     <script src="modules/APIManager.js"></script>
