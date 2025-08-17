@@ -100,6 +100,21 @@
         </div>
 
         <div class="header-controls">
+          <!-- View Switcher -->
+          <div id="view-switcher" class="view-switcher">
+            <!-- Will be populated by ViewManager -->
+          </div>
+
+          <button
+            id="analytics-btn"
+            class="btn btn-info"
+            onclick="openAnalyticsDashboard()"
+            title="View Analytics Dashboard"
+          >
+            <span class="btn-icon">📊</span>
+            Analytics
+          </button>
+
           <button
             id="ai-chat-btn"
             class="btn btn-ai"
@@ -228,87 +243,91 @@
         <p>Loading tasks...</p>
       </div>
 
-      <!-- Kanban Board -->
-      <div class="kanban-board" id="kanban-board">
-        <!-- To Do Column -->
-        <div class="kanban-column" data-status="todo">
-          <div class="column-header">
-            <h2 class="column-title">
-              <span class="column-icon">📝</span>
-              To Do
-              <span class="task-count" id="todo-count">0</span>
-            </h2>
-            <button
-              class="add-task-column-btn"
-              data-status="todo"
-              title="Add task to To Do"
-            >
-              ➕
-            </button>
+      <!-- View Container for Multiple Views -->
+      <div id="view-container" class="view-container">
+        <!-- Kanban Board (Default View) -->
+        <div class="kanban-board" id="kanban-board">
+          <!-- To Do Column -->
+          <div class="kanban-column" data-status="todo">
+            <div class="column-header">
+              <h2 class="column-title">
+                <span class="column-icon">📝</span>
+                To Do
+                <span class="task-count" id="todo-count">0</span>
+              </h2>
+              <button
+                class="add-task-column-btn"
+                data-status="todo"
+                title="Add task to To Do"
+              >
+                ➕
+              </button>
+            </div>
+            <div class="task-list" id="todo-tasks" data-status="todo">
+              <!-- Tasks will be loaded here dynamically -->
+            </div>
           </div>
-          <div class="task-list" id="todo-tasks" data-status="todo">
-            <!-- Tasks will be loaded here dynamically -->
-          </div>
-        </div>
 
-        <!-- In Progress Column -->
-        <div class="kanban-column" data-status="in_progress">
-          <div class="column-header">
-            <h2 class="column-title">
-              <span class="column-icon">⚡</span>
-              In Progress
-              <span class="task-count" id="in_progress-count">0</span>
-            </h2>
-            <button
-              class="add-task-column-btn"
+          <!-- In Progress Column -->
+          <div class="kanban-column" data-status="in_progress">
+            <div class="column-header">
+              <h2 class="column-title">
+                <span class="column-icon">⚡</span>
+                In Progress
+                <span class="task-count" id="in_progress-count">0</span>
+              </h2>
+              <button
+                class="add-task-column-btn"
+                data-status="in_progress"
+                title="Add task to In Progress"
+              >
+                ➕
+              </button>
+            </div>
+            <div
+              class="task-list"
+              id="in_progress-tasks"
               data-status="in_progress"
-              title="Add task to In Progress"
             >
-              ➕
-            </button>
+              <!-- Tasks will be loaded here dynamically -->
+            </div>
           </div>
-          <div
-            class="task-list"
-            id="in_progress-tasks"
-            data-status="in_progress"
-          >
-            <!-- Tasks will be loaded here dynamically -->
+
+          <!-- Done Column -->
+          <div class="kanban-column" data-status="done">
+            <div class="column-header">
+              <h2 class="column-title">
+                <span class="column-icon">✅</span>
+                Done
+                <span class="task-count" id="done-count">0</span>
+              </h2>
+              <button
+                class="add-task-column-btn"
+                data-status="done"
+                title="Add task to Done"
+              >
+                ➕
+              </button>
+            </div>
+            <div class="task-list" id="done-tasks" data-status="done">
+              <!-- Tasks will be loaded here dynamically -->
+            </div>
           </div>
         </div>
 
-        <!-- Done Column -->
-        <div class="kanban-column" data-status="done">
-          <div class="column-header">
-            <h2 class="column-title">
-              <span class="column-icon">✅</span>
-              Done
-              <span class="task-count" id="done-count">0</span>
-            </h2>
-            <button
-              class="add-task-column-btn"
-              data-status="done"
-              title="Add task to Done"
-            >
-              ➕
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state" style="display: none">
+          <div class="empty-state-content">
+            <div class="empty-state-icon">📋</div>
+            <h3>No tasks yet</h3>
+            <p>Create your first task to get started with your Kanban board!</p>
+            <button id="create-first-task-btn" class="btn btn-primary">
+              Create First Task
             </button>
           </div>
-          <div class="task-list" id="done-tasks" data-status="done">
-            <!-- Tasks will be loaded here dynamically -->
-          </div>
         </div>
       </div>
-
-      <!-- Empty State -->
-      <div id="empty-state" class="empty-state" style="display: none">
-        <div class="empty-state-content">
-          <div class="empty-state-icon">📋</div>
-          <h3>No tasks yet</h3>
-          <p>Create your first task to get started with your Kanban board!</p>
-          <button id="create-first-task-btn" class="btn btn-primary">
-            Create First Task
-          </button>
-        </div>
-      </div>
+      <!-- End view-container -->
     </main>
 
     <!-- Task Modal (will be implemented in Phase 5) -->
@@ -991,7 +1010,88 @@
     <script src="modules/UIManager.js"></script>
     <script src="modules/AIChatManager.js"></script>
 
+    <!-- View System Modules -->
+    <script src="modules/views/BaseView.js"></script>
+    <script src="modules/views/kanbanView.js"></script>
+    <script src="modules/views/calendarView.js"></script>
+    <script src="modules/views/listView.js"></script>
+    <script src="modules/ViewManager.js"></script>
+
     <!-- Main Application JavaScript -->
     <script src="js/app.js"></script>
+
+    <!-- Integration Scripts -->
+    <script>
+      // Global ViewManager instance
+      let viewManager = null;
+
+      // Function to check if all managers are ready
+      function areManagersReady() {
+        return (
+          window.apiManager &&
+          window.taskManager &&
+          window.projectManager &&
+          window.uiManager &&
+          window.dragDropManager &&
+          typeof window.taskManager.getTasks === "function" &&
+          typeof window.projectManager.getProjects === "function"
+        );
+      }
+
+      // Function to initialize ViewManager
+      async function initializeViewManager() {
+        try {
+          console.log("🔄 Initializing ViewManager...");
+
+          // Initialize ViewManager with dependencies
+          viewManager = new ViewManager({
+            apiManager: window.apiManager,
+            taskManager: window.taskManager,
+            projectManager: window.projectManager,
+            uiManager: window.uiManager,
+            dragDropManager: window.dragDropManager,
+          });
+
+          await viewManager.init();
+          console.log("✅ ViewManager integrated successfully");
+
+          // Make globally available
+          window.viewManager = viewManager;
+        } catch (error) {
+          console.error("❌ Failed to initialize ViewManager:", error);
+
+          // Retry after a delay
+          setTimeout(() => {
+            if (areManagersReady()) {
+              initializeViewManager();
+            }
+          }, 2000);
+        }
+      }
+
+      // Wait for managers to be ready
+      function waitForManagers() {
+        if (areManagersReady()) {
+          initializeViewManager();
+        } else {
+          console.log("⏳ Waiting for managers to be ready...");
+          setTimeout(waitForManagers, 500);
+        }
+      }
+
+      // Start waiting for managers after DOM loads
+      document.addEventListener("DOMContentLoaded", function () {
+        // Start checking for managers after a short delay
+        setTimeout(waitForManagers, 1500);
+      });
+
+      // Analytics Dashboard function
+      function openAnalyticsDashboard() {
+        window.open("dashboard.html", "_blank");
+      }
+
+      // Make functions globally available
+      window.openAnalyticsDashboard = openAnalyticsDashboard;
+    </script>
   </body>
 </html>
