@@ -158,10 +158,121 @@ function installDatabase() {
         
         $pdo->exec($insertTasks);
         echo "✅ Sample tasks inserted successfully.\n";
-        
+
+        // Create user preferences table for view settings
+        $userPreferencesSQL = "
+        CREATE TABLE IF NOT EXISTS user_preferences (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT DEFAULT 1,
+            preference_key VARCHAR(100) NOT NULL,
+            preference_value TEXT,
+            workspace_id INT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_user_preference (user_id, preference_key, workspace_id),
+            FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+            INDEX idx_user_preference (user_id, preference_key)
+        ) ENGINE=InnoDB";
+
+        $pdo->exec($userPreferencesSQL);
+        echo "✅ User preferences table created successfully.\n";
+
+        // Create task activity log for analytics
+        $taskActivitySQL = "
+        CREATE TABLE IF NOT EXISTS task_activity_log (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            task_id INT NOT NULL,
+            action_type ENUM('created', 'updated', 'status_changed', 'deleted', 'moved', 'priority_changed') NOT NULL,
+            old_value TEXT,
+            new_value TEXT,
+            field_changed VARCHAR(50),
+            user_id INT DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+            INDEX idx_task_action (task_id, action_type),
+            INDEX idx_created_at (created_at),
+            INDEX idx_user_activity (user_id, created_at)
+        ) ENGINE=InnoDB";
+
+        $pdo->exec($taskActivitySQL);
+        echo "✅ Task activity log table created successfully.\n";
+
+        // Create project analytics table
+        $projectAnalyticsSQL = "
+        CREATE TABLE IF NOT EXISTS project_analytics (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            project_id INT NOT NULL,
+            date DATE NOT NULL,
+            tasks_created INT DEFAULT 0,
+            tasks_completed INT DEFAULT 0,
+            tasks_in_progress INT DEFAULT 0,
+            total_tasks INT DEFAULT 0,
+            completion_rate DECIMAL(5,2) DEFAULT 0.00,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+            UNIQUE KEY unique_project_date (project_id, date),
+            INDEX idx_date (date),
+            INDEX idx_project_date (project_id, date)
+        ) ENGINE=InnoDB";
+
+        $pdo->exec($projectAnalyticsSQL);
+        echo "✅ Project analytics table created successfully.\n";
+
+        // Create analytics views
+        $createViews = "
+        CREATE OR REPLACE VIEW task_statistics AS
+        SELECT
+            p.id as project_id,
+            p.name as project_name,
+            p.workspace_id,
+            w.name as workspace_name,
+            COUNT(t.id) as total_tasks,
+            SUM(CASE WHEN t.status = 'todo' THEN 1 ELSE 0 END) as todo_count,
+            SUM(CASE WHEN t.status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_count,
+            SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END) as done_count,
+            SUM(CASE WHEN t.due_date < CURDATE() AND t.status != 'done' THEN 1 ELSE 0 END) as overdue_count,
+            ROUND(
+                (SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END) / NULLIF(COUNT(t.id), 0)) * 100, 2
+            ) as completion_percentage
+        FROM projects p
+        LEFT JOIN tasks t ON p.id = t.project_id
+        LEFT JOIN workspaces w ON p.workspace_id = w.id
+        GROUP BY p.id, p.name, p.workspace_id, w.name;
+
+        CREATE OR REPLACE VIEW analytics_overview AS
+        SELECT
+            DATE(t.created_at) as date,
+            COUNT(*) as tasks_created,
+            SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END) as tasks_completed,
+            SUM(CASE WHEN t.status = 'in_progress' THEN 1 ELSE 0 END) as tasks_in_progress,
+            SUM(CASE WHEN t.due_date < CURDATE() AND t.status != 'done' THEN 1 ELSE 0 END) as overdue_tasks,
+            p.workspace_id
+        FROM tasks t
+        LEFT JOIN projects p ON t.project_id = p.id
+        WHERE t.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY DATE(t.created_at), p.workspace_id
+        ORDER BY date DESC";
+
+        $pdo->exec($createViews);
+        echo "✅ Analytics views created successfully.\n";
+
+        // Insert default user preferences
+        $insertPreferences = "
+        INSERT IGNORE INTO user_preferences (user_id, preference_key, preference_value) VALUES
+        (1, 'default_view', 'kanban'),
+        (1, 'theme', 'light'),
+        (1, 'analytics_refresh_interval', '30'),
+        (1, 'show_completed_tasks', 'true'),
+        (1, 'calendar_view_type', 'month')";
+
+        $pdo->exec($insertPreferences);
+        echo "✅ Default user preferences inserted successfully.\n";
+
         echo "\n🎉 Database installation completed successfully!\n";
-        echo "You can now use your Kanban board application.\n";
-        
+        echo "📊 Analytics tables and views created.\n";
+        echo "🔧 User preferences system ready.\n";
+        echo "You can now use your enhanced Kanban board application.\n";
+
         return true;
         
     } catch(PDOException $e) {
