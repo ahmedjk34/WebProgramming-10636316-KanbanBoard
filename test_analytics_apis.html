@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analytics APIs Test - Phase 2</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #f5f7fa;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .success {
+        color: #27ae60;
+      }
+      .error {
+        color: #e74c3c;
+      }
+      .info {
+        color: #3498db;
+      }
+      .warning {
+        color: #f39c12;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border-left: 4px solid #ddd;
+        background: #f8f9fa;
+      }
+      .test-section.success {
+        border-left-color: #27ae60;
+      }
+      .test-section.error {
+        border-left-color: #e74c3c;
+      }
+      .test-section.info {
+        border-left-color: #3498db;
+      }
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        background: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin: 5px;
+        cursor: pointer;
+        border: none;
+      }
+      .button:hover {
+        background: #2980b9;
+      }
+      .button.success {
+        background: #27ae60;
+      }
+      .button.danger {
+        background: #e74c3c;
+      }
+      .response-container {
+        background: #2c3e50;
+        color: #ecf0f1;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 10px 0;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+      }
+      .controls {
+        margin: 15px 0;
+        padding: 15px;
+        background: #ecf0f1;
+        border-radius: 5px;
+      }
+      .controls label {
+        display: inline-block;
+        width: 120px;
+        margin-right: 10px;
+      }
+      .controls input,
+      .controls select {
+        padding: 5px;
+        margin: 5px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 15px 0;
+      }
+      .stat-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid #dee2e6;
+      }
+      .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #3498db;
+      }
+      .loading {
+        display: none;
+        color: #f39c12;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📊 Analytics APIs Test - Phase 2</h1>
+      <p>Test all analytics and preferences API endpoints</p>
+
+      <div class="controls">
+        <h3>🔧 Test Parameters</h3>
+        <div>
+          <label>Workspace ID:</label>
+          <select id="workspaceId">
+            <option value="">All Workspaces</option>
+            <option value="1">Personal (1)</option>
+            <option value="2">Work (2)</option>
+            <option value="3">Creative (3)</option>
+          </select>
+
+          <label>Project ID:</label>
+          <input type="number" id="projectId" placeholder="Optional" min="1" />
+
+          <label>Days:</label>
+          <select id="days">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>📈 Analytics Overview API</h2>
+      <p>Test the main analytics overview endpoint</p>
+
+      <button class="button" onclick="testAnalyticsOverview()">
+        Test Analytics Overview
+      </button>
+      <button class="button success" onclick="testAnalyticsOverview(true)">
+        Test with Workspace Filter
+      </button>
+      <span class="loading" id="overviewLoading">Loading...</span>
+
+      <div
+        id="overviewResponse"
+        class="response-container"
+        style="display: none"
+      ></div>
+
+      <div id="overviewStats" class="stats-grid" style="display: none"></div>
+    </div>
+
+    <div class="container">
+      <h2>📊 Project Statistics API</h2>
+      <p>Test project-specific analytics</p>
+
+      <button class="button" onclick="testProjectStats()">
+        Test All Projects
+      </button>
+      <button class="button success" onclick="testProjectStats(true)">
+        Test Specific Project
+      </button>
+      <span class="loading" id="projectLoading">Loading...</span>
+
+      <div
+        id="projectResponse"
+        class="response-container"
+        style="display: none"
+      ></div>
+    </div>
+
+    <div class="container">
+      <h2>📋 Activity Log API</h2>
+      <p>Test activity tracking and logs</p>
+
+      <button class="button" onclick="testActivityLog()">
+        Test Activity Log
+      </button>
+      <button class="button success" onclick="testActivityLog('created')">
+        Test Created Activities
+      </button>
+      <button
+        class="button success"
+        onclick="testActivityLog('status_changed')"
+      >
+        Test Status Changes
+      </button>
+      <span class="loading" id="activityLoading">Loading...</span>
+
+      <div
+        id="activityResponse"
+        class="response-container"
+        style="display: none"
+      ></div>
+    </div>
+
+    <div class="container">
+      <h2>⚙️ User Preferences API</h2>
+      <p>Test user preferences management</p>
+
+      <div class="controls">
+        <h4>Preference Test Controls</h4>
+        <div>
+          <label>Preference Key:</label>
+          <select id="prefKey">
+            <option value="default_view">Default View</option>
+            <option value="theme">Theme</option>
+            <option value="analytics_refresh_interval">Refresh Interval</option>
+            <option value="show_completed_tasks">Show Completed</option>
+          </select>
+
+          <label>Preference Value:</label>
+          <input
+            type="text"
+            id="prefValue"
+            placeholder="e.g., kanban, light, 30, true"
+          />
+        </div>
+      </div>
+
+      <button class="button" onclick="testGetPreferences()">
+        Get Preferences
+      </button>
+      <button class="button success" onclick="testUpdatePreference()">
+        Update Preference
+      </button>
+      <span class="loading" id="prefLoading">Loading...</span>
+
+      <div
+        id="prefResponse"
+        class="response-container"
+        style="display: none"
+      ></div>
+    </div>
+
+    <div class="container">
+      <h2>🧪 Comprehensive Test Suite</h2>
+      <p>Run all tests automatically</p>
+
+      <button class="button success" onclick="runAllTests()">
+        Run All Tests
+      </button>
+      <button class="button danger" onclick="clearAllResults()">
+        Clear Results
+      </button>
+
+      <div id="testResults" class="test-section info" style="display: none">
+        <h3>Test Results Summary</h3>
+        <div id="testSummary"></div>
+      </div>
+    </div>
+
+    <script>
+      let testResults = {
+        passed: 0,
+        failed: 0,
+        total: 0,
+      };
+
+      async function makeRequest(url, options = {}) {
+        try {
+          const response = await fetch(url, options);
+          const data = await response.json();
+          return { success: true, data, status: response.status };
+        } catch (error) {
+          return { success: false, error: error.message, status: 0 };
+        }
+      }
+
+      function showLoading(elementId, show = true) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.style.display = show ? "inline" : "none";
+        }
+      }
+
+      function displayResponse(containerId, response) {
+        const container = document.getElementById(containerId);
+        container.style.display = "block";
+        container.innerHTML = JSON.stringify(response, null, 2);
+      }
+
+      function getTestParams() {
+        return {
+          workspaceId: document.getElementById("workspaceId").value,
+          projectId: document.getElementById("projectId").value,
+          days: document.getElementById("days").value,
+        };
+      }
+
+      async function testAnalyticsOverview(useWorkspace = false) {
+        showLoading("overviewLoading");
+
+        const params = getTestParams();
+        let url = "php/api/analytics/overview.php?days=" + params.days;
+
+        if (useWorkspace && params.workspaceId) {
+          url += "&workspace_id=" + params.workspaceId;
+        }
+
+        const result = await makeRequest(url);
+
+        showLoading("overviewLoading", false);
+        displayResponse("overviewResponse", result);
+
+        if (result.success && result.data.success) {
+          displayOverviewStats(result.data.data);
+          updateTestResults(true);
+        } else {
+          updateTestResults(false);
+        }
+      }
+
+      function displayOverviewStats(data) {
+        const container = document.getElementById("overviewStats");
+        container.style.display = "block";
+
+        const overall = data.overall || {};
+        container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${overall.total_tasks || 0}</div>
+                    <div>Total Tasks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${
+                      overall.completed_tasks || 0
+                    }</div>
+                    <div>Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${
+                      overall.completion_rate || 0
+                    }%</div>
+                    <div>Completion Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${
+                      overall.total_projects || 0
+                    }</div>
+                    <div>Projects</div>
+                </div>
+            `;
+      }
+
+      async function testProjectStats(useSpecificProject = false) {
+        showLoading("projectLoading");
+
+        const params = getTestParams();
+        let url = "php/api/analytics/project_stats.php?days=" + params.days;
+
+        if (useSpecificProject && params.projectId) {
+          url += "&project_id=" + params.projectId;
+        }
+
+        if (params.workspaceId) {
+          url += "&workspace_id=" + params.workspaceId;
+        }
+
+        const result = await makeRequest(url);
+
+        showLoading("projectLoading", false);
+        displayResponse("projectResponse", result);
+
+        updateTestResults(result.success && result.data.success);
+      }
+
+      async function testActivityLog(actionType = null) {
+        showLoading("activityLoading");
+
+        const params = getTestParams();
+        let url =
+          "php/api/analytics/activity_log.php?days=" +
+          params.days +
+          "&limit=20";
+
+        if (actionType) {
+          url += "&action_type=" + actionType;
+        }
+
+        if (params.workspaceId) {
+          url += "&workspace_id=" + params.workspaceId;
+        }
+
+        if (params.projectId) {
+          url += "&project_id=" + params.projectId;
+        }
+
+        const result = await makeRequest(url);
+
+        showLoading("activityLoading", false);
+        displayResponse("activityResponse", result);
+
+        updateTestResults(result.success && result.data.success);
+      }
+
+      async function testGetPreferences() {
+        showLoading("prefLoading");
+
+        const params = getTestParams();
+        let url = "php/api/preferences/get_preferences.php";
+
+        if (params.workspaceId) {
+          url += "?workspace_id=" + params.workspaceId;
+        }
+
+        const result = await makeRequest(url);
+
+        showLoading("prefLoading", false);
+        displayResponse("prefResponse", result);
+
+        updateTestResults(result.success && result.data.success);
+      }
+
+      async function testUpdatePreference() {
+        showLoading("prefLoading");
+
+        const prefKey = document.getElementById("prefKey").value;
+        const prefValue =
+          document.getElementById("prefValue").value || "test_value";
+        const params = getTestParams();
+
+        const requestData = {
+          preference_key: prefKey,
+          preference_value: prefValue,
+        };
+
+        if (params.workspaceId) {
+          requestData.workspace_id = parseInt(params.workspaceId);
+        }
+
+        const result = await makeRequest(
+          "php/api/preferences/update_preferences.php",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestData),
+          }
+        );
+
+        showLoading("prefLoading", false);
+        displayResponse("prefResponse", result);
+
+        updateTestResults(result.success && result.data.success);
+      }
+
+      function updateTestResults(passed) {
+        testResults.total++;
+        if (passed) {
+          testResults.passed++;
+        } else {
+          testResults.failed++;
+        }
+
+        updateTestSummary();
+      }
+
+      function updateTestSummary() {
+        const container = document.getElementById("testSummary");
+        const resultsDiv = document.getElementById("testResults");
+
+        if (testResults.total > 0) {
+          resultsDiv.style.display = "block";
+          container.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">${testResults.total}</div>
+                            <div>Total Tests</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number success">${
+                              testResults.passed
+                            }</div>
+                            <div>Passed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number error">${
+                              testResults.failed
+                            }</div>
+                            <div>Failed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${Math.round(
+                              (testResults.passed / testResults.total) * 100
+                            )}%</div>
+                            <div>Success Rate</div>
+                        </div>
+                    </div>
+                `;
+        }
+      }
+
+      async function runAllTests() {
+        // Reset results
+        testResults = { passed: 0, failed: 0, total: 0 };
+
+        console.log("🧪 Running comprehensive test suite...");
+
+        // Test analytics overview
+        await testAnalyticsOverview();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Test project stats
+        await testProjectStats();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Test activity log
+        await testActivityLog();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Test preferences
+        await testGetPreferences();
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        await testUpdatePreference();
+
+        console.log("✅ Test suite completed");
+      }
+
+      function clearAllResults() {
+        const responseContainers = [
+          "overviewResponse",
+          "projectResponse",
+          "activityResponse",
+          "prefResponse",
+        ];
+
+        responseContainers.forEach((id) => {
+          const container = document.getElementById(id);
+          container.style.display = "none";
+          container.innerHTML = "";
+        });
+
+        document.getElementById("overviewStats").style.display = "none";
+        document.getElementById("testResults").style.display = "none";
+
+        testResults = { passed: 0, failed: 0, total: 0 };
+      }
+
+      // Initialize with some default values
+      document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("prefValue").value = "kanban";
+        console.log("📊 Analytics APIs Test Page Loaded");
+        console.log("🔗 Available endpoints:");
+        console.log("  - /php/api/analytics/overview.php");
+        console.log("  - /php/api/analytics/project_stats.php");
+        console.log("  - /php/api/analytics/activity_log.php");
+        console.log("  - /php/api/preferences/get_preferences.php");
+        console.log("  - /php/api/preferences/update_preferences.php");
+      });
+    </script>
+  </body>
+</html>
