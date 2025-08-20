@@ -16,6 +16,11 @@ class UIManager {
     this.projectManager = dependencies.projectManager;
     this.workspaceManager = dependencies.workspaceManager;
 
+    // Simple debounced filter for performance
+    this.debouncedFilter = window.helpers
+      ? window.helpers.debounce(this.handleFilterChange.bind(this), 300)
+      : this.handleFilterChange.bind(this);
+
     console.log(
       "🔧 UIManager initialized with dependencies:",
       Object.keys(dependencies)
@@ -77,17 +82,11 @@ class UIManager {
     const priorityFilter = document.getElementById("priority-filter");
 
     if (projectFilter) {
-      projectFilter.addEventListener(
-        "change",
-        this.handleFilterChange.bind(this)
-      );
+      projectFilter.addEventListener("change", this.debouncedFilter);
     }
 
     if (priorityFilter) {
-      priorityFilter.addEventListener(
-        "change",
-        this.handleFilterChange.bind(this)
-      );
+      priorityFilter.addEventListener("change", this.debouncedFilter);
     }
   }
 

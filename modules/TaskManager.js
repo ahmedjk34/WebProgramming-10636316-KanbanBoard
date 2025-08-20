@@ -33,7 +33,12 @@ class TaskManager {
    * @returns {Object|null} Task object or null if not found
    */
   findTaskById(taskId) {
-    return this.tasks.find((task) => task.id == taskId) || null;
+    try {
+      return this.tasks.find((task) => task.id == taskId) || null;
+    } catch (error) {
+      console.error("❌ Error finding task:", error);
+      return null;
+    }
   }
 
   // ===== TASK DISPLAY =====

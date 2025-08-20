@@ -45,6 +45,18 @@ class ViewManager {
     this.viewContainer = null;
     this.viewSwitcher = null;
 
+    // Simple element caching for performance
+    this.elements = {
+      viewContainer: null,
+      kanbanBoard: null,
+      viewSwitcher: null,
+    };
+
+    // Simple performance tracking
+    this.hasOriginalKanban = false;
+    this.originalKanbanBoard = null;
+    this.originalKanbanHTML = null;
+
     console.log("👁️ ViewManager initialized");
   }
 
@@ -281,16 +293,11 @@ class ViewManager {
       await currentViewInstance.hide();
     }
 
-    // CORRECTED LOGIC: Clear the view-container content
-    if (this.currentView === "kanban" && this.hasOriginalKanban) {
-      // For kanban, we'll replace the content when switching back
-      console.log(`🙈 Hiding kanban view - will restore when switching back`);
-    } else {
-      console.log(`🗑️ Clearing view container for view switch`);
+    // Simple cleanup - clear container (this removes event listeners too)
+    if (this.viewContainer) {
+      this.viewContainer.innerHTML = "";
+      console.log(`🗑️ Cleaned up view container for switch`);
     }
-
-    // Always clear the view container for clean switching
-    this.viewContainer.innerHTML = "";
   }
 
   /**
