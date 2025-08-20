@@ -4240,7 +4240,7 @@ body [id*="view"] .task-card:active {
   gap: 20px;
 }
 
-/* Masonry View */
+/* Masonry View - Pinterest-style layout */
 .card-content.masonry-view {
   columns: 3;
   column-gap: 20px;
@@ -4249,9 +4249,23 @@ body [id*="view"] .task-card:active {
 .card-content.masonry-view .task-card-item {
   break-inside: avoid;
   margin-bottom: 20px;
+  width: 100%;
 }
 
-/* Compact View */
+/* Responsive masonry */
+@media (max-width: 1200px) {
+  .card-content.masonry-view {
+    columns: 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .card-content.masonry-view {
+    columns: 1;
+  }
+}
+
+/* Compact View - Smaller, denser cards */
 .card-content.compact-view {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
