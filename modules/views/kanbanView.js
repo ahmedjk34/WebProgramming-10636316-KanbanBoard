@@ -32,33 +32,16 @@ class KanbanView extends BaseView {
    * Create the view element - use existing kanban board
    */
   createViewElement() {
-    // CRITICAL FIX: Use the existing kanban board instead of replacing it
-    const originalKanban = document.getElementById("kanban-board");
-    if (originalKanban) {
-      this.viewElement = originalKanban.parentElement || originalKanban;
-      this.originalKanbanBoard = originalKanban;
-      console.log(`✅ Using original kanban board HTML`);
-      return;
-    }
-
-    // Fallback: use container if original doesn't exist
+    // DYNAMIC HTML SWAPPING: Use container for all views
     this.viewElement = this.container;
-    console.log(`📦 Fallback: Using container for Kanban injection`);
+    console.log(`📦 Using container for dynamic Kanban view`);
   }
 
   /**
    * Render the Kanban board
    */
   async render() {
-    // CRITICAL FIX: If original kanban exists, DON'T DO ANYTHING
-    const originalKanban = document.getElementById("kanban-board");
-    if (originalKanban) {
-      console.log("✅ Original kanban found - KanbanView will not interfere");
-      console.log("🚫 Skipping render - original HTML is perfect as-is");
-      return;
-    }
-
-    // Only render if no original kanban exists
+    // DYNAMIC HTML SWAPPING: Generate fresh HTML for view switching
     if (!this.viewElement) {
       throw new Error("View element not created");
     }
@@ -66,7 +49,7 @@ class KanbanView extends BaseView {
     const filteredTasks = this.getFilteredTasks();
     const tasksByStatus = this.groupTasksByStatus(filteredTasks);
 
-    console.log("⚠️ Original kanban not found, generating new HTML");
+    console.log("🎨 Generating fresh Kanban HTML for dynamic view switching");
 
     let kanbanHTML = '<div class="kanban-board">';
     this.columns.forEach((columnKey) => {
@@ -116,7 +99,7 @@ class KanbanView extends BaseView {
       this.setupDragAndDrop();
     }, 100);
 
-    console.log(`🎨 Generated new Kanban with ${filteredTasks.length} tasks`);
+    console.log(`🎨 Generated fresh Kanban with ${filteredTasks.length} tasks`);
   }
 
   /**
