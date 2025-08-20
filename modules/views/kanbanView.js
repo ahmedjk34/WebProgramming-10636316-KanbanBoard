@@ -32,27 +32,26 @@ class KanbanView extends BaseView {
    * Create the view element - use existing kanban board
    */
   createViewElement() {
-    // DYNAMIC INJECTION - Use container directly
+    // DYNAMIC HTML SWAPPING: Use container for all views
     this.viewElement = this.container;
-    console.log(`📦 Using container for dynamic Kanban injection`);
+    console.log(`📦 Using container for dynamic Kanban view`);
   }
 
   /**
    * Render the Kanban board
    */
   async render() {
+    // DYNAMIC HTML SWAPPING: Generate fresh HTML for view switching
     if (!this.viewElement) {
       throw new Error("View element not created");
     }
 
     const filteredTasks = this.getFilteredTasks();
-
-    // Group tasks by status
     const tasksByStatus = this.groupTasksByStatus(filteredTasks);
 
-    // Generate Kanban HTML
-    let kanbanHTML = '<div class="kanban-board">';
+    console.log("🎨 Generating fresh Kanban HTML for dynamic view switching");
 
+    let kanbanHTML = '<div class="kanban-board">';
     this.columns.forEach((columnKey) => {
       const columnConfig = this.columnConfig[columnKey];
       const columnTasks = tasksByStatus[columnKey] || [];
@@ -63,22 +62,24 @@ class KanbanView extends BaseView {
             <div class="column-title">
               <span class="column-icon">${columnConfig.icon}</span>
               <span class="column-name">${columnConfig.title}</span>
-              <span class="task-count">${columnTasks.length}</span>
+              <span class="task-count" id="${columnKey}-count">${
+        columnTasks.length
+      }</span>
             </div>
             <div class="column-actions">
-              <button class="btn btn-small btn-secondary add-task-btn" 
-                      data-status="${columnKey}" 
+              <button class="btn btn-small btn-secondary add-task-btn"
+                      data-status="${columnKey}"
                       title="Add Task">
                 <span class="btn-icon">➕</span>
               </button>
             </div>
           </div>
-          
+
           <div class="column-content" data-status="${columnKey}">
-            <div class="task-list" data-status="${columnKey}">
+            <div class="task-list" id="${columnKey}-tasks" data-status="${columnKey}">
               ${this.renderTasks(columnTasks)}
             </div>
-            
+
             <div class="column-footer">
               <button class="btn btn-link add-task-link" data-status="${columnKey}">
                 <span class="btn-icon">➕</span>
@@ -89,18 +90,16 @@ class KanbanView extends BaseView {
         </div>
       `;
     });
-
     kanbanHTML += "</div>";
 
-    // INJECT THE COMPLETE HTML INTO CONTAINER
     this.viewElement.innerHTML = kanbanHTML;
+    this.setupEventListeners();
 
-    // Setup drag and drop
-    this.setupDragAndDrop();
+    setTimeout(() => {
+      this.setupDragAndDrop();
+    }, 100);
 
-    console.log(
-      `🎨 DYNAMICALLY RENDERED Kanban view with ${filteredTasks.length} tasks`
-    );
+    console.log(`🎨 Generated fresh Kanban with ${filteredTasks.length} tasks`);
   }
 
   /**
@@ -325,6 +324,14 @@ class KanbanView extends BaseView {
   }
 
   /**
+   * Protect styles from interference by other components
+   */
+  protectStyles() {
+    // REMOVED: No longer needed since we don't interfere with original HTML
+    console.log("🚫 Style protection disabled - original HTML is untouched");
+  }
+
+  /**
    * Setup drag and drop functionality
    */
   setupDragAndDrop() {
@@ -333,13 +340,22 @@ class KanbanView extends BaseView {
       return;
     }
 
-    // Use the correct DragDropManager methods
-    if (typeof this.dragDropManager.setupDragAndDropForTasks === "function") {
+    console.log(
+      "🎯 Setting up drag and drop for dynamically created Kanban view"
+    );
+
+    // Force re-initialization of drag and drop for new DOM elements
+    if (typeof this.dragDropManager.initializeDragAndDrop === "function") {
+      this.dragDropManager.initializeDragAndDrop();
+      console.log("✅ DragDropManager re-initialized for dynamic content");
+    } else if (
+      typeof this.dragDropManager.setupDragAndDropForTasks === "function"
+    ) {
       this.dragDropManager.setupDragAndDropForTasks();
-      console.log("🎯 Drag and drop setup for Kanban view");
+      console.log("✅ Drag and drop setup for Kanban view");
     } else if (typeof this.dragDropManager.refreshDragAndDrop === "function") {
       this.dragDropManager.refreshDragAndDrop();
-      console.log("🎯 Drag and drop refreshed for Kanban view");
+      console.log("✅ Drag and drop refreshed for Kanban view");
     } else {
       console.warn("⚠️ DragDropManager methods not available");
       console.log(
@@ -470,11 +486,12 @@ class KanbanView extends BaseView {
    */
   onViewShown() {
     super.onViewShown();
+    console.log("👁️ Kanban view shown - original HTML should be visible");
+  }
 
-    // Re-setup drag and drop when view becomes visible
-    setTimeout(() => {
-      this.setupDragAndDrop();
-    }, 100);
+  onViewHidden() {
+    super.onViewHidden();
+    console.log("🙈 Kanban view hidden - original HTML should be hidden");
   }
 }
 

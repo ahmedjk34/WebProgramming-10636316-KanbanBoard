@@ -338,6 +338,31 @@ class DragDropManager {
   }
 
   /**
+   * Force complete re-initialization (for dynamic HTML restoration)
+   */
+  forceReInitialize() {
+    console.log("🔄 Forcing complete drag & drop re-initialization...");
+
+    // Reset initialization flag
+    this.isInitialized = false;
+
+    // Clear any existing bound methods to prevent memory leaks
+    this.boundHandleDragStart = null;
+    this.boundHandleDragEnd = null;
+    this.boundHandleDragOver = null;
+    this.boundHandleDrop = null;
+    this.boundHandleDragEnter = null;
+    this.boundHandleDragLeave = null;
+    this.boundHandleColumnDragEnter = null;
+    this.boundHandleColumnDragLeave = null;
+
+    // Re-initialize everything
+    this.initializeDragAndDrop();
+
+    console.log("✅ Forced drag & drop re-initialization complete");
+  }
+
+  /**
    * Enable/disable drag and drop
    * @param {boolean} enabled - Whether to enable drag and drop
    */

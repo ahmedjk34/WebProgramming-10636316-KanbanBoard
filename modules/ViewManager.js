@@ -73,17 +73,33 @@ class ViewManager {
   }
 
   /**
-   * Setup the main view container
+   * Setup the main view container - CORRECTED LOGIC
    */
   setupViewContainer() {
+    // CRITICAL FIX: The kanban board is INSIDE the view-container in HTML
     this.viewContainer = document.getElementById("view-container");
+    const originalKanban = document.getElementById("kanban-board");
+
+    if (originalKanban && this.viewContainer) {
+      console.log(
+        "✅ Found original kanban INSIDE view-container - Setting up proper view switching"
+      );
+
+      // STORE the original kanban HTML for restoration
+      this.originalKanbanHTML = originalKanban.outerHTML;
+      this.originalKanbanBoard = originalKanban;
+      this.hasOriginalKanban = true;
+
+      console.log("💾 Stored original kanban HTML for proper view switching");
+      return;
+    }
+
+    // Fallback: create new container only if original doesn't exist
     if (!this.viewContainer) {
-      // Create view container if it doesn't exist
       this.viewContainer = document.createElement("div");
       this.viewContainer.id = "view-container";
       this.viewContainer.className = "view-container";
 
-      // Insert after header or at the beginning of main content
       const mainContent =
         document.querySelector(".main-content") || document.body;
       const header = document.querySelector(".app-header");
@@ -95,13 +111,7 @@ class ViewManager {
       }
     }
 
-    // IMPORTANT: Hide the original kanban board
-    const originalKanban = document.getElementById("kanban-board");
-    if (originalKanban) {
-      originalKanban.style.display = "none";
-      console.log("🙈 Hidden original kanban board");
-    }
-
+    this.hasOriginalKanban = false;
     console.log("📦 View container setup complete");
   }
 
@@ -271,15 +281,31 @@ class ViewManager {
       await currentViewInstance.hide();
     }
 
-    // COMPLETELY CLEAR THE VIEW CONTAINER FOR DYNAMIC INJECTION
+    // CORRECTED LOGIC: Clear the view-container content
+    if (this.currentView === "kanban" && this.hasOriginalKanban) {
+      // For kanban, we'll replace the content when switching back
+      console.log(`🙈 Hiding kanban view - will restore when switching back`);
+    } else {
+      console.log(`🗑️ Clearing view container for view switch`);
+    }
+
+    // Always clear the view container for clean switching
     this.viewContainer.innerHTML = "";
-    console.log(`🗑️ Cleared view container for view switch`);
   }
 
   /**
    * Load and show a specific view
    */
   async loadAndShowView(viewKey) {
+    // CORRECTED LOGIC: Handle kanban vs other views properly
+    if (viewKey === "kanban" && this.hasOriginalKanban) {
+      // RESTORE the original kanban HTML into the view-container
+      await this.restoreOriginalKanban();
+      console.log(`✅ Restored original kanban HTML into view-container`);
+      return;
+    }
+
+    // For other views, use the ViewManager system
     let viewInstance = this.viewInstances.get(viewKey);
 
     if (!viewInstance) {
@@ -288,17 +314,151 @@ class ViewManager {
       this.viewInstances.set(viewKey, viewInstance);
     }
 
-    // DYNAMICALLY INJECT THE VIEW HTML
+    // Render and show the view
     if (typeof viewInstance.render === "function") {
       await viewInstance.render();
     }
 
-    // Show the view
     if (typeof viewInstance.show === "function") {
       await viewInstance.show();
     }
 
-    console.log(`✅ Dynamically loaded and displayed ${viewKey} view`);
+    console.log(`✅ Loaded and displayed ${viewKey} view`);
+  }
+
+  /**
+   * Restore the original kanban HTML - CORRECTED VERSION
+   */
+  async restoreOriginalKanban() {
+    if (!this.hasOriginalKanban || !this.originalKanbanHTML) {
+      console.warn("⚠️ No original kanban HTML to restore");
+      return;
+    }
+
+    try {
+      // CRITICAL FIX: Inject the original kanban HTML directly into view-container
+      this.viewContainer.innerHTML = this.originalKanbanHTML;
+
+      // Update reference to the restored element
+      this.originalKanbanBoard = document.getElementById("kanban-board");
+
+      if (!this.originalKanbanBoard) {
+        throw new Error("Failed to find restored kanban board");
+      }
+
+      // Ensure view-container is visible
+      this.viewContainer.style.display = "flex";
+      this.viewContainer.style.visibility = "visible";
+      this.viewContainer.style.opacity = "1";
+
+      // Re-initialize ALL functionality for the restored HTML
+      setTimeout(() => {
+        // FORCE complete drag and drop re-initialization
+        if (window.app && window.app.dragDropManager) {
+          if (
+            typeof window.app.dragDropManager.forceReInitialize === "function"
+          ) {
+            window.app.dragDropManager.forceReInitialize();
+          } else {
+            // Fallback method
+            window.app.dragDropManager.isInitialized = false;
+            window.app.dragDropManager.initializeDragAndDrop();
+          }
+          console.log(
+            "🎯 FORCED complete drag & drop re-initialization for restored kanban"
+          );
+        } else if (window.dragDropManager) {
+          if (typeof window.dragDropManager.forceReInitialize === "function") {
+            window.dragDropManager.forceReInitialize();
+          } else {
+            // Fallback method
+            window.dragDropManager.isInitialized = false;
+            window.dragDropManager.initializeDragAndDrop();
+          }
+          console.log(
+            "🎯 FORCED complete drag & drop re-initialization (global)"
+          );
+        }
+
+        // Re-initialize UI manager (for dropdowns and other interactions)
+        if (window.app && window.app.uiManager) {
+          window.app.uiManager.setupEventListeners();
+          console.log(
+            "🎧 Re-initialized UI event listeners for restored kanban"
+          );
+        }
+
+        // Debug the final state
+        const computedStyle = window.getComputedStyle(this.originalKanbanBoard);
+        const containerStyle = window.getComputedStyle(this.viewContainer);
+
+        // Check task cards for drag & drop
+        const taskCards =
+          this.originalKanbanBoard.querySelectorAll(".task-card");
+        const draggableCards = Array.from(taskCards).filter(
+          (card) => card.draggable
+        );
+
+        console.log("👁️ Final state debug:", {
+          container: {
+            display: containerStyle.display,
+            visibility: containerStyle.visibility,
+            opacity: containerStyle.opacity,
+          },
+          kanban: {
+            display: computedStyle.display,
+            visibility: computedStyle.visibility,
+            opacity: computedStyle.opacity,
+            width: computedStyle.width,
+            height: computedStyle.height,
+          },
+          dragDrop: {
+            totalTaskCards: taskCards.length,
+            draggableCards: draggableCards.length,
+            dragDropManagerAvailable: !!(
+              window.app && window.app.dragDropManager
+            ),
+            isInitialized:
+              window.app && window.app.dragDropManager
+                ? window.app.dragDropManager.isInitialized
+                : false,
+          },
+        });
+
+        console.log("✅ Kanban restoration and re-initialization complete");
+      }, 100);
+
+      console.log(
+        "🔄 Original kanban HTML restored into view-container successfully"
+      );
+    } catch (error) {
+      console.error("❌ Failed to restore original kanban HTML:", error);
+      // Fallback: show an error message
+      this.viewContainer.innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #dc3545;">
+          <h3>⚠️ Failed to restore Kanban view</h3>
+          <p>Please refresh the page to reload the Kanban board.</p>
+          <button onclick="location.reload()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Refresh Page
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Force style recalculation to prevent conflicts
+   */
+  forceStyleRecalculation() {
+    const kanbanBoard = this.viewContainer.querySelector(".kanban-board");
+    if (kanbanBoard) {
+      // Force browser to recalculate styles
+      kanbanBoard.style.display = "none";
+      kanbanBoard.offsetHeight; // Trigger reflow
+      kanbanBoard.style.display = "grid";
+
+      console.log("🔄 Forced style recalculation for kanban board");
+    }
   }
 
   /**
