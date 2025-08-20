@@ -486,6 +486,7 @@ body {
   gap: 24px;
   min-height: 70vh;
   margin-top: 20px;
+  padding: 20px;
 }
 
 .kanban-column {
@@ -655,6 +656,7 @@ body {
   min-height: 120px;
   min-width: 280px;
   flex-shrink: 0;
+  margin-bottom: 16px;
 }
 
 .task-card::before {
@@ -3890,16 +3892,98 @@ body.modal-open {
   min-height: 0;
 }
 
-/* Exception for kanban view - preserve grid layout */
-.view-content.kanban-view,
-#kanban-view {
-  display: block !important;
-}
-
-.view-content.kanban-view .kanban-board,
-#kanban-view.kanban-board {
+/* CRITICAL: High specificity for dynamic kanban content - MUST OVERRIDE EVERYTHING */
+body #view-container .kanban-board,
+body .view-container .kanban-board,
+body [id*="view"] .kanban-board {
   display: grid !important;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)) !important;
+  gap: 24px !important;
+  padding: 20px !important;
+  min-height: 70vh !important;
+  margin-top: 20px !important;
+}
+
+body #view-container .kanban-column,
+body .view-container .kanban-column,
+body [id*="view"] .kanban-column {
+  background: var(--bg-glass) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius-lg) !important;
+  padding: 0 !important;
+  box-shadow: var(--shadow-medium) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: var(--transition) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+body #view-container .task-card,
+body .view-container .task-card,
+body [id*="view"] .task-card {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius) !important;
+  padding: 20px !important;
+  cursor: grab !important;
+  transition: var(--transition) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  min-height: 120px !important;
+  min-width: 280px !important;
+  flex-shrink: 0 !important;
+  margin-bottom: 16px !important;
+}
+
+/* CRITICAL: Ensure drag and drop cursors work */
+body #view-container .task-card:hover,
+body .view-container .task-card:hover,
+body [id*="view"] .task-card:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: var(--shadow-medium) !important;
+  border-color: rgba(102, 126, 234, 0.3) !important;
+  cursor: grab !important;
+}
+
+body #view-container .task-card:active,
+body .view-container .task-card:active,
+body [id*="view"] .task-card:active {
+  cursor: grabbing !important;
+  transform: rotate(2deg) scale(1.05) !important;
+}
+
+/* CRITICAL: Prevent dropdown/view-switcher from interfering with kanban styles */
+.view-switcher ~ #view-container .kanban-board,
+.dropdown-menu ~ #view-container .kanban-board,
+[class*="dropdown"] ~ #view-container .kanban-board {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)) !important;
+}
+
+/* CRITICAL: Ensure kanban always takes precedence over other components */
+#view-container .kanban-board {
+  z-index: 10 !important;
+}
+
+#view-container .kanban-column {
+  z-index: 11 !important;
+}
+
+#view-container .task-card {
+  z-index: 12 !important;
+}
+
+/* CRITICAL: Override any conflicting styles from dropdowns or other components */
+body #view-container .kanban-board,
+body #view-container .kanban-column,
+body #view-container .task-card {
+  position: relative !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* View Loading and Error States */

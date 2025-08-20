@@ -76,14 +76,32 @@ class ViewManager {
    * Setup the main view container
    */
   setupViewContainer() {
+    // CRITICAL FIX: Don't interfere with original kanban at all
+    const originalKanban = document.getElementById("kanban-board");
+    if (originalKanban) {
+      console.log("✅ Original kanban found - ViewManager will stay hands-off");
+      // Create a separate container for other views, leave kanban alone
+      this.viewContainer = document.createElement("div");
+      this.viewContainer.id = "view-container";
+      this.viewContainer.className = "view-container";
+      this.viewContainer.style.display = "none"; // Hidden by default
+
+      // Insert after the original kanban
+      originalKanban.parentElement.appendChild(this.viewContainer);
+
+      // Mark that we have original kanban
+      this.hasOriginalKanban = true;
+      this.originalKanbanBoard = originalKanban;
+      return;
+    }
+
+    // Fallback: create new container only if original doesn't exist
     this.viewContainer = document.getElementById("view-container");
     if (!this.viewContainer) {
-      // Create view container if it doesn't exist
       this.viewContainer = document.createElement("div");
       this.viewContainer.id = "view-container";
       this.viewContainer.className = "view-container";
 
-      // Insert after header or at the beginning of main content
       const mainContent =
         document.querySelector(".main-content") || document.body;
       const header = document.querySelector(".app-header");
@@ -95,13 +113,7 @@ class ViewManager {
       }
     }
 
-    // IMPORTANT: Hide the original kanban board
-    const originalKanban = document.getElementById("kanban-board");
-    if (originalKanban) {
-      originalKanban.style.display = "none";
-      console.log("🙈 Hidden original kanban board");
-    }
-
+    this.hasOriginalKanban = false;
     console.log("📦 View container setup complete");
   }
 
@@ -271,15 +283,33 @@ class ViewManager {
       await currentViewInstance.hide();
     }
 
-    // COMPLETELY CLEAR THE VIEW CONTAINER FOR DYNAMIC INJECTION
-    this.viewContainer.innerHTML = "";
-    console.log(`🗑️ Cleared view container for view switch`);
+    // CRITICAL FIX: Handle original kanban vs other views
+    if (this.currentView === "kanban" && this.hasOriginalKanban) {
+      // Just hide the original kanban, don't touch it
+      this.originalKanbanBoard.style.display = "none";
+      console.log(`🙈 Hidden original kanban board for view switch`);
+    } else {
+      // For other views, clear the separate container
+      this.viewContainer.innerHTML = "";
+      console.log(`🗑️ Cleared view container for view switch`);
+    }
   }
 
   /**
    * Load and show a specific view
    */
   async loadAndShowView(viewKey) {
+    // CRITICAL FIX: For kanban view with original HTML, just show it
+    if (viewKey === "kanban" && this.hasOriginalKanban) {
+      this.originalKanbanBoard.style.display = "grid";
+      this.viewContainer.style.display = "none";
+      console.log(
+        `✅ Showed original kanban board (no ViewManager interference)`
+      );
+      return;
+    }
+
+    // For other views, use the ViewManager system
     let viewInstance = this.viewInstances.get(viewKey);
 
     if (!viewInstance) {
@@ -288,17 +318,37 @@ class ViewManager {
       this.viewInstances.set(viewKey, viewInstance);
     }
 
-    // DYNAMICALLY INJECT THE VIEW HTML
+    // Show the view container for non-kanban views
+    this.viewContainer.style.display = "block";
+    if (this.hasOriginalKanban) {
+      this.originalKanbanBoard.style.display = "none";
+    }
+
+    // Render and show the view
     if (typeof viewInstance.render === "function") {
       await viewInstance.render();
     }
 
-    // Show the view
     if (typeof viewInstance.show === "function") {
       await viewInstance.show();
     }
 
-    console.log(`✅ Dynamically loaded and displayed ${viewKey} view`);
+    console.log(`✅ Loaded and displayed ${viewKey} view`);
+  }
+
+  /**
+   * Force style recalculation to prevent conflicts
+   */
+  forceStyleRecalculation() {
+    const kanbanBoard = this.viewContainer.querySelector(".kanban-board");
+    if (kanbanBoard) {
+      // Force browser to recalculate styles
+      kanbanBoard.style.display = "none";
+      kanbanBoard.offsetHeight; // Trigger reflow
+      kanbanBoard.style.display = "grid";
+
+      console.log("🔄 Forced style recalculation for kanban board");
+    }
   }
 
   /**
