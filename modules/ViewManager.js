@@ -353,10 +353,31 @@ class ViewManager {
 
       // Re-initialize ALL functionality for the restored HTML
       setTimeout(() => {
-        // Re-initialize drag and drop
+        // FORCE complete drag and drop re-initialization
         if (window.app && window.app.dragDropManager) {
-          window.app.dragDropManager.setupDragAndDropForTasks();
-          console.log("🎯 Re-initialized drag & drop for restored kanban");
+          if (
+            typeof window.app.dragDropManager.forceReInitialize === "function"
+          ) {
+            window.app.dragDropManager.forceReInitialize();
+          } else {
+            // Fallback method
+            window.app.dragDropManager.isInitialized = false;
+            window.app.dragDropManager.initializeDragAndDrop();
+          }
+          console.log(
+            "🎯 FORCED complete drag & drop re-initialization for restored kanban"
+          );
+        } else if (window.dragDropManager) {
+          if (typeof window.dragDropManager.forceReInitialize === "function") {
+            window.dragDropManager.forceReInitialize();
+          } else {
+            // Fallback method
+            window.dragDropManager.isInitialized = false;
+            window.dragDropManager.initializeDragAndDrop();
+          }
+          console.log(
+            "🎯 FORCED complete drag & drop re-initialization (global)"
+          );
         }
 
         // Re-initialize UI manager (for dropdowns and other interactions)
@@ -371,7 +392,14 @@ class ViewManager {
         const computedStyle = window.getComputedStyle(this.originalKanbanBoard);
         const containerStyle = window.getComputedStyle(this.viewContainer);
 
-        console.log("👁️ Final visibility debug:", {
+        // Check task cards for drag & drop
+        const taskCards =
+          this.originalKanbanBoard.querySelectorAll(".task-card");
+        const draggableCards = Array.from(taskCards).filter(
+          (card) => card.draggable
+        );
+
+        console.log("👁️ Final state debug:", {
           container: {
             display: containerStyle.display,
             visibility: containerStyle.visibility,
@@ -383,6 +411,17 @@ class ViewManager {
             opacity: computedStyle.opacity,
             width: computedStyle.width,
             height: computedStyle.height,
+          },
+          dragDrop: {
+            totalTaskCards: taskCards.length,
+            draggableCards: draggableCards.length,
+            dragDropManagerAvailable: !!(
+              window.app && window.app.dragDropManager
+            ),
+            isInitialized:
+              window.app && window.app.dragDropManager
+                ? window.app.dragDropManager.isInitialized
+                : false,
           },
         });
 
