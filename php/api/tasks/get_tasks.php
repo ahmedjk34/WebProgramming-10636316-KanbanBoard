@@ -32,18 +32,47 @@ try {
                 t.priority,
                 t.due_date,
                 t.position,
+                t.created_by,
+                t.assigned_to,
+                t.team_id,
+                t.task_type,
                 t.created_at,
                 t.updated_at,
                 p.name as project_name,
                 p.color as project_color,
-                p.workspace_id
+                p.workspace_id,
+                p.team_id as project_team_id,
+                tm.name as team_name,
+                tm.color as team_color,
+                u_creator.username as creator_username,
+                u_creator.first_name as creator_first_name,
+                u_creator.last_name as creator_last_name,
+                u_assigned.username as assigned_username,
+                u_assigned.first_name as assigned_first_name,
+                u_assigned.last_name as assigned_last_name
             FROM tasks t
             INNER JOIN projects p ON t.project_id = p.id
             INNER JOIN workspaces w ON p.workspace_id = w.id
-            INNER JOIN workspace_members wm ON w.id = wm.workspace_id
-            WHERE p.workspace_id = :workspace_id AND wm.user_id = :user_id";
+            LEFT JOIN workspace_members wm ON w.id = wm.workspace_id AND wm.user_id = :user_id_1
+            LEFT JOIN teams tm ON t.team_id = tm.id
+            LEFT JOIN users u_creator ON t.created_by = u_creator.id
+            LEFT JOIN users u_assigned ON t.assigned_to = u_assigned.id
+            WHERE p.workspace_id = :workspace_id 
+              AND (w.owner_id = :user_id_2 OR wm.user_id = :user_id_3 
+                   OR (w.team_id IS NOT NULL AND EXISTS (
+                       SELECT 1 FROM team_members tm_members 
+                       WHERE tm_members.team_id = w.team_id 
+                       AND tm_members.user_id = :user_id_4 
+                       AND tm_members.status = 'active'
+                   )))";
 
-    $params = [':workspace_id' => $workspaceId, ':user_id' => $userId];
+    $params = [
+        ':workspace_id' => $workspaceId, 
+        ':user_id_1' => $userId, 
+        ':user_id_2' => $userId, 
+        ':user_id_3' => $userId, 
+        ':user_id_4' => $userId
+    ];
 
     // Add filters if provided
     if ($projectId !== null && $projectId !== false) {
@@ -81,10 +110,27 @@ try {
             'priority' => $task['priority'],
             'due_date' => $task['due_date'],
             'position' => (int)$task['position'],
+            'created_by' => (int)$task['created_by'],
+            'assigned_to' => $task['assigned_to'] ? (int)$task['assigned_to'] : null,
+            'team_id' => $task['team_id'] ? (int)$task['team_id'] : null,
+            'task_type' => $task['task_type'],
             'created_at' => $task['created_at'],
             'updated_at' => $task['updated_at'],
             'project_name' => $task['project_name'],
             'project_color' => $task['project_color'],
+            'project_team_id' => $task['project_team_id'] ? (int)$task['project_team_id'] : null,
+            'team_name' => $task['team_name'],
+            'team_color' => $task['team_color'],
+            'creator' => [
+                'username' => $task['creator_username'],
+                'first_name' => $task['creator_first_name'],
+                'last_name' => $task['creator_last_name']
+            ],
+            'assigned_to_user' => $task['assigned_to'] ? [
+                'username' => $task['assigned_username'],
+                'first_name' => $task['assigned_first_name'],
+                'last_name' => $task['assigned_last_name']
+            ] : null,
             'is_overdue' => $task['due_date'] && $task['due_date'] < date('Y-m-d') && $task['status'] !== 'done'
         ];
     }
