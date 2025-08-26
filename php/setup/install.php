@@ -72,113 +72,6 @@ function installDatabase() {
         // Now connect to the specific database
         $pdo = getDBConnection();
 
-        // Create workspaces table (highest level in hierarchy)
-        $workspacesSQL = "
-        CREATE TABLE IF NOT EXISTS workspaces (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            description TEXT,
-            color VARCHAR(7) DEFAULT '#667eea',
-            icon VARCHAR(50) DEFAULT '🏢',
-            is_default BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_workspace_name (name)
-        ) ENGINE=InnoDB";
-
-        $pdo->exec($workspacesSQL);
-        echo "✅ Workspaces table created successfully.\n";
-
-        // Create projects table with workspace support
-        $projectsSQL = "
-        CREATE TABLE projects (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            workspace_id INT NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            description TEXT,
-            color VARCHAR(7) DEFAULT '#3498db',
-            status ENUM('active', 'on_hold', 'completed', 'archived') DEFAULT 'active',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
-            INDEX idx_project_workspace (workspace_id),
-            INDEX idx_project_name (name)
-        ) ENGINE=InnoDB";
-
-        $pdo->exec($projectsSQL);
-        echo "✅ Projects table created successfully.\n";
-        
-        // Create tasks table
-        $tasksSQL = "
-        CREATE TABLE IF NOT EXISTS tasks (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            project_id INT NOT NULL,
-            title VARCHAR(255) NOT NULL,
-            description TEXT,
-            status ENUM('todo', 'in_progress', 'done') DEFAULT 'todo',
-            priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
-            due_date DATE NULL,
-            position INT DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-            INDEX idx_status (status),
-            INDEX idx_priority (priority),
-            INDEX idx_due_date (due_date),
-            INDEX idx_project_status (project_id, status),
-            INDEX idx_position (position)
-        ) ENGINE=InnoDB";
-        
-        $pdo->exec($tasksSQL);
-        echo "✅ Tasks table created successfully.\n";
-        
-        // Insert default workspaces
-        $insertWorkspaces = "
-        INSERT IGNORE INTO workspaces (id, name, description, color, icon, is_default) VALUES
-        (1, 'Personal Workspace', 'Your personal tasks and projects', '#667eea', '👤', TRUE),
-        (2, 'Work Workspace', 'Professional work and business projects', '#2ecc71', '💼', FALSE),
-        (3, 'Creative Projects', 'Creative and artistic endeavors', '#f093fb', '🎨', FALSE)";
-
-        $pdo->exec($insertWorkspaces);
-        echo "✅ Default workspaces inserted successfully.\n";
-
-        // Insert default projects (now with workspace associations)
-        // First, check if we need to update existing projects to have workspace_id
-        $checkExistingProjects = "SELECT COUNT(*) as count FROM projects WHERE workspace_id IS NULL OR workspace_id = 0";
-        $result = $pdo->query($checkExistingProjects);
-        $needsUpdate = $result->fetch()['count'] > 0;
-
-        if ($needsUpdate) {
-            // Update existing projects to belong to default workspace
-            $updateExisting = "UPDATE projects SET workspace_id = 1 WHERE workspace_id IS NULL OR workspace_id = 0";
-            $pdo->exec($updateExisting);
-            echo "✅ Updated existing projects to belong to default workspace.\n";
-        }
-
-        // Insert default projects if they don't exist
-        $insertProjects = "
-        INSERT IGNORE INTO projects (id, workspace_id, name, description, color, status) VALUES
-        (1, 1, 'Personal Tasks', 'Daily personal tasks and reminders', '#3498db', 'active'),
-        (2, 1, 'Home Projects', 'Home improvement and maintenance', '#e74c3c', 'active'),
-        (3, 2, 'Work Projects', 'Professional work assignments', '#2ecc71', 'active'),
-        (4, 2, 'Team Collaboration', 'Team-based projects and meetings', '#f39c12', 'active'),
-        (5, 3, 'Art & Design', 'Creative design projects', '#9b59b6', 'active')";
-
-        $pdo->exec($insertProjects);
-        echo "✅ Default projects inserted successfully.\n";
-        
-        // Insert sample tasks
-        $insertTasks = "
-        INSERT IGNORE INTO tasks (project_id, title, description, status, priority, due_date, position) VALUES 
-        (1, 'Setup Development Environment', 'Install and configure all necessary tools for the project', 'done', 'high', '2025-01-15', 1),
-        (1, 'Create Database Schema', 'Design and implement the database structure', 'in_progress', 'high', '2025-01-20', 2),
-        (1, 'Implement Drag & Drop', 'Add HTML5 drag and drop functionality', 'todo', 'medium', '2025-01-25', 3),
-        (2, 'Plan Weekend Activities', 'Decide what to do this weekend', 'todo', 'low', '2025-01-18', 1),
-        (3, 'Prepare Project Presentation', 'Create slides for the project demo', 'todo', 'high', '2025-01-30', 1)";
-        
-        $pdo->exec($insertTasks);
-        echo "✅ Sample tasks inserted successfully.\n";
-
         // Create users table for authentication
         $usersSQL = "
         CREATE TABLE IF NOT EXISTS users (
@@ -207,6 +100,80 @@ function installDatabase() {
         $pdo->exec($usersSQL);
         echo "✅ Users table created successfully.\n";
 
+        // Create workspaces table with user ownership
+        $workspacesSQL = "
+        CREATE TABLE IF NOT EXISTS workspaces (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            description TEXT,
+            color VARCHAR(7) DEFAULT '#667eea',
+            icon VARCHAR(50) DEFAULT '🏢',
+            owner_id INT NOT NULL,
+            is_default BOOLEAN DEFAULT FALSE,
+            is_shared BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
+            INDEX idx_workspace_name (name),
+            INDEX idx_workspace_owner (owner_id),
+            INDEX idx_workspace_shared (is_shared)
+        ) ENGINE=InnoDB";
+
+        $pdo->exec($workspacesSQL);
+        echo "✅ Workspaces table created successfully.\n";
+
+        // Create projects table with workspace and user support
+        $projectsSQL = "
+        CREATE TABLE projects (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            workspace_id INT NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            description TEXT,
+            color VARCHAR(7) DEFAULT '#3498db',
+            status ENUM('active', 'on_hold', 'completed', 'archived') DEFAULT 'active',
+            created_by INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+            FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+            INDEX idx_project_workspace (workspace_id),
+            INDEX idx_project_creator (created_by),
+            INDEX idx_project_name (name)
+        ) ENGINE=InnoDB";
+
+        $pdo->exec($projectsSQL);
+        echo "✅ Projects table created successfully.\n";
+
+        // Create tasks table with user support
+        $tasksSQL = "
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            project_id INT NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            description TEXT,
+            status ENUM('todo', 'in_progress', 'done') DEFAULT 'todo',
+            priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+            due_date DATE NULL,
+            position INT DEFAULT 0,
+            created_by INT NOT NULL,
+            assigned_to INT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+            FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL,
+            INDEX idx_status (status),
+            INDEX idx_priority (priority),
+            INDEX idx_due_date (due_date),
+            INDEX idx_project_status (project_id, status),
+            INDEX idx_position (position),
+            INDEX idx_task_creator (created_by),
+            INDEX idx_task_assigned (assigned_to)
+        ) ENGINE=InnoDB";
+
+        $pdo->exec($tasksSQL);
+        echo "✅ Tasks table created successfully.\n";
+
         // Create user preferences table for view settings
         $userPreferencesSQL = "
         CREATE TABLE IF NOT EXISTS user_preferences (
@@ -226,7 +193,26 @@ function installDatabase() {
         $pdo->exec($userPreferencesSQL);
         echo "✅ User preferences table created successfully.\n";
 
-        // Create task activity log for analytics
+        // Create workspace members table for collaboration
+        $workspaceMembersSQL = "
+        CREATE TABLE IF NOT EXISTS workspace_members (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            workspace_id INT NOT NULL,
+            user_id INT NOT NULL,
+            role ENUM('owner', 'admin', 'member', 'viewer') DEFAULT 'member',
+            joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE KEY unique_workspace_member (workspace_id, user_id),
+            INDEX idx_workspace_members (workspace_id),
+            INDEX idx_user_workspaces (user_id),
+            INDEX idx_member_role (role)
+        ) ENGINE=InnoDB";
+
+        $pdo->exec($workspaceMembersSQL);
+        echo "✅ Workspace members table created successfully.\n";
+
+        // Create task activity log for analytics (after tasks table)
         $taskActivitySQL = "
         CREATE TABLE IF NOT EXISTS task_activity_log (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -247,7 +233,7 @@ function installDatabase() {
         $pdo->exec($taskActivitySQL);
         echo "✅ Task activity log table created successfully.\n";
 
-        // Create project analytics table
+        // Create project analytics table (after projects table)
         $projectAnalyticsSQL = "
         CREATE TABLE IF NOT EXISTS project_analytics (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -268,7 +254,71 @@ function installDatabase() {
         $pdo->exec($projectAnalyticsSQL);
         echo "✅ Project analytics table created successfully.\n";
 
-        // Create analytics views
+        // Insert default user (for demo purposes)
+        $insertDefaultUser = "
+        INSERT IGNORE INTO users (id, username, email, password_hash, first_name, last_name, is_active, email_verified) VALUES
+        (1, 'demo_user', 'demo@kanban.com', '" . password_hash('demo123', PASSWORD_DEFAULT) . "', 'Demo', 'User', TRUE, TRUE)";
+
+        $pdo->exec($insertDefaultUser);
+        echo "✅ Default user created successfully.\n";
+
+        // Insert default user preferences
+        $insertPreferences = "
+        INSERT IGNORE INTO user_preferences (user_id, preference_key, preference_value) VALUES
+        (1, 'default_view', 'kanban'),
+        (1, 'theme', 'light'),
+        (1, 'analytics_refresh_interval', '30'),
+        (1, 'show_completed_tasks', 'true'),
+        (1, 'calendar_view_type', 'month')";
+
+        $pdo->exec($insertPreferences);
+        echo "✅ Default user preferences inserted successfully.\n";
+
+        // Insert workspace members for default user
+        $insertWorkspaceMembers = "
+        INSERT IGNORE INTO workspace_members (workspace_id, user_id, role) VALUES
+        (1, 1, 'owner'),
+        (2, 1, 'owner'),
+        (3, 1, 'owner')";
+
+        $pdo->exec($insertWorkspaceMembers);
+        echo "✅ Workspace members inserted successfully.\n";
+
+        // Insert default workspaces (after user creation)
+        $insertWorkspaces = "
+        INSERT IGNORE INTO workspaces (id, name, description, color, icon, owner_id, is_default) VALUES
+        (1, 'Personal Workspace', 'Your personal tasks and projects', '#667eea', '👤', 1, TRUE),
+        (2, 'Work Workspace', 'Professional work and business projects', '#2ecc71', '💼', 1, FALSE),
+        (3, 'Creative Projects', 'Creative and artistic endeavors', '#f093fb', '🎨', 1, FALSE)";
+
+        $pdo->exec($insertWorkspaces);
+        echo "✅ Default workspaces inserted successfully.\n";
+
+        // Insert default projects with user associations
+        $insertProjects = "
+        INSERT IGNORE INTO projects (id, workspace_id, name, description, color, status, created_by) VALUES
+        (1, 1, 'Personal Tasks', 'Daily personal tasks and reminders', '#3498db', 'active', 1),
+        (2, 1, 'Home Projects', 'Home improvement and maintenance', '#e74c3c', 'active', 1),
+        (3, 2, 'Work Projects', 'Professional work assignments', '#2ecc71', 'active', 1),
+        (4, 2, 'Team Collaboration', 'Team-based projects and meetings', '#f39c12', 'active', 1),
+        (5, 3, 'Art & Design', 'Creative design projects', '#9b59b6', 'active', 1)";
+
+        $pdo->exec($insertProjects);
+        echo "✅ Default projects inserted successfully.\n";
+        
+        // Insert sample tasks with user associations
+        $insertTasks = "
+        INSERT IGNORE INTO tasks (project_id, title, description, status, priority, due_date, position, created_by) VALUES 
+        (1, 'Setup Development Environment', 'Install and configure all necessary tools for the project', 'done', 'high', '2025-01-15', 1, 1),
+        (1, 'Create Database Schema', 'Design and implement the database structure', 'in_progress', 'high', '2025-01-20', 2, 1),
+        (1, 'Implement Drag & Drop', 'Add HTML5 drag and drop functionality', 'todo', 'medium', '2025-01-25', 3, 1),
+        (2, 'Plan Weekend Activities', 'Decide what to do this weekend', 'todo', 'low', '2025-01-18', 1, 1),
+        (3, 'Prepare Project Presentation', 'Create slides for the project demo', 'todo', 'high', '2025-01-30', 1, 1)";
+        
+        $pdo->exec($insertTasks);
+        echo "✅ Sample tasks inserted successfully.\n";
+
+        // Create analytics views (after all tables and data exist)
         $createViews = "
         CREATE OR REPLACE VIEW task_statistics AS
         SELECT
@@ -305,26 +355,6 @@ function installDatabase() {
 
         $pdo->exec($createViews);
         echo "✅ Analytics views created successfully.\n";
-
-        // Insert default user (for demo purposes)
-        $insertDefaultUser = "
-        INSERT IGNORE INTO users (id, username, email, password_hash, first_name, last_name, is_active, email_verified) VALUES
-        (1, 'demo_user', 'demo@kanban.com', '" . password_hash('demo123', PASSWORD_DEFAULT) . "', 'Demo', 'User', TRUE, TRUE)";
-
-        $pdo->exec($insertDefaultUser);
-        echo "✅ Default user created successfully.\n";
-
-        // Insert default user preferences
-        $insertPreferences = "
-        INSERT IGNORE INTO user_preferences (user_id, preference_key, preference_value) VALUES
-        (1, 'default_view', 'kanban'),
-        (1, 'theme', 'light'),
-        (1, 'analytics_refresh_interval', '30'),
-        (1, 'show_completed_tasks', 'true'),
-        (1, 'calendar_view_type', 'month')";
-
-        $pdo->exec($insertPreferences);
-        echo "✅ Default user preferences inserted successfully.\n";
 
         echo "\n🎉 Database installation completed successfully!\n";
         echo "📊 Analytics tables and views created.\n";

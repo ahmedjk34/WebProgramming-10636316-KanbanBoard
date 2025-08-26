@@ -14,16 +14,28 @@ error_reporting(E_ERROR | E_PARSE);
 
 // Include required files
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/session.php';
 require_once __DIR__ . '/../../../utils/php-utils.php';
+
+// Start session to get user ID
+safeSessionStart();
 
 try {
     // Get database connection
     $pdo = getDBConnection();
 
+    // Get current user ID from session
+    $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+    
+    if (!$userId) {
+        echo jsonResponse(false, 'User not authenticated', [], 401);
+        exit;
+    }
+
     // Get workspace_id from query parameter (default to 1)
     $workspaceId = isset($_GET['workspace_id']) ? (int)$_GET['workspace_id'] : 1;
 
-    // Get all projects with task counts for the current workspace
+    // Get all projects with task counts for the current workspace (only accessible to user)
     $sql = "SELECT
                 p.id,
                 p.workspace_id,
@@ -38,13 +50,15 @@ try {
                 SUM(CASE WHEN t.status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_count,
                 SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END) as done_count
             FROM projects p
+            INNER JOIN workspaces w ON p.workspace_id = w.id
+            INNER JOIN workspace_members wm ON w.id = wm.workspace_id
             LEFT JOIN tasks t ON p.id = t.project_id
-            WHERE p.workspace_id = :workspace_id
+            WHERE p.workspace_id = :workspace_id AND wm.user_id = :user_id
             GROUP BY p.id, p.workspace_id, p.name, p.description, p.color, p.status, p.created_at, p.updated_at
             ORDER BY p.created_at ASC";
 
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([':workspace_id' => $workspaceId]);
+    $stmt->execute([':workspace_id' => $workspaceId, ':user_id' => $userId]);
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Format projects for frontend

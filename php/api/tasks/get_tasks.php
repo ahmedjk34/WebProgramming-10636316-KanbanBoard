@@ -2,10 +2,22 @@
 error_reporting(E_ERROR | E_PARSE);
 
 require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../config/session.php';
 require_once __DIR__ . '/../../../utils/php-utils.php';
+
+// Start session to get user ID
+safeSessionStart();
 
 try {
     $pdo = getDBConnection();
+
+    // Get current user ID from session
+    $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+    
+    if (!$userId) {
+        echo jsonResponse(false, 'User not authenticated', [], 401);
+        exit;
+    }
 
     $workspaceId = isset($_GET['workspace_id']) ? sanitizeAndValidate($_GET['workspace_id'], 'int') : 1;
     $projectId = isset($_GET['project_id']) ? sanitizeAndValidate($_GET['project_id'], 'int') : null;
@@ -26,10 +38,12 @@ try {
                 p.color as project_color,
                 p.workspace_id
             FROM tasks t
-            LEFT JOIN projects p ON t.project_id = p.id
-            WHERE p.workspace_id = :workspace_id";
+            INNER JOIN projects p ON t.project_id = p.id
+            INNER JOIN workspaces w ON p.workspace_id = w.id
+            INNER JOIN workspace_members wm ON w.id = wm.workspace_id
+            WHERE p.workspace_id = :workspace_id AND wm.user_id = :user_id";
 
-    $params = [':workspace_id' => $workspaceId];
+    $params = [':workspace_id' => $workspaceId, ':user_id' => $userId];
 
     // Add filters if provided
     if ($projectId !== null && $projectId !== false) {

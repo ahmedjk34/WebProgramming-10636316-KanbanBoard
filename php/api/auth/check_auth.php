@@ -4,6 +4,9 @@
  * Verifies if user is logged in and returns user data
  */
 
+// Load session configuration FIRST (before any output)
+require_once __DIR__ . '/../../config/session.php';
+
 // Disable error display to prevent HTML output
 error_reporting(0);
 ini_set('display_errors', 0);
@@ -24,8 +27,8 @@ try {
 }
 
 try {
-    // Start session
-    session_start();
+    // Start session safely
+    safeSessionStart();
     
     $pdo = getDBConnection();
     
