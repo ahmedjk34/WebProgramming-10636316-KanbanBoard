@@ -30,6 +30,7 @@ class AuthManager {
     this.setupThemeToggle();
     this.setupFormHandlers();
     this.setupPasswordToggles();
+    this.setupGuestLogin();
 
     if (this.currentPage === "signup") {
       this.setupPasswordStrength();
@@ -118,6 +119,20 @@ class AuthManager {
   }
 
   /**
+   * Setup guest login functionality
+   */
+  setupGuestLogin() {
+    const guestBtn = document.getElementById("guest-login-btn");
+
+    if (guestBtn) {
+      guestBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.handleGuestLogin();
+      });
+    }
+  }
+
+  /**
    * Calculate password strength
    */
   calculatePasswordStrength(password) {
@@ -201,6 +216,72 @@ class AuthManager {
     } finally {
       this.isSubmitting = false;
       this.setSubmitButtonState(form, false);
+    }
+  }
+
+  /**
+   * Handle guest login
+   */
+  async handleGuestLogin() {
+    if (this.isSubmitting) return;
+
+    this.isSubmitting = true;
+
+    // Show loading state on guest button
+    const guestBtn = document.getElementById("guest-login-btn");
+    if (guestBtn) {
+      guestBtn.disabled = true;
+      guestBtn.innerHTML =
+        '<span class="btn-icon">⏳</span>Creating Guest Session...';
+    }
+
+    try {
+      const response = await fetch("php/api/auth/guest_login.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        this.showNotification(
+          "Guest session created! Welcome to the demo.",
+          "success"
+        );
+
+        // Store auth token if provided
+        if (result.data.token) {
+          localStorage.setItem("auth_token", result.data.token);
+        }
+
+        // Store user data
+        if (result.data.user) {
+          localStorage.setItem("user_data", JSON.stringify(result.data.user));
+        }
+
+        // Store guest flag
+        localStorage.setItem("is_guest", "true");
+
+        // Redirect to main app
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 1500);
+      } else {
+        this.showNotification(result.message || "Guest login failed", "error");
+      }
+    } catch (error) {
+      console.error("Guest login error:", error);
+      this.showNotification("Network error. Please try again.", "error");
+    } finally {
+      this.isSubmitting = false;
+
+      // Reset guest button
+      if (guestBtn) {
+        guestBtn.disabled = false;
+        guestBtn.innerHTML = '<span class="btn-icon">👤</span>Visit as Guest';
+      }
     }
   }
 
