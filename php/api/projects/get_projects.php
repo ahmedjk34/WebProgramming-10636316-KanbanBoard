@@ -35,7 +35,7 @@ try {
     // Get workspace_id from query parameter (default to 1)
     $workspaceId = isset($_GET['workspace_id']) ? (int)$_GET['workspace_id'] : 1;
 
-    // Get all projects with task counts for the current workspace (only accessible to user)
+    // Get all projects with task counts for the current workspace (personal and team)
     $sql = "SELECT
                 p.id,
                 p.workspace_id,
@@ -43,22 +43,41 @@ try {
                 p.description,
                 p.color,
                 p.status,
+                p.created_by,
+                p.team_id,
+                p.project_type,
                 p.created_at,
                 p.updated_at,
                 COUNT(t.id) as task_count,
                 SUM(CASE WHEN t.status = 'todo' THEN 1 ELSE 0 END) as todo_count,
                 SUM(CASE WHEN t.status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_count,
-                SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END) as done_count
+                SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END) as done_count,
+                tm.name as team_name,
+                tm.color as team_color
             FROM projects p
             INNER JOIN workspaces w ON p.workspace_id = w.id
-            INNER JOIN workspace_members wm ON w.id = wm.workspace_id
+            LEFT JOIN workspace_members wm ON w.id = wm.workspace_id AND wm.user_id = :user_id_1
+            LEFT JOIN teams tm ON p.team_id = tm.id
             LEFT JOIN tasks t ON p.id = t.project_id
-            WHERE p.workspace_id = :workspace_id AND wm.user_id = :user_id
-            GROUP BY p.id, p.workspace_id, p.name, p.description, p.color, p.status, p.created_at, p.updated_at
+            WHERE p.workspace_id = :workspace_id 
+              AND (w.owner_id = :user_id_2 OR wm.user_id = :user_id_3 
+                   OR (w.team_id IS NOT NULL AND EXISTS (
+                       SELECT 1 FROM team_members tm 
+                       WHERE tm.team_id = w.team_id 
+                       AND tm.user_id = :user_id_4 
+                       AND tm.status = 'active'
+                   )))
+            GROUP BY p.id, p.workspace_id, p.name, p.description, p.color, p.status, p.created_by, p.team_id, p.project_type, p.created_at, p.updated_at, tm.name, tm.color
             ORDER BY p.created_at ASC";
 
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([':workspace_id' => $workspaceId, ':user_id' => $userId]);
+    $stmt->execute([
+        ':workspace_id' => $workspaceId, 
+        ':user_id_1' => $userId, 
+        ':user_id_2' => $userId, 
+        ':user_id_3' => $userId, 
+        ':user_id_4' => $userId
+    ]);
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Format projects for frontend
@@ -70,12 +89,17 @@ try {
             'description' => $project['description'],
             'color' => $project['color'],
             'status' => $project['status'],
+            'created_by' => (int)$project['created_by'],
+            'team_id' => $project['team_id'] ? (int)$project['team_id'] : null,
+            'project_type' => $project['project_type'],
             'created_at' => $project['created_at'],
             'updated_at' => $project['updated_at'],
             'task_count' => (int)$project['task_count'],
             'todo_count' => (int)$project['todo_count'],
             'in_progress_count' => (int)$project['in_progress_count'],
-            'done_count' => (int)$project['done_count']
+            'done_count' => (int)$project['done_count'],
+            'team_name' => $project['team_name'],
+            'team_color' => $project['team_color']
         ];
     }
 
