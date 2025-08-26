@@ -98,6 +98,10 @@ const moduleFactory = new ModuleFactory();
 let currentTheme = localStorage.getItem("theme") || "light";
 let currentEditingTaskId = null;
 
+// Workspace Type Management
+let currentWorkspaceType = localStorage.getItem("workspaceType") || "personal";
+let currentWorkspaceId = localStorage.getItem("currentWorkspaceId") || null;
+
 let apiManager;
 let taskManager;
 let projectManager;
@@ -188,6 +192,9 @@ async function initializeApp() {
     window.dragDropManager = dragDropManager;
     window.uiManager = uiManager;
     window.aiChatManager = aiChatManager;
+
+    // Initialize workspace type system
+    initializeWorkspaceTypeSystem();
 
     await workspaceManager.loadWorkspaces();
 
@@ -464,3 +471,131 @@ function confirmDeleteTask(taskId) {
 
 window.switchWorkspace = switchWorkspace;
 window.confirmDeleteTask = confirmDeleteTask;
+
+// Workspace Type Switching Functions
+function switchWorkspaceType(type) {
+  console.log(`🔄 Switching to ${type} workspace type`);
+
+  // Update current workspace type
+  currentWorkspaceType = type;
+  localStorage.setItem("workspaceType", type);
+
+  // Update UI tabs
+  updateWorkspaceTypeTabs(type);
+
+  // Update sidebar
+  updateSidebarForWorkspaceType(type);
+
+  // Load appropriate workspaces
+  loadWorkspacesForType(type);
+
+  // Update header controls
+  updateHeaderControlsForType(type);
+
+  // Refresh current view
+  if (window.workspaceManager) {
+    window.workspaceManager.refreshCurrentWorkspace();
+  }
+}
+
+function updateWorkspaceTypeTabs(type) {
+  // Update main header tabs
+  const personalTab = document.getElementById("personal-tab");
+  const teamsTab = document.getElementById("teams-tab");
+  const sidebarPersonalTab = document.getElementById("sidebar-personal-tab");
+  const sidebarTeamsTab = document.getElementById("sidebar-teams-tab");
+
+  if (personalTab && teamsTab) {
+    personalTab.classList.toggle("active", type === "personal");
+    teamsTab.classList.toggle("active", type === "teams");
+  }
+
+  if (sidebarPersonalTab && sidebarTeamsTab) {
+    sidebarPersonalTab.classList.toggle("active", type === "personal");
+    sidebarTeamsTab.classList.toggle("active", type === "teams");
+  }
+}
+
+function updateSidebarForWorkspaceType(type) {
+  const teamSections = document.getElementById("team-sections");
+  const createWorkspaceBtn = document.getElementById("create-workspace-btn");
+  const sidebarTitle = document.getElementById("sidebar-title");
+  const workspacesSectionTitle = document.getElementById(
+    "workspaces-section-title"
+  );
+
+  if (teamSections) {
+    teamSections.style.display = type === "teams" ? "block" : "none";
+  }
+
+  if (createWorkspaceBtn) {
+    const btnText = createWorkspaceBtn.querySelector(".btn-text");
+    if (btnText) {
+      btnText.textContent =
+        type === "teams" ? "New Team Workspace" : "New Workspace";
+    }
+  }
+
+  if (sidebarTitle) {
+    sidebarTitle.textContent =
+      type === "teams" ? "👥 Teams & Workspaces" : "🏢 Workspaces";
+  }
+
+  if (workspacesSectionTitle) {
+    workspacesSectionTitle.textContent =
+      type === "teams" ? "Team Workspaces" : "Switch Workspace";
+  }
+}
+
+function updateHeaderControlsForType(type) {
+  const teamControls = document.getElementById("team-controls");
+
+  if (teamControls) {
+    teamControls.style.display = type === "teams" ? "flex" : "none";
+  }
+}
+
+function loadWorkspacesForType(type) {
+  if (window.workspaceManager) {
+    window.workspaceManager.loadWorkspacesForType(type);
+  }
+}
+
+// Team Management Functions
+function openCreateTeamDialog() {
+  if (window.uiManager) {
+    window.uiManager.openCreateTeamDialog();
+  }
+}
+
+function openTeamManagementDialog() {
+  if (window.uiManager) {
+    window.uiManager.openTeamManagementDialog();
+  }
+}
+
+// Make functions globally available
+window.switchWorkspaceType = switchWorkspaceType;
+window.openCreateTeamDialog = openCreateTeamDialog;
+window.openTeamManagementDialog = openTeamManagementDialog;
+
+// Initialize workspace type system
+function initializeWorkspaceTypeSystem() {
+  console.log("🔧 Initializing workspace type system...");
+
+  // Set initial workspace type
+  const savedType = localStorage.getItem("workspaceType") || "personal";
+  currentWorkspaceType = savedType;
+
+  // Update UI to reflect current type
+  updateWorkspaceTypeTabs(savedType);
+  updateSidebarForWorkspaceType(savedType);
+  updateHeaderControlsForType(savedType);
+
+  // Load workspaces for current type
+  if (window.workspaceManager) {
+    window.workspaceManager.loadWorkspacesForType(savedType);
+  }
+
+  console.log(`✅ Workspace type system initialized with type: ${savedType}`);
+}

@@ -325,6 +325,140 @@ class APIManager {
     }
   }
 
+  // ===== TEAM API METHODS =====
+
+  /**
+   * Load teams
+   * @returns {Promise<Object>} API response
+   */
+  async loadTeams() {
+    try {
+      const response = await fetch("php/api/teams/get_teams.php");
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error loading teams:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create team
+   * @param {Object} teamData - Team data
+   * @returns {Promise<Object>} API response
+   */
+  async createTeam(teamData) {
+    try {
+      const response = await fetch("php/api/teams/create_team.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(teamData),
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error creating team:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update team
+   * @param {Object} teamData - Team data
+   * @returns {Promise<Object>} API response
+   */
+  async updateTeam(teamData) {
+    try {
+      const response = await fetch("php/api/teams/update_team.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(teamData),
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error updating team:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete team
+   * @param {number} teamId - Team ID
+   * @returns {Promise<Object>} API response
+   */
+  async deleteTeam(teamId) {
+    try {
+      const response = await fetch("php/api/teams/delete_team.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: teamId }),
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error deleting team:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create team workspace
+   * @param {Object} workspaceData - Workspace data with team_id
+   * @returns {Promise<Object>} API response
+   */
+  async createTeamWorkspace(workspaceData) {
+    try {
+      const response = await fetch("php/api/teams/create_team_workspace.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(workspaceData),
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error creating team workspace:", error);
+      throw error;
+    }
+  }
+
   // ===== UTILITY METHODS =====
 
   /**

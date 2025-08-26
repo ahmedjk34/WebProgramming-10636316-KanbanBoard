@@ -99,6 +99,115 @@ body {
   z-index: -1;
 }
 
+/* Workspace Type Tabs */
+.workspace-tabs {
+  display: flex;
+  gap: 8px;
+  margin-right: 20px;
+  background: var(--bg-glass);
+  border-radius: 12px;
+  padding: 4px;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+}
+
+.workspace-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.workspace-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-glass-hover);
+}
+
+.workspace-tab.active {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: var(--shadow-light);
+}
+
+.workspace-tab .tab-icon {
+  font-size: 16px;
+}
+
+.workspace-tab .tab-text {
+  font-weight: 600;
+}
+
+/* Workspace Selector */
+.workspace-selector {
+  margin-right: 20px;
+}
+
+/* Team Controls */
+.team-controls {
+  display: flex;
+  gap: 12px;
+  margin-right: 20px;
+}
+
+.team-controls .btn {
+  font-size: 13px;
+  padding: 8px 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .workspace-tabs {
+    margin-right: 15px;
+  }
+
+  .workspace-tab {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .workspace-tab .tab-icon {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .workspace-tabs {
+    margin-right: 10px;
+  }
+
+  .workspace-tab .tab-text {
+    display: none;
+  }
+
+  .workspace-tab {
+    padding: 8px;
+    min-width: 40px;
+    justify-content: center;
+  }
+
+  .team-controls {
+    margin-right: 10px;
+  }
+
+  .team-controls .btn .btn-icon {
+    margin-right: 0;
+  }
+
+  .team-controls .btn span:not(.btn-icon) {
+    display: none;
+  }
+}
+
 .header-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -1866,6 +1975,50 @@ body.modal-open {
   padding: 20px;
 }
 
+/* Sidebar Workspace Tabs */
+.sidebar-workspace-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 20px 0;
+  background: var(--bg-glass);
+  border-radius: 12px;
+  padding: 4px;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+}
+
+.sidebar-workspace-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.sidebar-workspace-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-glass-hover);
+}
+
+.sidebar-workspace-tab.active {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: var(--shadow-light);
+}
+
+.sidebar-workspace-tab .tab-icon {
+  font-size: 14px;
+}
+
 /* Current Workspace Display */
 .current-workspace {
   margin-bottom: 24px;
@@ -1908,6 +2061,31 @@ body.modal-open {
   font-size: 0.9rem;
   color: var(--text-secondary);
   line-height: 1.4;
+}
+
+/* Workspace Type Badge */
+.workspace-type-badge {
+  margin-top: 8px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge.personal {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.badge.team {
+  background: #f3e5f5;
+  color: #7b1fa2;
 }
 
 /* Workspace Actions */
@@ -2018,6 +2196,78 @@ body.modal-open {
 
 .workspace-toggle:hover .toggle-arrow {
   transform: rotate(180deg);
+}
+
+/* Team Sections */
+.team-sections {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.teams-list h4 {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+#teams-container {
+  /* Teams will be styled similar to workspaces */
+}
+
+.team-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.team-item:hover {
+  background: var(--bg-glass-hover);
+  transform: translateX(4px);
+}
+
+.team-item.active {
+  background: var(--success-gradient);
+  color: white;
+  border-color: transparent;
+}
+
+.team-item .team-icon {
+  font-size: 1.5rem;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.team-item.active .team-icon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.team-item .team-details {
+  flex: 1;
+}
+
+.team-item .team-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.team-item .team-description {
+  font-size: 0.8rem;
+  opacity: 0.8;
 }
 
 /* Icon Picker */

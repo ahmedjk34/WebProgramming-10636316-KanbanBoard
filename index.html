@@ -27,13 +27,35 @@
     <!-- Workspace Sidebar -->
     <div id="workspace-sidebar" class="workspace-sidebar">
       <div class="sidebar-header">
-        <h3>🏢 Workspaces</h3>
+        <h3 id="sidebar-title">🏢 Workspaces</h3>
         <button class="sidebar-close" onclick="closeSidebar()">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
 
       <div class="sidebar-content">
+        <!-- Workspace Type Tabs in Sidebar -->
+        <div class="sidebar-workspace-tabs">
+          <button
+            id="sidebar-personal-tab"
+            class="sidebar-workspace-tab active"
+            data-workspace-type="personal"
+            onclick="switchWorkspaceType('personal')"
+          >
+            <span class="tab-icon">👤</span>
+            <span class="tab-text">Personal</span>
+          </button>
+          <button
+            id="sidebar-teams-tab"
+            class="sidebar-workspace-tab"
+            data-workspace-type="teams"
+            onclick="switchWorkspaceType('teams')"
+          >
+            <span class="tab-icon">👥</span>
+            <span class="tab-text">Teams</span>
+          </button>
+        </div>
+
         <div class="current-workspace">
           <div class="workspace-info">
             <div class="workspace-icon" id="current-workspace-icon">👤</div>
@@ -47,24 +69,38 @@
               >
                 Your personal tasks and projects
               </div>
+              <div class="workspace-type-badge" id="workspace-type-badge">
+                <span class="badge personal">Personal</span>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="workspace-actions">
           <button
+            id="create-workspace-btn"
             class="btn btn-primary btn-small"
             onclick="openCreateWorkspaceDialog()"
           >
             <span class="btn-icon">➕</span>
-            New Workspace
+            <span class="btn-text">New Workspace</span>
           </button>
         </div>
 
         <div class="workspaces-list">
-          <h4>Switch Workspace</h4>
+          <h4 id="workspaces-section-title">Switch Workspace</h4>
           <div id="workspaces-container">
             <!-- Workspaces will be loaded dynamically -->
+          </div>
+        </div>
+
+        <!-- Team-specific sections (only visible in Teams tab) -->
+        <div id="team-sections" class="team-sections" style="display: none">
+          <div class="teams-list">
+            <h4>My Teams</h4>
+            <div id="teams-container">
+              <!-- Teams will be loaded dynamically -->
+            </div>
           </div>
         </div>
       </div>
@@ -81,17 +117,43 @@
     <header class="app-header">
       <div class="header-container">
         <div class="header-left">
-          <button
-            id="workspace-toggle"
-            class="workspace-toggle"
-            onclick="openSidebar()"
-          >
-            <span class="workspace-icon" id="header-workspace-icon">👤</span>
-            <span class="workspace-name" id="header-workspace-name"
-              >Personal Workspace</span
+          <!-- Workspace Type Tabs -->
+          <div class="workspace-tabs">
+            <button
+              id="personal-tab"
+              class="workspace-tab active"
+              data-workspace-type="personal"
+              onclick="switchWorkspaceType('personal')"
             >
-            <span class="toggle-arrow">▼</span>
-          </button>
+              <span class="tab-icon">👤</span>
+              <span class="tab-text">Personal</span>
+            </button>
+            <button
+              id="teams-tab"
+              class="workspace-tab"
+              data-workspace-type="teams"
+              onclick="switchWorkspaceType('teams')"
+            >
+              <span class="tab-icon">👥</span>
+              <span class="tab-text">Teams</span>
+            </button>
+          </div>
+
+          <!-- Workspace Selector -->
+          <div class="workspace-selector">
+            <button
+              id="workspace-toggle"
+              class="workspace-toggle"
+              onclick="openSidebar()"
+            >
+              <span class="workspace-icon" id="header-workspace-icon">👤</span>
+              <span class="workspace-name" id="header-workspace-name"
+                >Personal Workspace</span
+              >
+              <span class="toggle-arrow">▼</span>
+            </button>
+          </div>
+
           <h1 class="app-title" id="app-title">
             <span class="app-icon">📋</span>
             Kanban Task Board
@@ -124,6 +186,28 @@
             <span class="btn-icon">🤖</span>
             AI Planner
           </button>
+
+          <!-- Team Management Controls (only visible in Teams tab) -->
+          <div id="team-controls" class="team-controls" style="display: none">
+            <button
+              id="create-team-btn"
+              class="btn btn-success"
+              onclick="openCreateTeamDialog()"
+              title="Create New Team"
+            >
+              <span class="btn-icon">🏢</span>
+              Create Team
+            </button>
+            <button
+              id="manage-teams-btn"
+              class="btn btn-secondary"
+              onclick="openTeamManagementDialog()"
+              title="Manage Teams"
+            >
+              <span class="btn-icon">⚙️</span>
+              Manage Teams
+            </button>
+          </div>
 
           <button
             id="add-task-btn"

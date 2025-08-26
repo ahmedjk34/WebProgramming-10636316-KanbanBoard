@@ -10,6 +10,9 @@ class WorkspaceManager {
     this.workspaces = [];
     this.currentWorkspaceId =
       parseInt(localStorage.getItem("currentWorkspaceId")) || 1;
+    this.currentWorkspaceType =
+      localStorage.getItem("workspaceType") || "personal";
+    this.teams = [];
 
     // Store dependencies
     this.dependencies = dependencies;
@@ -405,6 +408,182 @@ class WorkspaceManager {
       document.getElementById("workspace-icon").value = "🏢";
       document.getElementById("workspace-color").value = "#667eea";
     }
+  }
+
+  // ===== WORKSPACE TYPE MANAGEMENT =====
+
+  /**
+   * Load workspaces for specific type (personal or teams)
+   * @param {string} type - 'personal' or 'teams'
+   */
+  async loadWorkspacesForType(type) {
+    console.log(`📊 Loading workspaces for type: ${type}`);
+
+    this.currentWorkspaceType = type;
+
+    try {
+      if (this.apiManager) {
+        const result = await this.apiManager.loadWorkspaces();
+
+        // Filter workspaces by type
+        const filteredWorkspaces = result.data.workspaces.filter(
+          (workspace) => {
+            if (type === "personal") {
+              return workspace.workspace_type === "personal";
+            } else {
+              return workspace.workspace_type === "team";
+            }
+          }
+        );
+
+        this.setWorkspaces(filteredWorkspaces);
+        this.displayWorkspaces();
+
+        // Load teams if in teams mode
+        if (type === "teams") {
+          await this.loadTeams();
+        }
+
+        // Auto-select first available workspace
+        if (this.workspaces.length > 0) {
+          const currentWorkspace = this.getCurrentWorkspace();
+          if (!currentWorkspace) {
+            const firstWorkspace = this.workspaces[0];
+            this.setCurrentWorkspaceId(firstWorkspace.id);
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Error loading workspaces for type ${type}:`, error);
+    }
+  }
+
+  /**
+   * Load teams from API
+   */
+  async loadTeams() {
+    console.log("📊 Loading teams...");
+
+    try {
+      if (this.apiManager) {
+        const result = await this.apiManager.loadTeams();
+        this.teams = result.data.teams || [];
+        this.displayTeams();
+      }
+    } catch (error) {
+      console.error("❌ Error loading teams:", error);
+    }
+  }
+
+  /**
+   * Display teams in the sidebar
+   */
+  displayTeams() {
+    const teamsContainer = document.getElementById("teams-container");
+    if (!teamsContainer) return;
+
+    teamsContainer.innerHTML = "";
+
+    if (this.teams.length === 0) {
+      teamsContainer.innerHTML = `
+        <div class="no-teams-message">
+          <p>No teams found. Create your first team to get started!</p>
+        </div>
+      `;
+      return;
+    }
+
+    this.teams.forEach((team) => {
+      const teamElement = document.createElement("div");
+      teamElement.className = "team-item";
+      teamElement.setAttribute("data-team-id", team.id);
+      teamElement.innerHTML = `
+        <div class="team-icon" style="background-color: ${
+          team.color || "#667eea"
+        }">
+          🏢
+        </div>
+        <div class="team-details">
+          <div class="team-name">${team.name}</div>
+          <div class="team-description">${
+            team.description || "No description"
+          }</div>
+        </div>
+      `;
+
+      teamElement.addEventListener("click", () => {
+        this.selectTeam(team.id);
+      });
+
+      teamsContainer.appendChild(teamElement);
+    });
+  }
+
+  /**
+   * Select a team
+   * @param {number} teamId - Team ID
+   */
+  selectTeam(teamId) {
+    console.log(`🎯 Selecting team: ${teamId}`);
+
+    // Update active team in UI
+    const teamItems = document.querySelectorAll(".team-item");
+    teamItems.forEach((item) => {
+      item.classList.remove("active");
+    });
+
+    const selectedTeamItem = document.querySelector(
+      `[data-team-id="${teamId}"]`
+    );
+    if (selectedTeamItem) {
+      selectedTeamItem.classList.add("active");
+    }
+
+    // Load team workspaces
+    this.loadTeamWorkspaces(teamId);
+  }
+
+  /**
+   * Load workspaces for a specific team
+   * @param {number} teamId - Team ID
+   */
+  async loadTeamWorkspaces(teamId) {
+    console.log(`📊 Loading workspaces for team: ${teamId}`);
+
+    try {
+      if (this.apiManager) {
+        const result = await this.apiManager.loadWorkspaces();
+
+        // Filter workspaces by team
+        const teamWorkspaces = result.data.workspaces.filter(
+          (workspace) => workspace.team_id === teamId
+        );
+
+        this.setWorkspaces(teamWorkspaces);
+        this.displayWorkspaces();
+
+        // Auto-select first team workspace
+        if (this.workspaces.length > 0) {
+          const firstWorkspace = this.workspaces[0];
+          this.setCurrentWorkspaceId(firstWorkspace.id);
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Error loading team workspaces:`, error);
+    }
+  }
+
+  /**
+   * Refresh current workspace
+   */
+  async refreshCurrentWorkspace() {
+    console.log("🔄 Refreshing current workspace");
+
+    if (this.currentWorkspaceType === "teams") {
+      await this.loadTeams();
+    }
+
+    await this.loadWorkspacesForType(this.currentWorkspaceType);
   }
 }
 
