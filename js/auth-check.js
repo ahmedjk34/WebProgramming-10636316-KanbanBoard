@@ -19,6 +19,8 @@ class AuthChecker {
       const response = await fetch("php/api/auth/check_auth.php");
       const result = await response.json();
 
+      console.log("Auth check result:", result);
+
       if (result.success && result.authenticated) {
         console.log("✅ User is authenticated");
 
@@ -34,10 +36,18 @@ class AuthChecker {
           );
         }
 
+        // Check if this is a guest user
+        const isGuest = result.data && result.data.preferences && result.data.preferences.is_guest === 'true';
+        if (isGuest) {
+          console.log("👤 Guest user detected");
+          localStorage.setItem("is_guest", "true");
+        }
+
         // Continue with app initialization
         this.continueWithApp();
       } else {
         console.log("❌ User is not authenticated, redirecting to login");
+        console.log("Auth check failed reason:", result.message);
         this.redirectToLogin = true;
 
         // Show notification before redirect
@@ -128,12 +138,17 @@ class AuthChecker {
    */
   updateUserInfo() {
     const userData = JSON.parse(localStorage.getItem("user_data") || "{}");
+    const isGuest = localStorage.getItem("is_guest") === "true";
 
     if (userData.first_name) {
       // Update workspace name to show user's name
       const workspaceName = document.getElementById("header-workspace-name");
       if (workspaceName) {
-        workspaceName.textContent = `${userData.first_name}'s Workspace`;
+        let workspaceText = `${userData.first_name}'s Workspace`;
+        if (isGuest) {
+          workspaceText += " (Guest Mode)";
+        }
+        workspaceName.textContent = workspaceText;
       }
 
       // Update current workspace name in sidebar
@@ -141,7 +156,54 @@ class AuthChecker {
         "current-workspace-name"
       );
       if (currentWorkspaceName) {
-        currentWorkspaceName.textContent = `${userData.first_name}'s Workspace`;
+        let workspaceText = `${userData.first_name}'s Workspace`;
+        if (isGuest) {
+          workspaceText += " (Guest Mode)";
+        }
+        currentWorkspaceName.textContent = workspaceText;
+      }
+
+      // Add guest indicator if user is a guest
+      if (isGuest) {
+        this.addGuestIndicator();
+      }
+    }
+  }
+
+  /**
+   * Add guest indicator to the interface
+   */
+  addGuestIndicator() {
+    // Check if guest indicator already exists
+    if (document.getElementById("guest-indicator")) {
+      return;
+    }
+
+    // Create guest indicator
+    const guestIndicator = document.createElement("div");
+    guestIndicator.id = "guest-indicator";
+    guestIndicator.className = "guest-indicator";
+    guestIndicator.innerHTML = `
+      <span class="guest-icon">👤</span>
+      <span class="guest-text">Guest Mode</span>
+      <span class="guest-note">Demo data only</span>
+    `;
+
+    // Add to header if available
+    const header = document.querySelector(".app-header");
+    if (header) {
+      const headerContainer = header.querySelector(".header-container");
+      if (headerContainer) {
+        headerContainer.appendChild(guestIndicator);
+      }
+    }
+
+    // Add to sidebar if available
+    const sidebar = document.querySelector(".sidebar");
+    if (sidebar) {
+      const sidebarHeader = sidebar.querySelector(".sidebar-header");
+      if (sidebarHeader) {
+        sidebarHeader.appendChild(guestIndicator.cloneNode(true));
       }
     }
   }
@@ -161,6 +223,7 @@ class AuthChecker {
         localStorage.removeItem("user_data");
         localStorage.removeItem("user_preferences");
         localStorage.removeItem("auth_token");
+        localStorage.removeItem("is_guest");
 
         this.showNotification("Logged out successfully", "success");
 
@@ -276,8 +339,11 @@ document.addEventListener("DOMContentLoaded", function () {
     header.style.display = "none";
   }
 
-  // Initialize auth check
-  window.authChecker.init();
+  // Add a small delay to ensure session is properly established
+  setTimeout(() => {
+    // Initialize auth check
+    window.authChecker.init();
+  }, 500);
 });
 
 console.log("✅ Authentication check system loaded");

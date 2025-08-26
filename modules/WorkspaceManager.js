@@ -77,6 +77,31 @@ class WorkspaceManager {
 
         this.setWorkspaces(result.data.workspaces);
         this.displayWorkspaces();
+
+        // Auto-select first available workspace if current workspace is not accessible
+        if (this.workspaces.length > 0) {
+          const currentWorkspace = this.getCurrentWorkspace();
+          if (!currentWorkspace) {
+            // Current workspace is not accessible, switch to first available
+            const firstWorkspace = this.workspaces[0];
+            console.log(
+              "🔄 Auto-switching to first available workspace:",
+              firstWorkspace.name
+            );
+            this.setCurrentWorkspaceId(firstWorkspace.id);
+
+            // Trigger project and task loading for the new workspace
+            setTimeout(async () => {
+              if (window.projectManager) {
+                await window.projectManager.loadProjects();
+              }
+              if (window.taskManager) {
+                await window.taskManager.refreshTasks();
+              }
+            }, 100);
+          }
+        }
+
         this.updateCurrentWorkspaceDisplay();
         console.log("✅ Workspaces loaded:", this.workspaces.length);
       }

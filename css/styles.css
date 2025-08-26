@@ -5233,6 +5233,90 @@ body #view-container .task-card {
   font-size: 1.1rem;
 }
 
+/* Guest Access */
+.guest-access {
+  margin-top: 24px;
+}
+
+.guest-btn {
+  width: 100%;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 14px 20px;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  backdrop-filter: blur(10px);
+  margin-bottom: 12px;
+}
+
+.guest-btn:hover {
+  background: var(--bg-glass-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-light);
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.guest-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.guest-note {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Guest Indicator */
+.guest-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.guest-icon {
+  font-size: 1rem;
+}
+
+.guest-text {
+  font-weight: 600;
+}
+
+.guest-indicator .guest-note {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  font-style: italic;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
 /* Auth Footer */
 .auth-footer {
   text-align: center;
