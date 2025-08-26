@@ -159,17 +159,46 @@ function installDatabase() {
         $pdo->exec($insertTasks);
         echo "✅ Sample tasks inserted successfully.\n";
 
+        // Create users table for authentication
+        $usersSQL = "
+        CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(50) UNIQUE NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            first_name VARCHAR(100) NOT NULL,
+            last_name VARCHAR(100) NOT NULL,
+            avatar_url VARCHAR(255) DEFAULT NULL,
+            is_active BOOLEAN DEFAULT TRUE,
+            email_verified BOOLEAN DEFAULT FALSE,
+            verification_token VARCHAR(255) DEFAULT NULL,
+            reset_token VARCHAR(255) DEFAULT NULL,
+            reset_token_expires TIMESTAMP NULL,
+            last_login TIMESTAMP NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_username (username),
+            INDEX idx_email (email),
+            INDEX idx_active (is_active),
+            INDEX idx_verification (verification_token),
+            INDEX idx_reset_token (reset_token)
+        ) ENGINE=InnoDB";
+
+        $pdo->exec($usersSQL);
+        echo "✅ Users table created successfully.\n";
+
         // Create user preferences table for view settings
         $userPreferencesSQL = "
         CREATE TABLE IF NOT EXISTS user_preferences (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT DEFAULT 1,
+            user_id INT NOT NULL,
             preference_key VARCHAR(100) NOT NULL,
             preference_value TEXT,
             workspace_id INT DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             UNIQUE KEY unique_user_preference (user_id, preference_key, workspace_id),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
             INDEX idx_user_preference (user_id, preference_key)
         ) ENGINE=InnoDB";
@@ -186,9 +215,10 @@ function installDatabase() {
             old_value TEXT,
             new_value TEXT,
             field_changed VARCHAR(50),
-            user_id INT DEFAULT 1,
+            user_id INT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             INDEX idx_task_action (task_id, action_type),
             INDEX idx_created_at (created_at),
             INDEX idx_user_activity (user_id, created_at)
@@ -255,6 +285,14 @@ function installDatabase() {
 
         $pdo->exec($createViews);
         echo "✅ Analytics views created successfully.\n";
+
+        // Insert default user (for demo purposes)
+        $insertDefaultUser = "
+        INSERT IGNORE INTO users (id, username, email, password_hash, first_name, last_name, is_active, email_verified) VALUES
+        (1, 'demo_user', 'demo@kanban.com', '" . password_hash('demo123', PASSWORD_DEFAULT) . "', 'Demo', 'User', TRUE, TRUE)";
+
+        $pdo->exec($insertDefaultUser);
+        echo "✅ Default user created successfully.\n";
 
         // Insert default user preferences
         $insertPreferences = "
