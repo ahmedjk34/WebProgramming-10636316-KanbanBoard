@@ -11,6 +11,47 @@
 require_once __DIR__ . '/../config/database.php';
 
 /**
+ * Clean database completely - DROP ALL TABLES AND DATA
+ */
+function cleanDatabase() {
+    try {
+        echo "🧹 Starting complete database cleanup...\n";
+        
+        // Connect to the database
+        $pdo = getDBConnection();
+        
+        // Disable foreign key checks temporarily
+        $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+        
+        // Get all table names
+        $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+        
+        if (!empty($tables)) {
+            echo "🗑️ Dropping " . count($tables) . " existing tables...\n";
+            
+            // Drop all tables
+            foreach ($tables as $table) {
+                $pdo->exec("DROP TABLE IF EXISTS `$table`");
+                echo "   - Dropped table: $table\n";
+            }
+            
+            echo "✅ All existing tables dropped successfully.\n";
+        } else {
+            echo "ℹ️ No existing tables found to drop.\n";
+        }
+        
+        // Re-enable foreign key checks
+        $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+        
+        echo "🧹 Database cleanup completed successfully.\n\n";
+        
+    } catch (Exception $e) {
+        echo "❌ Error during database cleanup: " . $e->getMessage() . "\n";
+        throw $e;
+    }
+}
+
+/**
  * Create database and tables
  */
 function installDatabase() {
@@ -24,6 +65,9 @@ function installDatabase() {
         // Create database
         $pdo->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME . " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         echo "✅ Database '" . DB_NAME . "' created successfully.\n";
+        
+        // Clean the database completely before fresh installation
+        cleanDatabase();
         
         // Now connect to the specific database
         $pdo = getDBConnection();
@@ -45,48 +89,24 @@ function installDatabase() {
         $pdo->exec($workspacesSQL);
         echo "✅ Workspaces table created successfully.\n";
 
-        // Check if projects table exists and if it has workspace_id column
-        $checkProjectsTable = "SHOW TABLES LIKE 'projects'";
-        $tableExists = $pdo->query($checkProjectsTable)->rowCount() > 0;
+        // Create projects table with workspace support
+        $projectsSQL = "
+        CREATE TABLE projects (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            workspace_id INT NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            description TEXT,
+            color VARCHAR(7) DEFAULT '#3498db',
+            status ENUM('active', 'on_hold', 'completed', 'archived') DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+            INDEX idx_project_workspace (workspace_id),
+            INDEX idx_project_name (name)
+        ) ENGINE=InnoDB";
 
-        if ($tableExists) {
-            // Check if workspace_id column exists
-            $checkColumn = "SHOW COLUMNS FROM projects LIKE 'workspace_id'";
-            $columnExists = $pdo->query($checkColumn)->rowCount() > 0;
-
-            if (!$columnExists) {
-                // Add workspace_id column to existing projects table
-                echo "🔄 Updating existing projects table to add workspace_id column...\n";
-                $alterSQL = "ALTER TABLE projects
-                            ADD COLUMN workspace_id INT NOT NULL DEFAULT 1 AFTER id,
-                            ADD COLUMN status ENUM('active', 'on_hold', 'completed', 'archived') DEFAULT 'active' AFTER color,
-                            ADD FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
-                            ADD INDEX idx_project_workspace (workspace_id)";
-                $pdo->exec($alterSQL);
-                echo "✅ Projects table updated successfully.\n";
-            } else {
-                echo "✅ Projects table already has workspace_id column.\n";
-            }
-        } else {
-            // Create new projects table with workspace support
-            $projectsSQL = "
-            CREATE TABLE projects (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                workspace_id INT NOT NULL,
-                name VARCHAR(255) NOT NULL,
-                description TEXT,
-                color VARCHAR(7) DEFAULT '#3498db',
-                status ENUM('active', 'on_hold', 'completed', 'archived') DEFAULT 'active',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
-                INDEX idx_project_workspace (workspace_id),
-                INDEX idx_project_name (name)
-            ) ENGINE=InnoDB";
-
-            $pdo->exec($projectsSQL);
-            echo "✅ Projects table created successfully.\n";
-        }
+        $pdo->exec($projectsSQL);
+        echo "✅ Projects table created successfully.\n";
         
         // Create tasks table
         $tasksSQL = "
@@ -321,10 +341,16 @@ function installDatabase() {
 
 // Run installation if accessed directly
 if (basename(__FILE__) == basename($_SERVER['SCRIPT_NAME'])) {
-    echo "🚀 Starting Kanban Board Database Installation...\n\n";
+    echo "🚀 Starting FRESH Kanban Board Database Installation...\n";
+    echo "⚠️  WARNING: This will DELETE ALL EXISTING DATA and create a fresh installation!\n\n";
+    
+    // Ask for confirmation (optional - you can remove this if you want automatic execution)
+    echo "Proceeding with complete database cleanup and fresh installation...\n\n";
     
     if (installDatabase()) {
-        echo "\n✅ Installation completed successfully!\n";
+        echo "\n✅ FRESH Installation completed successfully!\n";
+        echo "🎉 All old data has been removed and new database structure created.\n";
+        echo "📊 Ready for fresh start with clean database.\n";
     } else {
         echo "\n❌ Installation failed. Please check your database configuration.\n";
     }
