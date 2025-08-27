@@ -6040,3 +6040,904 @@ body #view-container .task-card {
 .task-action-btn:hover {
   background: var(--bg-primary);
 }
+
+/* ===== TEAM MANAGEMENT STYLES ===== */
+
+/* Team Management Dialogs */
+.create-team-dialog,
+.edit-team-dialog,
+.team-management-dialog,
+.invite-member-dialog,
+.create-team-workspace-dialog {
+  border: none;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-heavy);
+  background: var(--bg-primary);
+  max-width: 600px;
+  width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.team-management-dialog {
+  max-width: 800px;
+}
+
+/* Team Management Header */
+.team-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.team-management-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.team-management-tabs .tab-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.team-management-tabs .tab-btn:hover {
+  background: var(--bg-glass-hover);
+  color: var(--text-primary);
+}
+
+.team-management-tabs .tab-btn.active {
+  background: var(--primary-gradient);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* Teams Grid */
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.team-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 20px;
+  transition: var(--transition);
+  position: relative;
+}
+
+.team-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+  border-color: var(--primary-color);
+}
+
+.team-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.team-card-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--primary-gradient);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.team-card-info {
+  flex: 1;
+  margin-left: 12px;
+}
+
+.team-card-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.team-card-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.team-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.team-visibility {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.team-visibility.public {
+  color: #28a745;
+}
+
+.team-visibility.private {
+  color: #6c757d;
+}
+
+.team-member-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.team-card-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.team-card:hover .team-card-actions {
+  opacity: 1;
+}
+
+.team-action-btn {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.8rem;
+}
+
+.team-action-btn:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--primary-color);
+}
+
+.team-action-btn.edit {
+  color: var(--primary-color);
+}
+
+.team-action-btn.delete {
+  color: #dc3545;
+}
+
+.team-action-btn.delete:hover {
+  background: #dc354520;
+  border-color: #dc3545;
+}
+
+/* Members Section */
+.members-section {
+  margin-top: 16px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+}
+
+.member-item:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--primary-color);
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.member-avatar {
+  width: 36px;
+  height: 36px;
+  background: var(--primary-gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: white;
+  font-weight: 600;
+}
+
+.member-details {
+  flex: 1;
+}
+
+.member-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.member-email {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.member-role {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.member-role.admin {
+  color: #dc3545;
+}
+
+.member-role.member {
+  color: var(--text-secondary);
+}
+
+.member-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.member-action-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.8rem;
+}
+
+.member-action-btn:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--primary-color);
+}
+
+.member-action-btn.remove {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.member-action-btn.remove:hover {
+  background: #dc354520;
+}
+
+/* Workspaces Section */
+.workspaces-section {
+  margin-top: 16px;
+}
+
+.team-workspaces-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.team-workspace-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+}
+
+.team-workspace-item:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--primary-color);
+}
+
+.workspace-item-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.workspace-item-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.workspace-item-details {
+  flex: 1;
+}
+
+.workspace-item-name {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.workspace-item-description {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.workspace-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.workspace-action-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.8rem;
+}
+
+.workspace-action-btn:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--primary-color);
+}
+
+.workspace-action-btn.open {
+  color: var(--primary-color);
+}
+
+.workspace-action-btn.delete {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.workspace-action-btn.delete:hover {
+  background: #dc354520;
+}
+
+/* Empty State Styles */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.empty-state h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* Responsive Design for Team Management */
+@media (max-width: 768px) {
+  .team-management-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .team-management-tabs {
+    justify-content: center;
+  }
+
+  .teams-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-card-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .team-card-actions {
+    position: static;
+    opacity: 1;
+    margin-top: 12px;
+  }
+
+  .member-item,
+  .team-workspace-item {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .member-actions,
+  .workspace-item-actions {
+    justify-content: center;
+  }
+}
+
+/* ===== TEAM COLLABORATION FEATURES ===== */
+
+/* Team Activity Feed */
+.team-activity-feed {
+  margin-top: 24px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 24px;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.activity-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.refresh-activity-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.refresh-activity-btn:hover {
+  background: var(--bg-glass-hover);
+}
+
+.activity-feed-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-glass);
+}
+
+.activity-feed {
+  padding: 12px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.activity-item:hover {
+  background: var(--bg-glass-hover);
+  transform: translateY(-1px);
+}
+
+.activity-icon {
+  font-size: 1.2rem;
+  min-width: 24px;
+  text-align: center;
+}
+
+.activity-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-text {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.activity-time {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.activity-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* Team Analytics Dashboard */
+.team-analytics-dialog {
+  width: 95%;
+  max-width: 1200px;
+  max-height: 90vh;
+  border: none;
+  border-radius: 12px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.team-analytics-dialog .dialog-content {
+  padding: 0;
+  background: transparent;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.team-analytics-dialog .dialog-header {
+  padding: 24px 24px 0;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.team-analytics-dialog .dialog-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.team-analytics-dialog .dialog-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Analytics Statistics Grid */
+.analytics-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Analytics Charts */
+.analytics-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+.chart-container {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.chart-container h4 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.chart {
+  height: 300px;
+  position: relative;
+}
+
+.heatmap {
+  height: 300px;
+  overflow: auto;
+}
+
+/* Productivity Heatmap */
+.heatmap-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heatmap-header {
+  display: flex;
+  gap: 4px;
+}
+
+.heatmap-row {
+  display: flex;
+  gap: 4px;
+}
+
+.heatmap-cell {
+  width: 60px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.heatmap-cell.header {
+  background: var(--bg-glass);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.heatmap-cell.day-label {
+  background: var(--bg-glass);
+  font-weight: 600;
+  color: var(--text-primary);
+  width: 40px;
+}
+
+.heatmap-cell.intensity-very-low {
+  background: #f8f9fa;
+  color: #6c757d;
+}
+
+.heatmap-cell.intensity-low {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.heatmap-cell.intensity-medium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.heatmap-cell.intensity-high {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.heatmap-cell.intensity-very-high {
+  background: #d4edda;
+  color: #155724;
+}
+
+/* Fallback Charts */
+.fallback-chart {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.fallback-bar-chart {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  height: 200px;
+  padding: 20px;
+}
+
+.bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.bar-container {
+  display: flex;
+  gap: 4px;
+  align-items: end;
+  height: 150px;
+}
+
+.bar {
+  width: 20px;
+  border-radius: 2px 2px 0 0;
+  transition: var(--transition);
+}
+
+.bar:hover {
+  opacity: 0.8;
+}
+
+.bar-values {
+  display: flex;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.fallback-line-chart {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  height: 200px;
+  padding: 20px;
+}
+
+.line-point {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.point-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.point-value {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Responsive Design for Collaboration Features */
+@media (max-width: 768px) {
+  .team-analytics-dialog {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .analytics-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .analytics-charts {
+    grid-template-columns: 1fr;
+  }
+
+  .chart {
+    height: 250px;
+  }
+
+  .heatmap {
+    height: 250px;
+  }
+
+  .heatmap-cell {
+    width: 40px;
+    height: 25px;
+    font-size: 0.7rem;
+  }
+
+  .heatmap-cell.day-label {
+    width: 30px;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .header-actions .btn {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .chart-container {
+    padding: 16px;
+  }
+}
