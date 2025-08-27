@@ -331,3 +331,8 @@ if (typeof module !== "undefined" && module.exports) {
     addWelcomeAnimation,
   };
 }
+
+// Make theme functions globally available
+window.initializeTheme = initializeTheme;
+window.toggleTheme = toggleTheme;
+window.updateThemeIcon = updateThemeIcon;
