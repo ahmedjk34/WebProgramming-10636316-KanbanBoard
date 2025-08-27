@@ -57,15 +57,6 @@
           </button>
 
           <button
-            id="team-analytics-btn"
-            class="btn btn-info"
-            onclick="openTeamAnalyticsDialog()"
-          >
-            <span class="btn-icon">📊</span>
-            Analytics
-          </button>
-
-          <button
             id="theme-toggle"
             class="theme-toggle"
             title="Toggle Dark/Light Mode"
@@ -86,11 +77,11 @@
             <div id="user-menu-dropdown" class="user-menu-dropdown">
               <a href="index.html" class="menu-item">
                 <span class="menu-icon">👤</span>
-                Switch to Personal
+                Personal Dashboard
               </a>
               <a href="dashboard.html" class="menu-item">
                 <span class="menu-icon">📊</span>
-                Dashboard
+                Analytics Dashboard
               </a>
               <div class="menu-divider"></div>
               <button class="menu-item" onclick="logout()">
@@ -584,6 +575,35 @@
         }
       });
 
+      // Update user info function
+      function updateUserInfo() {
+        fetch("php/api/auth/check_auth.php")
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success && data.authenticated && data.data?.user) {
+              const user = data.data.user;
+              const userNameElement = document.getElementById("user-name");
+              const userAvatarElement = document.querySelector(".user-avatar");
+
+              if (userNameElement) {
+                userNameElement.textContent =
+                  user.first_name && user.last_name
+                    ? `${user.first_name} ${user.last_name}`
+                    : user.username || "User";
+              }
+
+              if (userAvatarElement) {
+                userAvatarElement.textContent = user.first_name
+                  ? user.first_name.charAt(0).toUpperCase()
+                  : "👤";
+              }
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching user info:", error);
+          });
+      }
+
       // Initialize theme on page load
       document.addEventListener("DOMContentLoaded", () => {
         const savedTheme = localStorage.getItem("theme");
@@ -599,6 +619,9 @@
         if (themeToggle) {
           themeToggle.addEventListener("click", window.toggleTheme);
         }
+
+        // Update user info
+        updateUserInfo();
       });
     </script>
   </body>

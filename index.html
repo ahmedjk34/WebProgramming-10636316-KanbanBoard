@@ -106,23 +106,6 @@
     <header class="app-header">
       <div class="header-container">
         <div class="header-left">
-          <!-- Workspace Type Tabs -->
-          <div class="workspace-tabs">
-            <button
-              id="personal-tab"
-              class="workspace-tab active"
-              data-workspace-type="personal"
-              onclick="switchWorkspaceType('personal')"
-            >
-              <span class="tab-icon">👤</span>
-              <span class="tab-text">Personal</span>
-            </button>
-            <a href="teams.html" class="workspace-tab" title="Go to Teams">
-              <span class="tab-icon">👥</span>
-              <span class="tab-text">Teams</span>
-            </a>
-          </div>
-
           <!-- Workspace Selector -->
           <div class="workspace-selector">
             <button
@@ -142,7 +125,6 @@
             <span class="app-icon">📋</span>
             Kanban Task Board
           </h1>
-          <span class="app-subtitle">Web Programming 10636316 Project</span>
         </div>
 
         <div class="header-controls">
@@ -180,96 +162,6 @@
             Add Task
           </button>
 
-          <div class="filter-controls">
-            <button
-              id="manage-projects-btn"
-              class="btn btn-secondary"
-              onclick="openProjectManagementDialog()"
-            >
-              <span class="btn-icon">🗂️</span>
-              Manage Projects
-            </button>
-
-            <div class="custom-dropdown" id="project-dropdown">
-              <button class="dropdown-trigger" type="button">
-                <span class="dropdown-text">All Projects</span>
-                <span class="dropdown-arrow">▼</span>
-              </button>
-              <div class="dropdown-menu">
-                <div class="dropdown-item active" data-value="">
-                  All Projects
-                </div>
-                <!-- Projects will be loaded dynamically -->
-              </div>
-              <input type="hidden" id="project-filter" value="" />
-            </div>
-
-            <div class="custom-dropdown" id="priority-dropdown">
-              <button class="dropdown-trigger" type="button">
-                <span class="dropdown-text">All Priorities</span>
-                <span class="dropdown-arrow">▼</span>
-              </button>
-              <div class="dropdown-menu">
-                <div class="dropdown-item active" data-value="">
-                  All Priorities
-                </div>
-                <div class="dropdown-item" data-value="high">
-                  🔴 High Priority
-                </div>
-                <div class="dropdown-item" data-value="medium">
-                  🟡 Medium Priority
-                </div>
-                <div class="dropdown-item" data-value="low">
-                  🟢 Low Priority
-                </div>
-              </div>
-              <input type="hidden" id="priority-filter" value="" />
-            </div>
-
-            <div class="custom-dropdown" id="status-dropdown">
-              <button class="dropdown-trigger" type="button">
-                <span class="dropdown-text">All Status</span>
-                <span class="dropdown-arrow">▼</span>
-              </button>
-              <div class="dropdown-menu">
-                <div class="dropdown-item active" data-value="">All Status</div>
-                <div class="dropdown-item" data-value="todo">📝 To Do</div>
-                <div class="dropdown-item" data-value="in_progress">
-                  ⚡ In Progress
-                </div>
-                <div class="dropdown-item" data-value="done">✅ Done</div>
-              </div>
-            </div>
-
-            <div class="custom-dropdown" id="due-date-dropdown">
-              <button class="dropdown-trigger" type="button">
-                <span class="dropdown-text">All Due Dates</span>
-                <span class="dropdown-arrow">▼</span>
-              </button>
-              <div class="dropdown-menu">
-                <div class="dropdown-item active" data-value="">
-                  All Due Dates
-                </div>
-                <div class="dropdown-item" data-value="overdue">🚨 Overdue</div>
-                <div class="dropdown-item" data-value="today">📅 Due Today</div>
-                <div class="dropdown-item" data-value="this_week">
-                  📆 This Week
-                </div>
-                <div class="dropdown-item" data-value="no_date">
-                  ⏳ No Due Date
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <button
-            id="refresh-btn"
-            class="btn btn-secondary"
-            title="Refresh Tasks"
-          >
-            <span class="btn-icon">🔄</span>
-          </button>
-
           <button
             id="theme-toggle"
             class="theme-toggle"
@@ -277,6 +169,33 @@
           >
             <span id="theme-icon">🌙</span>
           </button>
+
+          <div class="user-menu">
+            <button
+              id="user-menu-btn"
+              class="user-menu-btn"
+              onclick="toggleUserMenu()"
+            >
+              <span class="user-avatar">👤</span>
+              <span class="user-name" id="user-name">Guest User</span>
+              <span class="menu-arrow">▼</span>
+            </button>
+            <div id="user-menu-dropdown" class="user-menu-dropdown">
+              <a href="teams.html" class="menu-item">
+                <span class="menu-icon">👥</span>
+                Team Collaboration
+              </a>
+              <a href="dashboard.html" class="menu-item">
+                <span class="menu-icon">📊</span>
+                Analytics Dashboard
+              </a>
+              <div class="menu-divider"></div>
+              <button class="menu-item" onclick="logout()">
+                <span class="menu-icon">🚪</span>
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -1056,6 +975,8 @@
     <script src="modules/ProjectManager.js"></script>
     <script src="modules/WorkspaceManager.js"></script>
     <script src="modules/TeamManager.js"></script>
+    <script src="modules/TeamCollaborationManager.js"></script>
+    <script src="modules/TeamAnalyticsManager.js"></script>
     <script src="modules/DragDropManager.js"></script>
     <script src="modules/UIManager.js"></script>
     <script src="modules/AIChatManager.js"></script>
@@ -1125,11 +1046,25 @@
       }
 
       // Wait for managers to be ready
+      let managerWaitAttempts = 0;
+      const maxWaitAttempts = 20; // 10 seconds max wait
+
       function waitForManagers() {
         if (areManagersReady()) {
           initializeViewManager();
         } else {
-          console.log("⏳ Waiting for managers to be ready...");
+          managerWaitAttempts++;
+          console.log(
+            `⏳ Waiting for managers to be ready... (attempt ${managerWaitAttempts}/${maxWaitAttempts})`
+          );
+
+          if (managerWaitAttempts >= maxWaitAttempts) {
+            console.warn(
+              "⚠️ Managers not ready after maximum attempts, skipping ViewManager initialization"
+            );
+            return;
+          }
+
           setTimeout(waitForManagers, 500);
         }
       }
@@ -1138,6 +1073,18 @@
       document.addEventListener("DOMContentLoaded", function () {
         // Start checking for managers after a short delay
         setTimeout(waitForManagers, 1500);
+
+        // Also set a timeout to stop waiting if managers never get ready
+        setTimeout(() => {
+          if (
+            managerWaitAttempts > 0 &&
+            managerWaitAttempts < maxWaitAttempts
+          ) {
+            console.warn(
+              "⚠️ Stopping ViewManager initialization - managers not ready"
+            );
+          }
+        }, 10000); // 10 second timeout
       });
 
       // Analytics Dashboard function
