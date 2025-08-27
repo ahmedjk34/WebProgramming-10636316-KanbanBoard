@@ -45,9 +45,16 @@ class APIManager {
     }
   }
 
-  async loadWorkspaces() {
+  /**
+   * Centralized API request method to eliminate code duplication
+   * @param {string} endpoint - API endpoint URL
+   * @param {Object} options - Fetch options (method, headers, body, etc.)
+   * @param {string} operationName - Name of the operation for error logging
+   * @returns {Promise<Object>} API response
+   */
+  async makeAPIRequest(endpoint, options = {}, operationName = "API request") {
     try {
-      const response = await fetch("php/api/workspaces/get_workspaces.php");
+      const response = await fetch(endpoint, options);
       const result = await this.safeJsonParse(response);
 
       if (!result.success) {
@@ -56,80 +63,65 @@ class APIManager {
 
       return result;
     } catch (error) {
-      console.error("❌ Error loading workspaces:", error);
+      console.error(`❌ Error in ${operationName}:`, error);
       throw error;
     }
   }
 
+  // ===== WORKSPACE API CALLS =====
+
+  async loadWorkspaces() {
+    return this.makeAPIRequest(
+      "php/api/workspaces/get_workspaces.php",
+      {},
+      "loading workspaces"
+    );
+  }
+
   async createWorkspace(workspaceData) {
-    try {
-      const response = await fetch("php/api/workspaces/create_workspace.php", {
+    return this.makeAPIRequest(
+      "php/api/workspaces/create_workspace.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(workspaceData),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error creating workspace:", error);
-      throw error;
-    }
+      },
+      "creating workspace"
+    );
   }
 
+  // ===== PROJECT API CALLS =====
+
   async loadProjects() {
-    try {
-      const response = await fetch(
-        `php/api/projects/get_projects.php?workspace_id=${this.currentWorkspaceId}`
-      );
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error loading projects:", error);
-      throw error;
-    }
+    return this.makeAPIRequest(
+      `php/api/projects/get_projects.php?workspace_id=${this.currentWorkspaceId}`,
+      {},
+      "loading projects"
+    );
   }
 
   async createProject(projectData) {
-    try {
-      projectData.workspace_id = this.currentWorkspaceId;
+    projectData.workspace_id = this.currentWorkspaceId;
 
-      const response = await fetch("php/api/projects/create_project.php", {
+    return this.makeAPIRequest(
+      "php/api/projects/create_project.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(projectData),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error creating project:", error);
-      throw error;
-    }
+      },
+      "creating project"
+    );
   }
 
   async updateProject(projectId, projectData) {
-    try {
-      const response = await fetch("php/api/projects/update_project.php", {
+    return this.makeAPIRequest(
+      "php/api/projects/update_project.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -138,19 +130,9 @@ class APIManager {
           id: projectId,
           ...projectData,
         }),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error updating project:", error);
-      throw error;
-    }
+      },
+      "updating project"
+    );
   }
 
   /**
@@ -159,26 +141,17 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async deleteProject(projectId) {
-    try {
-      const response = await fetch("php/api/projects/delete_project.php", {
+    return this.makeAPIRequest(
+      "php/api/projects/delete_project.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ id: projectId }),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error deleting project:", error);
-      throw error;
-    }
+      },
+      "deleting project"
+    );
   }
 
   // ===== TASK API CALLS =====
@@ -188,21 +161,11 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async loadTasks() {
-    try {
-      const response = await fetch(
-        `php/api/tasks/get_tasks.php?workspace_id=${this.currentWorkspaceId}`
-      );
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error loading tasks:", error);
-      throw error;
-    }
+    return this.makeAPIRequest(
+      `php/api/tasks/get_tasks.php?workspace_id=${this.currentWorkspaceId}`,
+      {},
+      "loading tasks"
+    );
   }
 
   /**
@@ -211,26 +174,17 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async createTask(taskData) {
-    try {
-      const response = await fetch("php/api/tasks/create_task.php", {
+    return this.makeAPIRequest(
+      "php/api/tasks/create_task.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(taskData),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error creating task:", error);
-      throw error;
-    }
+      },
+      "creating task"
+    );
   }
 
   /**
@@ -240,8 +194,9 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async updateTask(taskId, taskData) {
-    try {
-      const response = await fetch("php/api/tasks/update_task.php", {
+    return this.makeAPIRequest(
+      "php/api/tasks/update_task.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -250,19 +205,9 @@ class APIManager {
           id: taskId,
           ...taskData,
         }),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error updating task:", error);
-      throw error;
-    }
+      },
+      "updating task"
+    );
   }
 
   /**
@@ -272,8 +217,9 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async updateTaskStatus(taskId, newStatus) {
-    try {
-      const response = await fetch("php/api/tasks/update_status_simple.php", {
+    return this.makeAPIRequest(
+      "php/api/tasks/update_status_simple.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -282,19 +228,9 @@ class APIManager {
           task_id: parseInt(taskId),
           status: newStatus,
         }),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error updating task status:", error);
-      throw error;
-    }
+      },
+      "updating task status"
+    );
   }
 
   /**
@@ -303,26 +239,17 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async deleteTask(taskId) {
-    try {
-      const response = await fetch("php/api/tasks/delete_task.php", {
+    return this.makeAPIRequest(
+      "php/api/tasks/delete_task.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ task_id: taskId }),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error deleting task:", error);
-      throw error;
-    }
+      },
+      "deleting task"
+    );
   }
 
   // ===== TEAM API METHODS =====
@@ -332,19 +259,11 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async loadTeams() {
-    try {
-      const response = await fetch("php/api/teams/get_teams.php");
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error loading teams:", error);
-      throw error;
-    }
+    return this.makeAPIRequest(
+      "php/api/teams/get_teams.php",
+      {},
+      "loading teams"
+    );
   }
 
   /**
@@ -353,26 +272,17 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async createTeam(teamData) {
-    try {
-      const response = await fetch("php/api/teams/create_team.php", {
+    return this.makeAPIRequest(
+      "php/api/teams/create_team.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(teamData),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error creating team:", error);
-      throw error;
-    }
+      },
+      "creating team"
+    );
   }
 
   /**
@@ -381,26 +291,17 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async updateTeam(teamData) {
-    try {
-      const response = await fetch("php/api/teams/update_team.php", {
+    return this.makeAPIRequest(
+      "php/api/teams/update_team.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(teamData),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error updating team:", error);
-      throw error;
-    }
+      },
+      "updating team"
+    );
   }
 
   /**
@@ -409,26 +310,17 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async deleteTeam(teamId) {
-    try {
-      const response = await fetch("php/api/teams/delete_team.php", {
+    return this.makeAPIRequest(
+      "php/api/teams/delete_team.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ id: teamId }),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error deleting team:", error);
-      throw error;
-    }
+      },
+      "deleting team"
+    );
   }
 
   /**
@@ -437,26 +329,17 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async createTeamWorkspace(workspaceData) {
-    try {
-      const response = await fetch("php/api/teams/create_team_workspace.php", {
+    return this.makeAPIRequest(
+      "php/api/teams/create_team_workspace.php",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(workspaceData),
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error creating team workspace:", error);
-      throw error;
-    }
+      },
+      "creating team workspace"
+    );
   }
 
   // ===== TEAM COLLABORATION APIs =====
@@ -467,28 +350,16 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async getTeamUpdates(teamId) {
-    try {
-      const response = await fetch(
-        `php/api/teams/get_team_updates.php?team_id=${teamId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error getting team updates:", error);
-      throw error;
-    }
+    return this.makeAPIRequest(
+      `php/api/teams/get_team_updates.php?team_id=${teamId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+      "getting team updates"
+    );
   }
 
   /**
@@ -498,28 +369,16 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async getTeamActivity(teamId, limit = 50) {
-    try {
-      const response = await fetch(
-        `php/api/teams/get_team_activity.php?team_id=${teamId}&limit=${limit}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error getting team activity:", error);
-      throw error;
-    }
+    return this.makeAPIRequest(
+      `php/api/teams/get_team_activity.php?team_id=${teamId}&limit=${limit}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+      "getting team activity"
+    );
   }
 
   // ===== TEAM ANALYTICS APIs =====
@@ -531,28 +390,16 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async getTeamStats(teamId, days = 30) {
-    try {
-      const response = await fetch(
-        `php/api/teams/get_team_stats.php?team_id=${teamId}&days=${days}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error getting team stats:", error);
-      throw error;
-    }
+    return this.makeAPIRequest(
+      `php/api/teams/get_team_stats.php?team_id=${teamId}&days=${days}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+      "getting team stats"
+    );
   }
 
   /**
@@ -562,28 +409,16 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async getMemberPerformance(teamId, days = 30) {
-    try {
-      const response = await fetch(
-        `php/api/teams/get_member_performance.php?team_id=${teamId}&days=${days}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error getting member performance:", error);
-      throw error;
-    }
+    return this.makeAPIRequest(
+      `php/api/teams/get_member_performance.php?team_id=${teamId}&days=${days}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+      "getting member performance"
+    );
   }
 
   /**
@@ -593,28 +428,16 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async getProjectMetrics(teamId, days = 30) {
-    try {
-      const response = await fetch(
-        `php/api/teams/get_project_metrics.php?team_id=${teamId}&days=${days}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error getting project metrics:", error);
-      throw error;
-    }
+    return this.makeAPIRequest(
+      `php/api/teams/get_project_metrics.php?team_id=${teamId}&days=${days}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+      "getting project metrics"
+    );
   }
 
   /**
@@ -624,28 +447,16 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async getActivityTimeline(teamId, days = 30) {
-    try {
-      const response = await fetch(
-        `php/api/teams/get_activity_timeline.php?team_id=${teamId}&days=${days}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error getting activity timeline:", error);
-      throw error;
-    }
+    return this.makeAPIRequest(
+      `php/api/teams/get_activity_timeline.php?team_id=${teamId}&days=${days}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+      "getting activity timeline"
+    );
   }
 
   /**
@@ -653,25 +464,16 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async getTeams() {
-    try {
-      const response = await fetch("php/api/teams/get_teams.php", {
+    return this.makeAPIRequest(
+      "php/api/teams/get_teams.php",
+      {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-      });
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error getting teams:", error);
-      throw error;
-    }
+      },
+      "getting teams"
+    );
   }
 
   /**
@@ -681,28 +483,16 @@ class APIManager {
    * @returns {Promise<Object>} API response
    */
   async getProductivityHeatmap(teamId, days = 30) {
-    try {
-      const response = await fetch(
-        `php/api/teams/get_productivity_heatmap.php?team_id=${teamId}&days=${days}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const result = await this.safeJsonParse(response);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      return result;
-    } catch (error) {
-      console.error("❌ Error getting productivity heatmap:", error);
-      throw error;
-    }
+    return this.makeAPIRequest(
+      `php/api/teams/get_productivity_heatmap.php?team_id=${teamId}&days=${days}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+      "getting productivity heatmap"
+    );
   }
 
   // ===== UTILITY METHODS =====
