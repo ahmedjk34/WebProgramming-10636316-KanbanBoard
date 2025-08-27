@@ -75,21 +75,7 @@ class ListView extends BaseView {
             </select>
           </div>
           
-          <div class="filter-group">
-            <label for="status-filter-list">Status:</label>
-            <select id="status-filter-list" class="filter-select">
-              <option value="">All Statuses</option>
-              <option value="todo" ${
-                this.config.filters.status === "todo" ? "selected" : ""
-              }>To Do</option>
-              <option value="in_progress" ${
-                this.config.filters.status === "in_progress" ? "selected" : ""
-              }>In Progress</option>
-              <option value="done" ${
-                this.config.filters.status === "done" ? "selected" : ""
-              }>Done</option>
-            </select>
-          </div>
+
           
           <div class="filter-group">
             <label for="priority-filter-list">Priority:</label>
@@ -416,7 +402,7 @@ class ListView extends BaseView {
     const projectFilter = this.viewElement.querySelector(
       "#project-filter-list"
     );
-    const statusFilter = this.viewElement.querySelector("#status-filter-list");
+
     const priorityFilter = this.viewElement.querySelector(
       "#priority-filter-list"
     );
@@ -425,12 +411,6 @@ class ListView extends BaseView {
     if (projectFilter) {
       projectFilter.addEventListener("change", (e) => {
         this.updateFilters({ project: e.target.value || null });
-      });
-    }
-
-    if (statusFilter) {
-      statusFilter.addEventListener("change", (e) => {
-        this.updateFilters({ status: e.target.value || null });
       });
     }
 
