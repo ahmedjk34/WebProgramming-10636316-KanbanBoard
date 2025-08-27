@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teams - Kanban Task Board</title>
+    <meta
+      name="description"
+      content="Team collaboration and project management"
+    />
+    <meta name="author" content="Web Programming 10636316 Student" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico" />
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/teams.css" />
+
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body class="teams-page">
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- Teams Navigation Header -->
+    <header class="teams-header">
+      <div class="header-container">
+        <div class="header-left">
+          <div class="navigation-tabs">
+            <a href="index.html" class="nav-tab">
+              <span class="tab-icon">👤</span>
+              <span class="tab-text">Personal</span>
+            </a>
+            <a href="teams.html" class="nav-tab active">
+              <span class="tab-icon">👥</span>
+              <span class="tab-text">Teams</span>
+            </a>
+          </div>
+
+          <h1 class="teams-title">
+            <span class="title-icon">🚀</span>
+            Team Collaboration Hub
+          </h1>
+        </div>
+
+        <div class="header-controls">
+          <button
+            id="create-team-btn"
+            class="btn btn-primary"
+            onclick="openCreateTeamDialog()"
+          >
+            <span class="btn-icon">➕</span>
+            Create Team
+          </button>
+
+          <button
+            id="team-analytics-btn"
+            class="btn btn-info"
+            onclick="openTeamAnalyticsDialog()"
+          >
+            <span class="btn-icon">📊</span>
+            Analytics
+          </button>
+
+          <div class="user-menu">
+            <button
+              id="user-menu-btn"
+              class="user-menu-btn"
+              onclick="toggleUserMenu()"
+            >
+              <span class="user-avatar">👤</span>
+              <span class="user-name" id="user-name">Guest User</span>
+              <span class="menu-arrow">▼</span>
+            </button>
+            <div id="user-menu-dropdown" class="user-menu-dropdown">
+              <a href="index.html" class="menu-item">
+                <span class="menu-icon">👤</span>
+                Switch to Personal
+              </a>
+              <a href="dashboard.html" class="menu-item">
+                <span class="menu-icon">📊</span>
+                Dashboard
+              </a>
+              <div class="menu-divider"></div>
+              <button class="menu-item" onclick="logout()">
+                <span class="menu-icon">🚪</span>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="teams-main">
+      <div class="teams-container">
+        <!-- Teams Overview Section -->
+        <section class="teams-overview">
+          <div class="overview-header">
+            <h2>My Teams</h2>
+            <div class="overview-stats">
+              <div class="stat-item">
+                <span class="stat-number" id="total-teams">0</span>
+                <span class="stat-label">Teams</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number" id="total-members">0</span>
+                <span class="stat-label">Members</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number" id="active-projects">0</span>
+                <span class="stat-label">Projects</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="teams-grid" class="teams-grid">
+            <!-- Teams will be loaded dynamically -->
+          </div>
+        </section>
+
+        <!-- Team Activity Feed -->
+        <aside class="team-activity-sidebar">
+          <div class="activity-header">
+            <h3>📊 Team Activity</h3>
+            <button
+              class="refresh-activity-btn"
+              onclick="refreshTeamActivity()"
+              title="Refresh Activity"
+            >
+              🔄
+            </button>
+          </div>
+          <div class="activity-feed">
+            <div id="team-activity-feed" class="activity-feed">
+              <!-- Activity items will be loaded dynamically -->
+              <div class="activity-placeholder">
+                <div class="activity-icon">📊</div>
+                <div class="activity-content">
+                  <div class="activity-text">No team selected</div>
+                  <div class="activity-time">Select a team to see activity</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/auth-check.js"></script>
+    <script src="js/analytics-app.js"></script>
+    <script src="js/app.js"></script>
+    <script src="modules/ModuleFactory.js"></script>
+    <script src="modules/APIManager.js"></script>
+    <script src="modules/TaskManager.js"></script>
+    <script src="modules/ProjectManager.js"></script>
+    <script src="modules/WorkspaceManager.js"></script>
+    <script src="modules/UIManager.js"></script>
+    <script src="modules/ViewManager.js"></script>
+    <script src="modules/DragDropManager.js"></script>
+    <script src="modules/ChartManager.js"></script>
+    <script src="modules/AnalyticsDataManager.js"></script>
+    <script src="modules/AIChatManager.js"></script>
+    <script src="modules/TeamManager.js"></script>
+    <script src="modules/TeamCollaborationManager.js"></script>
+    <script src="modules/TeamAnalyticsManager.js"></script>
+    <script src="js/teams-app.js"></script>
+  </body>
+</html>
