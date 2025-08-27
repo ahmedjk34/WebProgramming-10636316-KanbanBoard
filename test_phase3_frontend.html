@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phase 3 Frontend Test - Personal vs Teams Workspace Split</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .content {
+        padding: 30px;
+      }
+
+      .test-section {
+        margin-bottom: 40px;
+        padding: 25px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        border-left: 5px solid #667eea;
+      }
+
+      .test-section h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .test-section h2::before {
+        content: "🧪";
+        font-size: 1.2rem;
+      }
+
+      .feature-list {
+        list-style: none;
+        margin: 20px 0;
+      }
+
+      .feature-list li {
+        padding: 10px 0;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .feature-list li:last-child {
+        border-bottom: none;
+      }
+
+      .status {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status.implemented {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        margin: 5px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+      }
+
+      .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+      }
+
+      .screenshot {
+        background: #e9ecef;
+        border: 2px dashed #adb5bd;
+        border-radius: 10px;
+        padding: 40px;
+        text-align: center;
+        margin: 20px 0;
+        color: #6c757d;
+      }
+
+      .code-block {
+        background: #2c3e50;
+        color: #ecf0f1;
+        padding: 20px;
+        border-radius: 10px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        overflow-x: auto;
+        margin: 15px 0;
+      }
+
+      .alert {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+
+      .alert-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .alert-warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🧪 Phase 3 Frontend Test</h1>
+        <p>
+          Personal vs Teams Workspace Split - Frontend Architecture
+          Implementation
+        </p>
+      </div>
+
+      <div class="content">
+        <!-- Overview -->
+        <div class="test-section">
+          <h2>Phase 3 Overview</h2>
+          <p>
+            This phase implements the frontend architecture for the Personal vs
+            Teams workspace split feature. The implementation includes:
+          </p>
+
+          <ul class="feature-list">
+            <li>
+              <span class="status implemented">✅</span>
+              <strong>Workspace Type Tabs:</strong> Personal and Teams tabs in
+              header and sidebar
+            </li>
+            <li>
+              <span class="status implemented">✅</span>
+              <strong>Dynamic UI Controls:</strong> Team management buttons that
+              appear only in Teams mode
+            </li>
+            <li>
+              <span class="status implemented">✅</span>
+              <strong>Enhanced Sidebar:</strong> Teams section with team list
+              and management
+            </li>
+            <li>
+              <span class="status implemented">✅</span>
+              <strong>Workspace Type Badges:</strong> Visual indicators for
+              personal vs team workspaces
+            </li>
+            <li>
+              <span class="status implemented">✅</span>
+              <strong>JavaScript Architecture:</strong> Modular system for
+              workspace type switching
+            </li>
+            <li>
+              <span class="status implemented">✅</span>
+              <strong>API Integration:</strong> Team API methods in APIManager
+            </li>
+          </ul>
+        </div>
+
+        <!-- UI Components Test -->
+        <div class="test-section">
+          <h2>UI Components Implementation</h2>
+
+          <h3>1. Workspace Type Tabs</h3>
+          <div class="screenshot">
+            <h4>Header Tabs</h4>
+            <p>Personal and Teams tabs in the main header</p>
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                justify-content: center;
+                margin: 20px 0;
+              "
+            >
+              <button
+                class="btn btn-primary"
+                style="
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  color: white;
+                "
+              >
+                👤 Personal
+              </button>
+              <button
+                class="btn"
+                style="background: transparent; color: #64748b"
+              >
+                👥 Teams
+              </button>
+            </div>
+          </div>
+
+          <h3>2. Team Management Controls</h3>
+          <div class="screenshot">
+            <h4>Team Controls (Visible in Teams Mode)</h4>
+            <p>Create Team and Manage Teams buttons</p>
+            <div
+              style="
+                display: flex;
+                gap: 12px;
+                justify-content: center;
+                margin: 20px 0;
+              "
+            >
+              <button class="btn btn-success">🏢 Create Team</button>
+              <button class="btn btn-primary">⚙️ Manage Teams</button>
+            </div>
+          </div>
+
+          <h3>3. Enhanced Sidebar</h3>
+          <div class="screenshot">
+            <h4>Sidebar with Teams Section</h4>
+            <p>Teams list and workspace management</p>
+            <div style="text-align: left; max-width: 300px; margin: 0 auto">
+              <div
+                style="
+                  background: #f8f9fa;
+                  padding: 15px;
+                  border-radius: 8px;
+                  margin: 10px 0;
+                "
+              >
+                <strong>👥 Teams & Workspaces</strong>
+              </div>
+              <div
+                style="
+                  background: #e3f2fd;
+                  padding: 10px;
+                  border-radius: 8px;
+                  margin: 5px 0;
+                "
+              >
+                <strong>Personal</strong> (Active)
+              </div>
+              <div
+                style="
+                  background: #f3e5f5;
+                  padding: 10px;
+                  border-radius: 8px;
+                  margin: 5px 0;
+                "
+              >
+                <strong>Teams</strong>
+              </div>
+              <div
+                style="
+                  background: #f8f9fa;
+                  padding: 15px;
+                  border-radius: 8px;
+                  margin: 10px 0;
+                "
+              >
+                <strong>My Teams</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CSS Implementation -->
+        <div class="test-section">
+          <h2>CSS Implementation</h2>
+
+          <h3>Workspace Type Tabs Styling</h3>
+          <div class="code-block">
+            /* Workspace Type Tabs */ .workspace-tabs { display: flex; gap: 8px;
+            margin-right: 20px; background: var(--bg-glass); border-radius:
+            12px; padding: 4px; backdrop-filter: blur(10px); border: 1px solid
+            var(--border-color); } .workspace-tab { display: flex; align-items:
+            center; gap: 8px; padding: 8px 16px; border: none; border-radius:
+            8px; background: transparent; color: var(--text-secondary);
+            font-weight: 500; font-size: 14px; cursor: pointer; transition:
+            var(--transition); } .workspace-tab.active { background:
+            var(--primary-gradient); color: white; box-shadow:
+            var(--shadow-light); }
+          </div>
+
+          <h3>Team Controls Styling</h3>
+          <div class="code-block">
+            /* Team Controls */ .team-controls { display: flex; gap: 12px;
+            margin-right: 20px; } .team-controls .btn { font-size: 13px;
+            padding: 8px 16px; } /* Responsive adjustments */ @media (max-width:
+            768px) { .workspace-tab .tab-text { display: none; } .team-controls
+            .btn span:not(.btn-icon) { display: none; } }
+          </div>
+        </div>
+
+        <!-- JavaScript Architecture -->
+        <div class="test-section">
+          <h2>JavaScript Architecture</h2>
+
+          <h3>Workspace Type Switching</h3>
+          <div class="code-block">
+            function switchWorkspaceType(type) { console.log(`🔄 Switching to
+            ${type} workspace type`); // Update current workspace type
+            currentWorkspaceType = type; localStorage.setItem("workspaceType",
+            type); // Update UI tabs updateWorkspaceTypeTabs(type); // Update
+            sidebar updateSidebarForWorkspaceType(type); // Load appropriate
+            workspaces loadWorkspacesForType(type); // Update header controls
+            updateHeaderControlsForType(type); // Refresh current view if
+            (window.workspaceManager) {
+            window.workspaceManager.refreshCurrentWorkspace(); } }
+          </div>
+
+          <h3>WorkspaceManager Enhancements</h3>
+          <div class="code-block">
+            class WorkspaceManager { constructor(dependencies = {}) {
+            this.workspaces = []; this.currentWorkspaceId =
+            parseInt(localStorage.getItem("currentWorkspaceId")) || 1;
+            this.currentWorkspaceType = localStorage.getItem("workspaceType") ||
+            "personal"; this.teams = []; // ... rest of constructor } async
+            loadWorkspacesForType(type) { console.log(`📊 Loading workspaces for
+            type: ${type}`); this.currentWorkspaceType = type; try { if
+            (this.apiManager) { const result = await
+            this.apiManager.loadWorkspaces(); // Filter workspaces by type const
+            filteredWorkspaces = result.data.workspaces.filter(workspace => { if
+            (type === 'personal') { return workspace.workspace_type ===
+            'personal'; } else { return workspace.workspace_type === 'team'; }
+            }); this.setWorkspaces(filteredWorkspaces);
+            this.displayWorkspaces(); // Load teams if in teams mode if (type
+            === 'teams') { await this.loadTeams(); } } } catch (error) {
+            console.error(`❌ Error loading workspaces for type ${type}:`,
+            error); } } }
+          </div>
+        </div>
+
+        <!-- API Integration -->
+        <div class="test-section">
+          <h2>API Integration</h2>
+
+          <h3>Team API Methods in APIManager</h3>
+          <div class="code-block">
+            // ===== TEAM API METHODS ===== async loadTeams() { try { const
+            response = await fetch("php/api/teams/get_teams.php"); const result
+            = await this.safeJsonParse(response); return result; } catch (error)
+            { console.error("❌ Error loading teams:", error); throw error; } }
+            async createTeam(teamData) { try { const response = await
+            fetch("php/api/teams/create_team.php", { method: "POST", headers: {
+            "Content-Type": "application/json" }, body:
+            JSON.stringify(teamData), }); const result = await
+            this.safeJsonParse(response); return result; } catch (error) {
+            console.error("❌ Error creating team:", error); throw error; } }
+            async createTeamWorkspace(workspaceData) { try { const response =
+            await fetch("php/api/teams/create_team_workspace.php", { method:
+            "POST", headers: { "Content-Type": "application/json" }, body:
+            JSON.stringify(workspaceData), }); const result = await
+            this.safeJsonParse(response); return result; } catch (error) {
+            console.error("❌ Error creating team workspace:", error); throw
+            error; } }
+          </div>
+        </div>
+
+        <!-- Testing Instructions -->
+        <div class="test-section">
+          <h2>Testing Instructions</h2>
+
+          <div class="alert alert-info">
+            <strong>To test Phase 3 implementation:</strong>
+          </div>
+
+          <ol style="margin-left: 20px; line-height: 1.8">
+            <li>
+              <strong>Open the main application:</strong> Navigate to
+              <code>index.html</code>
+            </li>
+            <li>
+              <strong>Test Workspace Type Tabs:</strong> Click between Personal
+              and Teams tabs in the header
+            </li>
+            <li>
+              <strong>Verify Team Controls:</strong> Team management buttons
+              should appear only in Teams mode
+            </li>
+            <li>
+              <strong>Test Sidebar:</strong> Open the sidebar and verify the
+              enhanced layout with teams section
+            </li>
+            <li>
+              <strong>Test Workspace Switching:</strong> Switch between
+              different workspace types and verify filtering
+            </li>
+            <li>
+              <strong>Test Responsive Design:</strong> Resize browser window to
+              test mobile responsiveness
+            </li>
+          </ol>
+
+          <div class="alert alert-success">
+            <strong>Expected Results:</strong>
+            <ul style="margin: 10px 0 0 20px">
+              <li>✅ Smooth transitions between Personal and Teams modes</li>
+              <li>✅ Team controls appear/disappear based on selected mode</li>
+              <li>✅ Sidebar updates to show relevant sections</li>
+              <li>✅ Workspaces are filtered by type</li>
+              <li>✅ UI is responsive on mobile devices</li>
+              <li>✅ State is persisted in localStorage</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="test-section">
+          <h2>Next Steps - Phase 4</h2>
+
+          <div class="alert alert-warning">
+            <strong>Phase 4 will implement:</strong>
+          </div>
+
+          <ul class="feature-list">
+            <li>
+              <span class="status pending">⏳</span>
+              <strong>Team Management Dialogs:</strong> Create, edit, and manage
+              teams
+            </li>
+            <li>
+              <span class="status pending">⏳</span>
+              <strong>Team Member Management:</strong> Invite, remove, and
+              manage team members
+            </li>
+            <li>
+              <span class="status pending">⏳</span>
+              <strong>Team Workspace Creation:</strong> Create workspaces for
+              specific teams
+            </li>
+            <li>
+              <span class="status pending">⏳</span>
+              <strong>Permission System:</strong> Role-based access control for
+              team workspaces
+            </li>
+            <li>
+              <span class="status pending">⏳</span>
+              <strong>Real-time Collaboration:</strong> Live updates for team
+              activities
+            </li>
+          </ul>
+        </div>
+
+        <!-- Navigation -->
+        <div style="text-align: center; margin-top: 40px">
+          <a href="index.html" class="btn btn-primary">🏠 Back to Main App</a>
+          <a href="test_team.html" class="btn btn-success">🧪 Test Team APIs</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
