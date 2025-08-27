@@ -1103,34 +1103,41 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     console.log("✅ User authenticated:", authResult.data?.user);
 
-    // Wait for main app modules to be initialized
-    let attempts = 0;
-    const maxAttempts = 50; // 5 seconds max wait
-
-    while (attempts < maxAttempts) {
-      if (
-        window.apiManager &&
-        window.workspaceManager &&
-        window.taskManager &&
-        window.uiManager
-      ) {
-        console.log("✅ Main app modules are ready");
-        break;
-      }
-
-      console.log(
-        `⏳ Waiting for main app modules... (attempt ${
-          attempts + 1
-        }/${maxAttempts})`
-      );
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      attempts++;
+    // Initialize required managers if they don't exist
+    if (!window.apiManager) {
+      console.log("🔧 Initializing APIManager...");
+      window.apiManager = new APIManager();
+      await window.apiManager.init();
     }
 
-    if (attempts >= maxAttempts) {
-      console.error("❌ Timeout waiting for main app modules");
-      throw new Error("Main app modules not available");
+    if (!window.workspaceManager) {
+      console.log("🔧 Initializing WorkspaceManager...");
+      window.workspaceManager = new WorkspaceManager({
+        apiManager: window.apiManager,
+      });
+      await window.workspaceManager.init();
     }
+
+    if (!window.taskManager) {
+      console.log("🔧 Initializing TaskManager...");
+      window.taskManager = new TaskManager({
+        apiManager: window.apiManager,
+        workspaceManager: window.workspaceManager,
+      });
+      await window.taskManager.init();
+    }
+
+    if (!window.uiManager) {
+      console.log("🔧 Initializing UIManager...");
+      window.uiManager = new UIManager({
+        apiManager: window.apiManager,
+        taskManager: window.taskManager,
+        workspaceManager: window.workspaceManager,
+      });
+      await window.uiManager.init();
+    }
+
+    console.log("✅ All required managers initialized");
 
     // Initialize the teams app
     window.teamsApp = new TeamsApp();
@@ -1139,8 +1146,119 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("✅ Teams Application initialized successfully");
   } catch (error) {
     console.error("❌ Failed to initialize Teams Application:", error);
+
+    // Fallback: Simple teams display without complex modules
+    console.log("🔄 Attempting fallback teams display...");
+    try {
+      await loadTeamsSimple();
+    } catch (fallbackError) {
+      console.error("❌ Fallback also failed:", fallbackError);
+    }
   }
 });
+
+// Simple fallback teams loading function
+async function loadTeamsSimple() {
+  try {
+    console.log("🔄 Loading teams with simple fallback...");
+
+    const response = await fetch("php/api/teams/get_teams.php");
+    const result = await response.json();
+
+    if (result.success && result.data) {
+      console.log(`✅ Loaded ${result.data.length} teams with fallback`);
+
+      const teamsGrid = document.getElementById("teams-grid");
+      if (teamsGrid) {
+        if (result.data.length === 0) {
+          teamsGrid.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">👥</div>
+              <h3>No Teams Yet</h3>
+              <p>Create your first team to start collaborating with others and boost productivity.</p>
+              <div class="empty-actions">
+                <button class="btn btn-primary" onclick="alert('Create team functionality requires full app initialization')">
+                  <span class="btn-icon">➕</span>
+                  Create Team
+                </button>
+              </div>
+            </div>
+          `;
+        } else {
+          teamsGrid.innerHTML = result.data
+            .map(
+              (team) => `
+            <div class="team-card" data-team-id="${team.id}">
+              <div class="team-card-header">
+                <div class="team-card-icon" style="background: ${
+                  team.color || "#667eea"
+                }">👥</div>
+                <div class="team-card-info">
+                  <div class="team-card-name">${team.name}</div>
+                  <div class="team-card-description">${
+                    team.description || "No description"
+                  }</div>
+                  <div class="team-card-meta">
+                    <div class="team-visibility private">
+                      <span>🔒</span>
+                      <span>Private</span>
+                    </div>
+                    <div class="team-member-count">
+                      <span>👤</span>
+                      <span>${team.member_count || 0} members</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="team-card-stats">
+                <div class="stat-item">
+                  <span class="stat-number">${team.member_count || 0}</span>
+                  <span class="stat-label">Members</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-number">${team.project_count || 0}</span>
+                  <span class="stat-label">Projects</span>
+                </div>
+              </div>
+              <div class="team-card-actions">
+                <button class="team-action-btn primary" onclick="alert('Team functionality requires full app initialization')" title="Open Team">
+                  <span>🚀</span>
+                  <span>Open</span>
+                </button>
+              </div>
+            </div>
+          `
+            )
+            .join("");
+        }
+      }
+
+      // Update statistics
+      const totalTeams = result.data.length;
+      const totalMembers = result.data.reduce(
+        (sum, team) => sum + (team.member_count || 0),
+        0
+      );
+      const activeProjects = result.data.reduce(
+        (sum, team) => sum + (team.project_count || 0),
+        0
+      );
+
+      const totalTeamsElement = document.getElementById("total-teams");
+      const totalMembersElement = document.getElementById("total-members");
+      const activeProjectsElement = document.getElementById("active-projects");
+
+      if (totalTeamsElement) totalTeamsElement.textContent = totalTeams;
+      if (totalMembersElement) totalMembersElement.textContent = totalMembers;
+      if (activeProjectsElement)
+        activeProjectsElement.textContent = activeProjects;
+    } else {
+      console.error("❌ Failed to load teams:", result.message);
+    }
+  } catch (error) {
+    console.error("❌ Error in fallback teams loading:", error);
+  }
+}
 
 // Global functions for HTML onclick handlers
 window.openCreateTeamDialog = () => {
