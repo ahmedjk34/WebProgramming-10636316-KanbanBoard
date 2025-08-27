@@ -7,6 +7,9 @@
 // Load session configuration FIRST (before any output)
 require_once __DIR__ . '/../../config/session.php';
 
+// Start session immediately
+safeSessionStart();
+
 // Disable error display to prevent HTML output
 error_reporting(0);
 ini_set('display_errors', 0);
@@ -38,7 +41,7 @@ try {
     $guestStmt = $pdo->prepare("
         SELECT id, username, email, first_name, last_name, avatar_url, last_login
         FROM users 
-        WHERE username = 'guest_user' AND is_active = TRUE
+        WHERE username = 'guest' AND is_active = TRUE
     ");
     $guestStmt->execute();
     $guestUser = $guestStmt->fetch(PDO::FETCH_ASSOC);
@@ -53,14 +56,20 @@ try {
         ");
         
         $createGuestStmt->execute([
-            'guest_user',
-            'guest@kanban.com',
+            'guest',
+            'guest@example.com',
             $guestPasswordHash,
             'Guest',
             'User'
         ]);
         
         $guestUserId = $pdo->lastInsertId();
+        
+        $isNewGuest = true;
+    } else {
+        $guestUserId = $guestUser['id'];
+        $isNewGuest = false;
+    }
         
         // Create guest user preferences
         $guestPreferencesStmt = $pdo->prepare("
@@ -151,10 +160,213 @@ try {
             }
         }
         
-        // Get the created guest user
-        $guestStmt->execute();
-        $guestUser = $guestStmt->fetch(PDO::FETCH_ASSOC);
+        // Create a demo team for guest user
+        $teamStmt = $pdo->prepare("
+            INSERT INTO teams (name, description, color, avatar_url, created_by, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+        ");
+        $teamStmt->execute([
+            'Demo Development Team',
+            'A demonstration team with Guest user as admin and various team members with assigned tasks',
+            '#667eea',
+            null,
+            $guestUserId
+        ]);
+        $teamId = $pdo->lastInsertId();
+        
+        // Add Guest user as admin to the team
+        $teamMemberStmt = $pdo->prepare("
+            INSERT INTO team_members (team_id, user_id, role, status, joined_at) 
+            VALUES (?, ?, ?, ?, NOW())
+        ");
+        $teamMemberStmt->execute([$teamId, $guestUserId, 'admin', 'active']);
+        
+        // Create dummy users for the team
+        $dummyUsers = [
+            ['john_doe', 'john@example.com', 'John', 'Doe'],
+            ['jane_smith', 'jane@example.com', 'Jane', 'Smith'],
+            ['mike_wilson', 'mike@example.com', 'Mike', 'Wilson'],
+            ['sarah_jones', 'sarah@example.com', 'Sarah', 'Jones'],
+            ['alex_brown', 'alex@example.com', 'Alex', 'Brown']
+        ];
+        
+        $dummyUserIds = [];
+        foreach ($dummyUsers as $user) {
+            $dummyUserStmt = $pdo->prepare("
+                INSERT INTO users (username, email, first_name, last_name, password_hash, is_active, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, NOW())
+            ");
+            $dummyUserStmt->execute([
+                $user[0],
+                $user[1],
+                $user[2],
+                $user[3],
+                password_hash('password123', PASSWORD_DEFAULT),
+                1
+            ]);
+            $dummyUserId = $pdo->lastInsertId();
+            $dummyUserIds[] = $dummyUserId;
+            
+            // Add dummy user to team
+            $teamMemberStmt->execute([$teamId, $dummyUserId, 'member', 'active']);
+        }
+        
+        // Create a workspace for the team
+        $teamWorkspaceStmt = $pdo->prepare("
+            INSERT INTO workspaces (name, description, color, icon, workspace_type, owner_id, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, NOW())
+        ");
+        $teamWorkspaceStmt->execute([
+            'Development Workspace',
+            'Main workspace for development tasks and projects',
+            '#4facfe',
+            '💻',
+            'team',
+            $guestUserId
+        ]);
+        $teamWorkspaceId = $pdo->lastInsertId();
+        
+        // Link workspace to team
+        $teamWorkspaceLinkStmt = $pdo->prepare("
+            INSERT INTO team_workspaces (team_id, workspace_id, created_at) 
+            VALUES (?, ?, NOW())
+        ");
+        $teamWorkspaceLinkStmt->execute([$teamId, $teamWorkspaceId]);
+        
+        // Create projects for the team workspace
+        $teamProjects = [
+            ['Frontend Development', 'Building responsive user interfaces', '#43e97b'],
+            ['Backend API', 'Developing RESTful APIs and database design', '#fa709a'],
+            ['Mobile App', 'Cross-platform mobile application development', '#ffecd2'],
+            ['Testing & QA', 'Quality assurance and testing procedures', '#667eea']
+        ];
+        
+        foreach ($teamProjects as $project) {
+            $teamProjectStmt = $pdo->prepare("
+                INSERT INTO projects (name, description, color, status, created_by, workspace_id, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, NOW())
+            ");
+            $teamProjectStmt->execute([
+                $project[0],
+                $project[1],
+                $project[2],
+                'active',
+                $guestUserId,
+                $teamWorkspaceId
+            ]);
+        }
     }
+    
+    // Check if guest user has a team, if not create one
+    $teamCheckStmt = $pdo->prepare("
+        SELECT COUNT(*) as team_count 
+        FROM team_members 
+        WHERE user_id = ?
+    ");
+    $teamCheckStmt->execute([$guestUserId]);
+    $teamCount = $teamCheckStmt->fetch(PDO::FETCH_ASSOC)['team_count'];
+    
+    if ($teamCount == 0) {
+        // Create a demo team for guest user
+        $teamStmt = $pdo->prepare("
+            INSERT INTO teams (name, description, color, avatar_url, created_by, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+        ");
+        $teamStmt->execute([
+            'Demo Development Team',
+            'A demonstration team with Guest user as admin and various team members with assigned tasks',
+            '#667eea',
+            null,
+            $guestUserId
+        ]);
+        $teamId = $pdo->lastInsertId();
+        
+        // Add Guest user as admin to the team
+        $teamMemberStmt = $pdo->prepare("
+            INSERT INTO team_members (team_id, user_id, role, status, joined_at) 
+            VALUES (?, ?, ?, ?, NOW())
+        ");
+        $teamMemberStmt->execute([$teamId, $guestUserId, 'admin', 'active']);
+        
+        // Create dummy users for the team
+        $dummyUsers = [
+            ['john_doe', 'john@example.com', 'John', 'Doe'],
+            ['jane_smith', 'jane@example.com', 'Jane', 'Smith'],
+            ['mike_wilson', 'mike@example.com', 'Mike', 'Wilson'],
+            ['sarah_jones', 'sarah@example.com', 'Sarah', 'Jones'],
+            ['alex_brown', 'alex@example.com', 'Alex', 'Brown']
+        ];
+        
+        $dummyUserIds = [];
+        foreach ($dummyUsers as $user) {
+            $dummyUserStmt = $pdo->prepare("
+                INSERT INTO users (username, email, first_name, last_name, password_hash, is_active, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, NOW())
+            ");
+            $dummyUserStmt->execute([
+                $user[0],
+                $user[1],
+                $user[2],
+                $user[3],
+                password_hash('password123', PASSWORD_DEFAULT),
+                1
+            ]);
+            $dummyUserId = $pdo->lastInsertId();
+            $dummyUserIds[] = $dummyUserId;
+            
+            // Add dummy user to team
+            $teamMemberStmt->execute([$teamId, $dummyUserId, 'member', 'active']);
+        }
+        
+        // Create a workspace for the team
+        $teamWorkspaceStmt = $pdo->prepare("
+            INSERT INTO workspaces (name, description, color, icon, workspace_type, owner_id, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, NOW())
+        ");
+        $teamWorkspaceStmt->execute([
+            'Development Workspace',
+            'Main workspace for development tasks and projects',
+            '#4facfe',
+            '💻',
+            'team',
+            $guestUserId
+        ]);
+        $teamWorkspaceId = $pdo->lastInsertId();
+        
+        // Link workspace to team
+        $teamWorkspaceLinkStmt = $pdo->prepare("
+            INSERT INTO team_workspaces (team_id, workspace_id, created_at) 
+            VALUES (?, ?, NOW())
+        ");
+        $teamWorkspaceLinkStmt->execute([$teamId, $teamWorkspaceId]);
+        
+        // Create projects for the team workspace
+        $teamProjects = [
+            ['Frontend Development', 'Building responsive user interfaces', '#43e97b'],
+            ['Backend API', 'Developing RESTful APIs and database design', '#fa709a'],
+            ['Mobile App', 'Cross-platform mobile application development', '#ffecd2'],
+            ['Testing & QA', 'Quality assurance and testing procedures', '#667eea']
+        ];
+        
+        foreach ($teamProjects as $project) {
+            $teamProjectStmt = $pdo->prepare("
+                INSERT INTO projects (name, description, color, status, created_by, workspace_id, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, NOW())
+            ");
+            $teamProjectStmt->execute([
+                $project[0],
+                $project[1],
+                $project[2],
+                'active',
+                $guestUserId,
+                $teamWorkspaceId
+            ]);
+        }
+    }
+    
+    // Get the guest user data
+    $guestStmt->execute();
+    $guestUser = $guestStmt->fetch(PDO::FETCH_ASSOC);
     
     // Update last login time
     $updateStmt = $pdo->prepare("
@@ -168,13 +380,19 @@ try {
     $token = generateSecureToken();
     $tokenExpiry = date('Y-m-d H:i:s', strtotime('+24 hours'));
     
-    // Store token in database (with NULL workspace_id to match unique constraint)
-    $tokenStmt = $pdo->prepare("
-        INSERT INTO user_preferences (user_id, preference_key, preference_value, workspace_id) 
-        VALUES (?, 'auth_token', ?, NULL) 
-        ON DUPLICATE KEY UPDATE preference_value = ?
+    // FIXED: Properly handle auth token - delete existing ones first, then insert new one
+    $deleteTokenStmt = $pdo->prepare("
+        DELETE FROM user_preferences 
+        WHERE user_id = ? AND preference_key = 'auth_token'
     ");
-    $tokenStmt->execute([$guestUser['id'], $token, $token]);
+    $deleteTokenStmt->execute([$guestUser['id']]);
+    
+    // Insert new token
+    $tokenStmt = $pdo->prepare("
+        INSERT INTO user_preferences (user_id, preference_key, preference_value) 
+        VALUES (?, 'auth_token', ?)
+    ");
+    $tokenStmt->execute([$guestUser['id'], $token]);
     
     // Start session safely
     safeSessionStart();

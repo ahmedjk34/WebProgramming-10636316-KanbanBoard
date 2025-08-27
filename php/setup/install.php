@@ -76,10 +76,38 @@ function populateDemoTeamData($pdo) {
                 1
             ]);
             $guestUserId = $pdo->lastInsertId();
-            echo "   ✅ Created Guest user (ID: $guestUserId)\n";
+            
+            // Create auth token for guest user
+            $authToken = bin2hex(random_bytes(32));
+            $tokenStmt = $pdo->prepare("
+                INSERT INTO user_preferences (user_id, preference_key, preference_value) 
+                VALUES (?, 'auth_token', ?)
+            ");
+            $tokenStmt->execute([$guestUserId, $authToken]);
+            
+            echo "   ✅ Created Guest user (ID: $guestUserId) with auth token\n";
         } else {
             $guestUserId = $guestUser['id'];
-            echo "   ℹ️ Guest user already exists (ID: $guestUserId)\n";
+            
+            // Check if guest user has auth token, if not create one
+            $tokenCheckStmt = $pdo->prepare("
+                SELECT preference_value FROM user_preferences 
+                WHERE user_id = ? AND preference_key = 'auth_token'
+            ");
+            $tokenCheckStmt->execute([$guestUserId]);
+            $existingToken = $tokenCheckStmt->fetchColumn();
+            
+            if (!$existingToken) {
+                $authToken = bin2hex(random_bytes(32));
+                $tokenStmt = $pdo->prepare("
+                    INSERT INTO user_preferences (user_id, preference_key, preference_value) 
+                    VALUES (?, 'auth_token', ?)
+                ");
+                $tokenStmt->execute([$guestUserId, $authToken]);
+                echo "   ✅ Added auth token to existing Guest user (ID: $guestUserId)\n";
+            } else {
+                echo "   ℹ️ Guest user already has auth token (ID: $guestUserId)\n";
+            }
         }
         
         // Create dummy users if they don't exist

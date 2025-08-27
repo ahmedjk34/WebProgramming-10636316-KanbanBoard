@@ -7,7 +7,7 @@
 // Include necessary files
 require_once '../../config/database.php';
 require_once '../../config/session.php';
-require_once '../../includes/auth_middleware.php';
+require_once '../includes/auth_middleware.php';
 
 // Set headers
 header('Content-Type: application/json');

@@ -21,7 +21,7 @@ try {
 
     $workspaceId = isset($_GET['workspace_id']) ? sanitizeAndValidate($_GET['workspace_id'], 'int') : 1;
     $projectId = isset($_GET['project_id']) ? sanitizeAndValidate($_GET['project_id'], 'int') : null;
-    $status = isset($_GET['status']) ? sanitizeAndValidate($_GET['status'], 'string') : null;
+
     $priority = isset($_GET['priority']) ? sanitizeAndValidate($_GET['priority'], 'string') : null;
     $sql = "SELECT
                 t.id,
@@ -80,10 +80,7 @@ try {
         $params[':project_id'] = $projectId;
     }
 
-    if ($status && validateStatus($status)) {
-        $sql .= " AND t.status = :status";
-        $params[':status'] = $status;
-    }
+
 
     if ($priority && validatePriority($priority)) {
         $sql .= " AND t.priority = :priority";
