@@ -106,6 +106,7 @@ let apiManager;
 let taskManager;
 let projectManager;
 let workspaceManager;
+let teamManager;
 let dragDropManager;
 let uiManager;
 let aiChatManager;
@@ -132,6 +133,10 @@ function registerModules() {
     "WorkspaceManager",
     "DragDropManager",
     "UIManager",
+    "TeamManager",
+    "AIChatManager",
+    "TeamCollaborationManager",
+    "TeamAnalyticsManager",
   ];
 
   const missingModules = requiredModules.filter(
@@ -153,6 +158,10 @@ function registerModules() {
   moduleFactory.register("workspaceManager", window.WorkspaceManager, [
     "apiManager",
   ]);
+  moduleFactory.register("teamManager", window.TeamManager, [
+    "apiManager",
+    "workspaceManager",
+  ]);
   moduleFactory.register("dragDropManager", window.DragDropManager, [
     "taskManager",
   ]);
@@ -160,9 +169,21 @@ function registerModules() {
     "taskManager",
     "projectManager",
     "workspaceManager",
+    "teamManager",
   ]);
   moduleFactory.register("aiChatManager", window.AIChatManager, [
     "taskManager",
+    "uiManager",
+  ]);
+  moduleFactory.register("teamCollaborationManager", window.TeamCollaborationManager, [
+    "apiManager",
+    "taskManager",
+    "teamManager",
+    "uiManager",
+  ]);
+  moduleFactory.register("teamAnalyticsManager", window.TeamAnalyticsManager, [
+    "apiManager",
+    "teamManager",
     "uiManager",
   ]);
 
@@ -181,17 +202,23 @@ async function initializeApp() {
     taskManager = modules.taskManager;
     projectManager = modules.projectManager;
     workspaceManager = modules.workspaceManager;
+    teamManager = modules.teamManager;
     dragDropManager = modules.dragDropManager;
     uiManager = modules.uiManager;
     aiChatManager = modules.aiChatManager;
+    teamCollaborationManager = modules.teamCollaborationManager;
+    teamAnalyticsManager = modules.teamAnalyticsManager;
 
     window.apiManager = apiManager;
     window.taskManager = taskManager;
     window.projectManager = projectManager;
     window.workspaceManager = workspaceManager;
+    window.teamManager = teamManager;
     window.dragDropManager = dragDropManager;
     window.uiManager = uiManager;
     window.aiChatManager = aiChatManager;
+    window.teamCollaborationManager = teamCollaborationManager;
+    window.teamAnalyticsManager = teamAnalyticsManager;
 
     // Initialize workspace type system
     initializeWorkspaceTypeSystem();
@@ -574,10 +601,130 @@ function openTeamManagementDialog() {
   }
 }
 
+function closeCreateTeamDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeCreateTeamDialog();
+  }
+}
+
+function closeTeamManagementDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeTeamManagementDialog();
+  }
+}
+
+function closeEditTeamDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeEditTeamDialog();
+  }
+}
+
+function closeInviteMemberDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeInviteMemberDialog();
+  }
+}
+
+function closeCreateTeamWorkspaceDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeCreateTeamWorkspaceDialog();
+  }
+}
+
+function editTeam(teamId) {
+  if (window.teamManager) {
+    window.teamManager.editTeam(teamId);
+  }
+}
+
+function deleteTeam(teamId) {
+  if (window.teamManager) {
+    window.teamManager.deleteTeam(teamId);
+  }
+}
+
+function removeMember(memberId) {
+  if (window.teamManager) {
+    window.teamManager.removeMember(memberId);
+  }
+}
+
+function openInviteMemberDialog() {
+  if (window.uiManager) {
+    window.uiManager.openInviteMemberDialog();
+  }
+}
+
+function openCreateTeamWorkspaceDialog() {
+  if (window.uiManager) {
+    window.uiManager.openCreateTeamWorkspaceDialog();
+  }
+}
+
+function openTeamWorkspace(workspaceId) {
+  // This would switch to the team workspace
+  console.log("Opening team workspace:", workspaceId);
+  // Implementation would depend on workspace switching logic
+}
+
+function deleteTeamWorkspace(workspaceId) {
+  // This would delete the team workspace
+  console.log("Deleting team workspace:", workspaceId);
+  // Implementation would depend on workspace deletion logic
+}
+
+// Team Collaboration Functions
+function refreshTeamActivity() {
+  if (window.teamCollaborationManager) {
+    window.teamCollaborationManager.loadTeamActivity(window.teamCollaborationManager.teamId);
+  }
+}
+
+function openTeamAnalyticsDialog() {
+  if (window.uiManager) {
+    window.uiManager.openTeamAnalyticsDialog();
+  }
+}
+
+function closeTeamAnalyticsDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeTeamAnalyticsDialog();
+  }
+}
+
+function refreshTeamAnalytics() {
+  if (window.teamAnalyticsManager) {
+    window.teamAnalyticsManager.loadTeamAnalytics(window.teamAnalyticsManager.currentTeamId);
+  }
+}
+
+function exportTeamAnalytics(format) {
+  if (window.teamAnalyticsManager) {
+    window.teamAnalyticsManager.exportAnalytics(format);
+  }
+}
+
 // Make functions globally available
 window.switchWorkspaceType = switchWorkspaceType;
 window.openCreateTeamDialog = openCreateTeamDialog;
 window.openTeamManagementDialog = openTeamManagementDialog;
+window.closeCreateTeamDialog = closeCreateTeamDialog;
+window.closeTeamManagementDialog = closeTeamManagementDialog;
+window.closeEditTeamDialog = closeEditTeamDialog;
+window.closeInviteMemberDialog = closeInviteMemberDialog;
+window.closeCreateTeamWorkspaceDialog = closeCreateTeamWorkspaceDialog;
+window.editTeam = editTeam;
+window.deleteTeam = deleteTeam;
+window.removeMember = removeMember;
+window.openInviteMemberDialog = openInviteMemberDialog;
+window.openCreateTeamWorkspaceDialog = openCreateTeamWorkspaceDialog;
+window.openTeamWorkspace = openTeamWorkspace;
+window.deleteTeamWorkspace = deleteTeamWorkspace;
+window.refreshTeamActivity = refreshTeamActivity;
+window.openTeamAnalyticsDialog = openTeamAnalyticsDialog;
+window.closeTeamAnalyticsDialog = closeTeamAnalyticsDialog;
+window.refreshTeamAnalytics = refreshTeamAnalytics;
+window.exportTeamAnalytics = exportTeamAnalytics;
 
 // Initialize workspace type system
 function initializeWorkspaceTypeSystem() {
