@@ -4,8 +4,15 @@
  * Ensures proper session handling across the application
  */
 
-// No session configuration changes to avoid header issues
-// Using default PHP session handling
+// Configure session for proper cookie handling
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', 0); // Set to 1 if using HTTPS
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.use_strict_mode', 1);
+ini_set('session.cookie_lifetime', 86400); // 24 hours
+ini_set('session.cookie_path', '/');
+ini_set('session.cookie_domain', '');
+ini_set('session.gc_maxlifetime', 86400); // 24 hours
 
 // Function to safely start session
 function safeSessionStart() {
