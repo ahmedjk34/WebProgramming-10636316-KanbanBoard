@@ -98,10 +98,15 @@ const moduleFactory = new ModuleFactory();
 let currentTheme = localStorage.getItem("theme") || "light";
 let currentEditingTaskId = null;
 
+// Workspace Type Management
+let currentWorkspaceType = localStorage.getItem("workspaceType") || "personal";
+let currentWorkspaceId = localStorage.getItem("currentWorkspaceId") || null;
+
 let apiManager;
 let taskManager;
 let projectManager;
 let workspaceManager;
+let teamManager;
 let dragDropManager;
 let uiManager;
 let aiChatManager;
@@ -128,6 +133,10 @@ function registerModules() {
     "WorkspaceManager",
     "DragDropManager",
     "UIManager",
+    "TeamManager",
+    "AIChatManager",
+    "TeamCollaborationManager",
+    "TeamAnalyticsManager",
   ];
 
   const missingModules = requiredModules.filter(
@@ -149,6 +158,10 @@ function registerModules() {
   moduleFactory.register("workspaceManager", window.WorkspaceManager, [
     "apiManager",
   ]);
+  moduleFactory.register("teamManager", window.TeamManager, [
+    "apiManager",
+    "workspaceManager",
+  ]);
   moduleFactory.register("dragDropManager", window.DragDropManager, [
     "taskManager",
   ]);
@@ -156,9 +169,21 @@ function registerModules() {
     "taskManager",
     "projectManager",
     "workspaceManager",
+    "teamManager",
   ]);
   moduleFactory.register("aiChatManager", window.AIChatManager, [
     "taskManager",
+    "uiManager",
+  ]);
+  moduleFactory.register("teamCollaborationManager", window.TeamCollaborationManager, [
+    "apiManager",
+    "taskManager",
+    "teamManager",
+    "uiManager",
+  ]);
+  moduleFactory.register("teamAnalyticsManager", window.TeamAnalyticsManager, [
+    "apiManager",
+    "teamManager",
     "uiManager",
   ]);
 
@@ -177,17 +202,26 @@ async function initializeApp() {
     taskManager = modules.taskManager;
     projectManager = modules.projectManager;
     workspaceManager = modules.workspaceManager;
+    teamManager = modules.teamManager;
     dragDropManager = modules.dragDropManager;
     uiManager = modules.uiManager;
     aiChatManager = modules.aiChatManager;
+    teamCollaborationManager = modules.teamCollaborationManager;
+    teamAnalyticsManager = modules.teamAnalyticsManager;
 
     window.apiManager = apiManager;
     window.taskManager = taskManager;
     window.projectManager = projectManager;
     window.workspaceManager = workspaceManager;
+    window.teamManager = teamManager;
     window.dragDropManager = dragDropManager;
     window.uiManager = uiManager;
     window.aiChatManager = aiChatManager;
+    window.teamCollaborationManager = teamCollaborationManager;
+    window.teamAnalyticsManager = teamAnalyticsManager;
+
+    // Initialize workspace type system
+    initializeWorkspaceTypeSystem();
 
     await workspaceManager.loadWorkspaces();
 
@@ -464,3 +498,251 @@ function confirmDeleteTask(taskId) {
 
 window.switchWorkspace = switchWorkspace;
 window.confirmDeleteTask = confirmDeleteTask;
+
+// Workspace Type Switching Functions
+function switchWorkspaceType(type) {
+  console.log(`🔄 Switching to ${type} workspace type`);
+
+  // Update current workspace type
+  currentWorkspaceType = type;
+  localStorage.setItem("workspaceType", type);
+
+  // Update UI tabs
+  updateWorkspaceTypeTabs(type);
+
+  // Update sidebar
+  updateSidebarForWorkspaceType(type);
+
+  // Load appropriate workspaces
+  loadWorkspacesForType(type);
+
+  // Update header controls
+  updateHeaderControlsForType(type);
+
+  // Refresh current view
+  if (window.workspaceManager) {
+    window.workspaceManager.refreshCurrentWorkspace();
+  }
+}
+
+function updateWorkspaceTypeTabs(type) {
+  // Update main header tabs
+  const personalTab = document.getElementById("personal-tab");
+  const teamsTab = document.getElementById("teams-tab");
+  const sidebarPersonalTab = document.getElementById("sidebar-personal-tab");
+  const sidebarTeamsTab = document.getElementById("sidebar-teams-tab");
+
+  if (personalTab && teamsTab) {
+    personalTab.classList.toggle("active", type === "personal");
+    teamsTab.classList.toggle("active", type === "teams");
+  }
+
+  if (sidebarPersonalTab && sidebarTeamsTab) {
+    sidebarPersonalTab.classList.toggle("active", type === "personal");
+    sidebarTeamsTab.classList.toggle("active", type === "teams");
+  }
+}
+
+function updateSidebarForWorkspaceType(type) {
+  const teamSections = document.getElementById("team-sections");
+  const createWorkspaceBtn = document.getElementById("create-workspace-btn");
+  const sidebarTitle = document.getElementById("sidebar-title");
+  const workspacesSectionTitle = document.getElementById(
+    "workspaces-section-title"
+  );
+
+  if (teamSections) {
+    teamSections.style.display = type === "teams" ? "block" : "none";
+  }
+
+  if (createWorkspaceBtn) {
+    const btnText = createWorkspaceBtn.querySelector(".btn-text");
+    if (btnText) {
+      btnText.textContent =
+        type === "teams" ? "New Team Workspace" : "New Workspace";
+    }
+  }
+
+  if (sidebarTitle) {
+    sidebarTitle.textContent =
+      type === "teams" ? "👥 Teams & Workspaces" : "🏢 Workspaces";
+  }
+
+  if (workspacesSectionTitle) {
+    workspacesSectionTitle.textContent =
+      type === "teams" ? "Team Workspaces" : "Switch Workspace";
+  }
+}
+
+function updateHeaderControlsForType(type) {
+  const teamControls = document.getElementById("team-controls");
+
+  if (teamControls) {
+    teamControls.style.display = type === "teams" ? "flex" : "none";
+  }
+}
+
+function loadWorkspacesForType(type) {
+  if (window.workspaceManager) {
+    window.workspaceManager.loadWorkspacesForType(type);
+  }
+}
+
+// Team Management Functions
+function openCreateTeamDialog() {
+  if (window.uiManager) {
+    window.uiManager.openCreateTeamDialog();
+  }
+}
+
+function openTeamManagementDialog() {
+  if (window.uiManager) {
+    window.uiManager.openTeamManagementDialog();
+  }
+}
+
+function closeCreateTeamDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeCreateTeamDialog();
+  }
+}
+
+function closeTeamManagementDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeTeamManagementDialog();
+  }
+}
+
+function closeEditTeamDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeEditTeamDialog();
+  }
+}
+
+function closeInviteMemberDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeInviteMemberDialog();
+  }
+}
+
+function closeCreateTeamWorkspaceDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeCreateTeamWorkspaceDialog();
+  }
+}
+
+function editTeam(teamId) {
+  if (window.teamManager) {
+    window.teamManager.editTeam(teamId);
+  }
+}
+
+function deleteTeam(teamId) {
+  if (window.teamManager) {
+    window.teamManager.deleteTeam(teamId);
+  }
+}
+
+function removeMember(memberId) {
+  if (window.teamManager) {
+    window.teamManager.removeMember(memberId);
+  }
+}
+
+function openInviteMemberDialog() {
+  if (window.uiManager) {
+    window.uiManager.openInviteMemberDialog();
+  }
+}
+
+function openCreateTeamWorkspaceDialog() {
+  if (window.uiManager) {
+    window.uiManager.openCreateTeamWorkspaceDialog();
+  }
+}
+
+function openTeamWorkspace(workspaceId) {
+  // This would switch to the team workspace
+  console.log("Opening team workspace:", workspaceId);
+  // Implementation would depend on workspace switching logic
+}
+
+function deleteTeamWorkspace(workspaceId) {
+  // This would delete the team workspace
+  console.log("Deleting team workspace:", workspaceId);
+  // Implementation would depend on workspace deletion logic
+}
+
+// Team Collaboration Functions
+function refreshTeamActivity() {
+  if (window.teamCollaborationManager) {
+    window.teamCollaborationManager.loadTeamActivity(window.teamCollaborationManager.teamId);
+  }
+}
+
+function openTeamAnalyticsDialog() {
+  if (window.uiManager) {
+    window.uiManager.openTeamAnalyticsDialog();
+  }
+}
+
+function closeTeamAnalyticsDialog() {
+  if (window.uiManager) {
+    window.uiManager.closeTeamAnalyticsDialog();
+  }
+}
+
+function refreshTeamAnalytics() {
+  if (window.teamAnalyticsManager) {
+    window.teamAnalyticsManager.loadTeamAnalytics(window.teamAnalyticsManager.currentTeamId);
+  }
+}
+
+function exportTeamAnalytics(format) {
+  if (window.teamAnalyticsManager) {
+    window.teamAnalyticsManager.exportAnalytics(format);
+  }
+}
+
+// Make functions globally available
+window.switchWorkspaceType = switchWorkspaceType;
+window.openCreateTeamDialog = openCreateTeamDialog;
+window.openTeamManagementDialog = openTeamManagementDialog;
+window.closeCreateTeamDialog = closeCreateTeamDialog;
+window.closeTeamManagementDialog = closeTeamManagementDialog;
+window.closeEditTeamDialog = closeEditTeamDialog;
+window.closeInviteMemberDialog = closeInviteMemberDialog;
+window.closeCreateTeamWorkspaceDialog = closeCreateTeamWorkspaceDialog;
+window.editTeam = editTeam;
+window.deleteTeam = deleteTeam;
+window.removeMember = removeMember;
+window.openInviteMemberDialog = openInviteMemberDialog;
+window.openCreateTeamWorkspaceDialog = openCreateTeamWorkspaceDialog;
+window.openTeamWorkspace = openTeamWorkspace;
+window.deleteTeamWorkspace = deleteTeamWorkspace;
+window.refreshTeamActivity = refreshTeamActivity;
+window.openTeamAnalyticsDialog = openTeamAnalyticsDialog;
+window.closeTeamAnalyticsDialog = closeTeamAnalyticsDialog;
+window.refreshTeamAnalytics = refreshTeamAnalytics;
+window.exportTeamAnalytics = exportTeamAnalytics;
+
+// Initialize workspace type system
+function initializeWorkspaceTypeSystem() {
+  console.log("🔧 Initializing workspace type system...");
+
+  // Set initial workspace type
+  const savedType = localStorage.getItem("workspaceType") || "personal";
+  currentWorkspaceType = savedType;
+
+  // Update UI to reflect current type
+  updateWorkspaceTypeTabs(savedType);
+  updateSidebarForWorkspaceType(savedType);
+  updateHeaderControlsForType(savedType);
+
+  // Load workspaces for current type
+  if (window.workspaceManager) {
+    window.workspaceManager.loadWorkspacesForType(savedType);
+  }
+
+  console.log(`✅ Workspace type system initialized with type: ${savedType}`);
+}

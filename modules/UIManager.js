@@ -9,12 +9,14 @@ class UIManager {
   constructor(dependencies = {}) {
     this.currentEditingTaskId = null;
     this.currentEditingProjectId = null;
+    this.currentEditingTeamId = null;
 
     // Store dependencies
     this.dependencies = dependencies;
     this.taskManager = dependencies.taskManager;
     this.projectManager = dependencies.projectManager;
     this.workspaceManager = dependencies.workspaceManager;
+    this.teamManager = dependencies.teamManager;
 
     // Simple debounced filter for performance
     this.debouncedFilter = window.helpers
@@ -537,6 +539,514 @@ class UIManager {
       // Add the event listener
       taskForm.addEventListener("submit", this.boundTaskFormHandler);
       console.log("✅ Task form handler setup complete");
+    }
+  }
+
+  // ===== TEAM MANAGEMENT DIALOGS =====
+
+  /**
+   * Open create team dialog
+   */
+  openCreateTeamDialog() {
+    console.log("👥 Opening create team dialog");
+
+    const dialog = document.getElementById("create-team-dialog");
+    if (!dialog) {
+      console.error("❌ Create team dialog not found!");
+      return;
+    }
+
+    // Reset form
+    this.resetCreateTeamForm();
+
+    // Setup form submission handler
+    this.setupCreateTeamFormHandler();
+
+    // Lock scrolling and show dialog
+    lockScroll();
+    dialog.showModal();
+
+    // Focus on name field
+    setTimeout(() => {
+      const nameField = document.getElementById("team-name");
+      if (nameField) {
+        nameField.focus();
+      }
+    }, 100);
+
+    // Handle dialog events
+    dialog.addEventListener("keydown", handleDialogKeydown);
+    dialog.addEventListener("click", handleDialogClickOutside);
+  }
+
+  /**
+   * Close create team dialog
+   */
+  closeCreateTeamDialog() {
+    const dialog = document.getElementById("create-team-dialog");
+    if (dialog) {
+      dialog.close();
+      clearFormErrors();
+      unlockScroll();
+    }
+  }
+
+  /**
+   * Reset create team form
+   */
+  resetCreateTeamForm() {
+    const form = document.getElementById("create-team-form");
+    if (form) {
+      form.reset();
+    }
+    clearFormErrors();
+  }
+
+  /**
+   * Setup create team form submission handler
+   */
+  setupCreateTeamFormHandler() {
+    const form = document.getElementById("create-team-form");
+    if (form && this.teamManager) {
+      // Remove existing listener to prevent duplicates
+      form.removeEventListener("submit", this.boundCreateTeamFormHandler);
+
+      // Create bound handler if not exists
+      if (!this.boundCreateTeamFormHandler) {
+        this.boundCreateTeamFormHandler =
+          this.handleCreateTeamSubmit.bind(this);
+      }
+
+      // Add the event listener
+      form.addEventListener("submit", this.boundCreateTeamFormHandler);
+      console.log("✅ Create team form handler setup complete");
+    }
+  }
+
+  /**
+   * Handle create team form submission
+   * @param {Event} event - Form submission event
+   */
+  async handleCreateTeamSubmit(event) {
+    event.preventDefault();
+    console.log("🚀 Creating team...");
+
+    const formData = new FormData(event.target);
+    const teamData = {
+      name: formData.get("name"),
+      description: formData.get("description"),
+      visibility: formData.get("visibility"),
+    };
+
+    try {
+      await this.teamManager.createTeam(teamData);
+    } catch (error) {
+      console.error("❌ Error in create team form submission:", error);
+    }
+  }
+
+  /**
+   * Open team management dialog
+   */
+  openTeamManagementDialog() {
+    console.log("👥 Opening team management dialog");
+
+    const dialog = document.getElementById("team-management-dialog");
+    if (!dialog) {
+      console.error("❌ Team management dialog not found!");
+      return;
+    }
+
+    // Lock scrolling and show dialog
+    lockScroll();
+    dialog.showModal();
+
+    // Setup team management functionality
+    this.setupTeamManagement();
+
+    // Handle dialog events
+    dialog.addEventListener("click", handleDialogClickOutside);
+  }
+
+  /**
+   * Close team management dialog
+   */
+  closeTeamManagementDialog() {
+    const dialog = document.getElementById("team-management-dialog");
+    if (dialog) {
+      dialog.close();
+      unlockScroll();
+    }
+  }
+
+  /**
+   * Setup team management functionality
+   */
+  setupTeamManagement() {
+    // Setup tab switching
+    this.setupTeamTabs();
+
+    // Load teams grid
+    if (this.teamManager) {
+      this.teamManager.loadTeams();
+    }
+  }
+
+  /**
+   * Setup team management tabs
+   */
+  setupTeamTabs() {
+    const tabButtons = document.querySelectorAll(
+      "#team-management-dialog .tab-btn"
+    );
+    const tabContents = document.querySelectorAll(
+      "#team-management-dialog .tab-content"
+    );
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const targetTab = button.getAttribute("data-tab");
+
+        // Update active tab button
+        tabButtons.forEach((btn) => btn.classList.remove("active"));
+        button.classList.add("active");
+
+        // Update active tab content
+        tabContents.forEach((content) => {
+          content.classList.remove("active");
+          if (content.id === `${targetTab}-tab`) {
+            content.classList.add("active");
+          }
+        });
+
+        // Load content based on tab
+        if (targetTab === "teams" && this.teamManager) {
+          this.teamManager.loadTeams();
+        } else if (targetTab === "members" && this.teamManager) {
+          this.teamManager.loadTeamMembers(
+            this.teamManager.getCurrentTeam()?.id
+          );
+        } else if (targetTab === "workspaces" && this.teamManager) {
+          this.teamManager.loadTeamWorkspaces(
+            this.teamManager.getCurrentTeam()?.id
+          );
+        }
+      });
+    });
+  }
+
+  /**
+   * Open edit team dialog
+   */
+  openEditTeamDialog(teamId) {
+    console.log("✏️ Opening edit team dialog for team:", teamId);
+
+    if (this.teamManager) {
+      this.teamManager.editTeam(teamId);
+    }
+  }
+
+  /**
+   * Close edit team dialog
+   */
+  closeEditTeamDialog() {
+    const dialog = document.getElementById("edit-team-dialog");
+    if (dialog) {
+      dialog.close();
+      clearFormErrors();
+      unlockScroll();
+    }
+  }
+
+  /**
+   * Setup edit team form submission handler
+   */
+  setupEditTeamFormHandler() {
+    const form = document.getElementById("edit-team-form");
+    if (form && this.teamManager) {
+      // Remove existing listener to prevent duplicates
+      form.removeEventListener("submit", this.boundEditTeamFormHandler);
+
+      // Create bound handler if not exists
+      if (!this.boundEditTeamFormHandler) {
+        this.boundEditTeamFormHandler = this.handleEditTeamSubmit.bind(this);
+      }
+
+      // Add the event listener
+      form.addEventListener("submit", this.boundEditTeamFormHandler);
+      console.log("✅ Edit team form handler setup complete");
+    }
+  }
+
+  /**
+   * Handle edit team form submission
+   * @param {Event} event - Form submission event
+   */
+  async handleEditTeamSubmit(event) {
+    event.preventDefault();
+    console.log("💾 Updating team...");
+
+    const formData = new FormData(event.target);
+    const teamData = {
+      id: formData.get("id"),
+      name: formData.get("name"),
+      description: formData.get("description"),
+      visibility: formData.get("visibility"),
+    };
+
+    try {
+      await this.teamManager.updateTeam(teamData);
+    } catch (error) {
+      console.error("❌ Error in edit team form submission:", error);
+    }
+  }
+
+  /**
+   * Open invite member dialog
+   */
+  openInviteMemberDialog() {
+    console.log("📧 Opening invite member dialog");
+
+    const dialog = document.getElementById("invite-member-dialog");
+    if (!dialog) {
+      console.error("❌ Invite member dialog not found!");
+      return;
+    }
+
+    // Reset form
+    this.resetInviteMemberForm();
+
+    // Setup form submission handler
+    this.setupInviteMemberFormHandler();
+
+    // Lock scrolling and show dialog
+    lockScroll();
+    dialog.showModal();
+
+    // Focus on email field
+    setTimeout(() => {
+      const emailField = document.getElementById("invite-email");
+      if (emailField) {
+        emailField.focus();
+      }
+    }, 100);
+
+    // Handle dialog events
+    dialog.addEventListener("keydown", handleDialogKeydown);
+    dialog.addEventListener("click", handleDialogClickOutside);
+  }
+
+  /**
+   * Close invite member dialog
+   */
+  closeInviteMemberDialog() {
+    const dialog = document.getElementById("invite-member-dialog");
+    if (dialog) {
+      dialog.close();
+      clearFormErrors();
+      unlockScroll();
+    }
+  }
+
+  /**
+   * Reset invite member form
+   */
+  resetInviteMemberForm() {
+    const form = document.getElementById("invite-member-form");
+    if (form) {
+      form.reset();
+    }
+    clearFormErrors();
+  }
+
+  /**
+   * Setup invite member form submission handler
+   */
+  setupInviteMemberFormHandler() {
+    const form = document.getElementById("invite-member-form");
+    if (form && this.teamManager) {
+      // Remove existing listener to prevent duplicates
+      form.removeEventListener("submit", this.boundInviteMemberFormHandler);
+
+      // Create bound handler if not exists
+      if (!this.boundInviteMemberFormHandler) {
+        this.boundInviteMemberFormHandler =
+          this.handleInviteMemberSubmit.bind(this);
+      }
+
+      // Add the event listener
+      form.addEventListener("submit", this.boundInviteMemberFormHandler);
+      console.log("✅ Invite member form handler setup complete");
+    }
+  }
+
+  /**
+   * Handle invite member form submission
+   * @param {Event} event - Form submission event
+   */
+  async handleInviteMemberSubmit(event) {
+    event.preventDefault();
+    console.log("📧 Inviting member...");
+
+    const formData = new FormData(event.target);
+    const inviteData = {
+      email: formData.get("email"),
+      role: formData.get("role"),
+      message: formData.get("message"),
+    };
+
+    try {
+      await this.teamManager.inviteMember(inviteData);
+    } catch (error) {
+      console.error("❌ Error in invite member form submission:", error);
+    }
+  }
+
+  /**
+   * Open create team workspace dialog
+   */
+  openCreateTeamWorkspaceDialog() {
+    console.log("🗂️ Opening create team workspace dialog");
+
+    const dialog = document.getElementById("create-team-workspace-dialog");
+    if (!dialog) {
+      console.error("❌ Create team workspace dialog not found!");
+      return;
+    }
+
+    // Reset form
+    this.resetCreateTeamWorkspaceForm();
+
+    // Setup form submission handler
+    this.setupCreateTeamWorkspaceFormHandler();
+
+    // Lock scrolling and show dialog
+    lockScroll();
+    dialog.showModal();
+
+    // Focus on name field
+    setTimeout(() => {
+      const nameField = document.getElementById("team-workspace-name");
+      if (nameField) {
+        nameField.focus();
+      }
+    }, 100);
+
+    // Handle dialog events
+    dialog.addEventListener("keydown", handleDialogKeydown);
+    dialog.addEventListener("click", handleDialogClickOutside);
+  }
+
+  /**
+   * Close create team workspace dialog
+   */
+  closeCreateTeamWorkspaceDialog() {
+    const dialog = document.getElementById("create-team-workspace-dialog");
+    if (dialog) {
+      dialog.close();
+      clearFormErrors();
+      unlockScroll();
+    }
+  }
+
+  /**
+   * Reset create team workspace form
+   */
+  resetCreateTeamWorkspaceForm() {
+    const form = document.getElementById("create-team-workspace-form");
+    if (form) {
+      form.reset();
+    }
+    clearFormErrors();
+  }
+
+  /**
+   * Setup create team workspace form submission handler
+   */
+  setupCreateTeamWorkspaceFormHandler() {
+    const form = document.getElementById("create-team-workspace-form");
+    if (form && this.teamManager) {
+      // Remove existing listener to prevent duplicates
+      form.removeEventListener(
+        "submit",
+        this.boundCreateTeamWorkspaceFormHandler
+      );
+
+      // Create bound handler if not exists
+      if (!this.boundCreateTeamWorkspaceFormHandler) {
+        this.boundCreateTeamWorkspaceFormHandler =
+          this.handleCreateTeamWorkspaceSubmit.bind(this);
+      }
+
+      // Add the event listener
+      form.addEventListener("submit", this.boundCreateTeamWorkspaceFormHandler);
+      console.log("✅ Create team workspace form handler setup complete");
+    }
+  }
+
+  /**
+   * Handle create team workspace form submission
+   * @param {Event} event - Form submission event
+   */
+  async handleCreateTeamWorkspaceSubmit(event) {
+    event.preventDefault();
+    console.log("🗂️ Creating team workspace...");
+
+    const formData = new FormData(event.target);
+    const workspaceData = {
+      name: formData.get("name"),
+      description: formData.get("description"),
+      visibility: formData.get("visibility"),
+    };
+
+    try {
+      await this.teamManager.createTeamWorkspace(workspaceData);
+    } catch (error) {
+      console.error(
+        "❌ Error in create team workspace form submission:",
+        error
+      );
+    }
+  }
+
+  // ===== TEAM ANALYTICS DIALOGS =====
+
+  /**
+   * Open team analytics dialog
+   */
+  openTeamAnalyticsDialog() {
+    console.log("📊 Opening team analytics dialog");
+
+    const dialog = document.getElementById("team-analytics-dialog");
+    if (!dialog) {
+      console.error("❌ Team analytics dialog not found!");
+      return;
+    }
+
+    // Lock scrolling and show dialog
+    lockScroll();
+    dialog.showModal();
+
+    // Load analytics data if team is selected
+    if (this.teamManager && this.teamManager.getCurrentTeam()) {
+      const currentTeam = this.teamManager.getCurrentTeam();
+      if (this.teamAnalyticsManager) {
+        this.teamAnalyticsManager.loadTeamAnalytics(currentTeam.id);
+      }
+    }
+
+    // Handle dialog events
+    dialog.addEventListener("click", handleDialogClickOutside);
+  }
+
+  /**
+   * Close team analytics dialog
+   */
+  closeTeamAnalyticsDialog() {
+    const dialog = document.getElementById("team-analytics-dialog");
+    if (dialog) {
+      dialog.close();
+      unlockScroll();
     }
   }
 }
