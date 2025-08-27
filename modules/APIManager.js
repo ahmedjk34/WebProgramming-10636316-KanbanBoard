@@ -459,6 +459,205 @@ class APIManager {
     }
   }
 
+  // ===== TEAM COLLABORATION APIs =====
+
+  /**
+   * Get team updates for real-time collaboration
+   * @param {number} teamId - Team ID
+   * @returns {Promise<Object>} API response
+   */
+  async getTeamUpdates(teamId) {
+    try {
+      const response = await fetch(`php/api/teams/get_team_updates.php?team_id=${teamId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error getting team updates:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get team activity feed
+   * @param {number} teamId - Team ID
+   * @param {number} limit - Number of activities to fetch
+   * @returns {Promise<Object>} API response
+   */
+  async getTeamActivity(teamId, limit = 50) {
+    try {
+      const response = await fetch(`php/api/teams/get_team_activity.php?team_id=${teamId}&limit=${limit}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error getting team activity:", error);
+      throw error;
+    }
+  }
+
+  // ===== TEAM ANALYTICS APIs =====
+
+  /**
+   * Get team statistics
+   * @param {number} teamId - Team ID
+   * @param {number} days - Number of days to analyze
+   * @returns {Promise<Object>} API response
+   */
+  async getTeamStats(teamId, days = 30) {
+    try {
+      const response = await fetch(`php/api/teams/get_team_stats.php?team_id=${teamId}&days=${days}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error getting team stats:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get member performance metrics
+   * @param {number} teamId - Team ID
+   * @param {number} days - Number of days to analyze
+   * @returns {Promise<Object>} API response
+   */
+  async getMemberPerformance(teamId, days = 30) {
+    try {
+      const response = await fetch(`php/api/teams/get_member_performance.php?team_id=${teamId}&days=${days}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error getting member performance:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get project metrics
+   * @param {number} teamId - Team ID
+   * @param {number} days - Number of days to analyze
+   * @returns {Promise<Object>} API response
+   */
+  async getProjectMetrics(teamId, days = 30) {
+    try {
+      const response = await fetch(`php/api/teams/get_project_metrics.php?team_id=${teamId}&days=${days}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error getting project metrics:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get activity timeline
+   * @param {number} teamId - Team ID
+   * @param {number} days - Number of days to analyze
+   * @returns {Promise<Object>} API response
+   */
+  async getActivityTimeline(teamId, days = 30) {
+    try {
+      const response = await fetch(`php/api/teams/get_activity_timeline.php?team_id=${teamId}&days=${days}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error getting activity timeline:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get productivity heatmap
+   * @param {number} teamId - Team ID
+   * @param {number} days - Number of days to analyze
+   * @returns {Promise<Object>} API response
+   */
+  async getProductivityHeatmap(teamId, days = 30) {
+    try {
+      const response = await fetch(`php/api/teams/get_productivity_heatmap.php?team_id=${teamId}&days=${days}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error getting productivity heatmap:", error);
+      throw error;
+    }
+  }
+
   // ===== UTILITY METHODS =====
 
   /**
