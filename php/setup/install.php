@@ -52,6 +52,329 @@ function cleanDatabase() {
 }
 
 /**
+ * Populate demo team data
+ */
+function populateDemoTeamData($pdo) {
+    try {
+        // Create Guest user if not exists
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE username = 'guest' OR email = 'guest@example.com' LIMIT 1");
+        $stmt->execute();
+        $guestUser = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$guestUser) {
+            // Create Guest user
+            $stmt = $pdo->prepare("
+                INSERT INTO users (username, email, first_name, last_name, password_hash, is_active, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, NOW())
+            ");
+            $stmt->execute([
+                'guest',
+                'guest@example.com',
+                'Guest',
+                'User',
+                password_hash('guest123', PASSWORD_DEFAULT),
+                1
+            ]);
+            $guestUserId = $pdo->lastInsertId();
+            echo "   ✅ Created Guest user (ID: $guestUserId)\n";
+        } else {
+            $guestUserId = $guestUser['id'];
+            echo "   ℹ️ Guest user already exists (ID: $guestUserId)\n";
+        }
+        
+        // Create dummy users if they don't exist
+        $dummyUsers = [
+            ['john_doe', 'john@example.com', 'John', 'Doe'],
+            ['jane_smith', 'jane@example.com', 'Jane', 'Smith'],
+            ['mike_wilson', 'mike@example.com', 'Mike', 'Wilson'],
+            ['sarah_jones', 'sarah@example.com', 'Sarah', 'Jones'],
+            ['alex_brown', 'alex@example.com', 'Alex', 'Brown']
+        ];
+        
+        $dummyUserIds = [];
+        foreach ($dummyUsers as $user) {
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1");
+            $stmt->execute([$user[0], $user[1]]);
+            $existingUser = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$existingUser) {
+                $stmt = $pdo->prepare("
+                    INSERT INTO users (username, email, first_name, last_name, password_hash, is_active, created_at) 
+                    VALUES (?, ?, ?, ?, ?, ?, NOW())
+                ");
+                $stmt->execute([
+                    $user[0],
+                    $user[1],
+                    $user[2],
+                    $user[3],
+                    password_hash('password123', PASSWORD_DEFAULT),
+                    1
+                ]);
+                $dummyUserIds[] = $pdo->lastInsertId();
+            } else {
+                $dummyUserIds[] = $existingUser['id'];
+            }
+        }
+        echo "   ✅ Created " . count($dummyUserIds) . " dummy users\n";
+        
+        // Create a demo team if it doesn't exist
+        $stmt = $pdo->prepare("SELECT id FROM teams WHERE name = 'Demo Development Team' LIMIT 1");
+        $stmt->execute();
+        $existingTeam = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$existingTeam) {
+            // Create team
+            $stmt = $pdo->prepare("
+                INSERT INTO teams (name, description, color, avatar_url, created_by, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+            ");
+            $stmt->execute([
+                'Demo Development Team',
+                'A demonstration team with Guest user as admin and various team members with assigned tasks',
+                '#667eea',
+                null,
+                $guestUserId
+            ]);
+            $teamId = $pdo->lastInsertId();
+            echo "   ✅ Created Demo Development Team (ID: $teamId)\n";
+        } else {
+            $teamId = $existingTeam['id'];
+            echo "   ℹ️ Demo team already exists (ID: $teamId)\n";
+        }
+        
+        // Add Guest user as admin to the team
+        $stmt = $pdo->prepare("
+            INSERT IGNORE INTO team_members (team_id, user_id, role, status, joined_at) 
+            VALUES (?, ?, ?, ?, NOW())
+        ");
+        $stmt->execute([$teamId, $guestUserId, 'admin', 'active']);
+        echo "   ✅ Added Guest user as admin to team\n";
+        
+        // Add dummy users to the team
+        $roles = ['member', 'member', 'member', 'member', 'member'];
+        foreach ($dummyUserIds as $index => $userId) {
+            $stmt = $pdo->prepare("
+                INSERT IGNORE INTO team_members (team_id, user_id, role, status, joined_at) 
+                VALUES (?, ?, ?, ?, NOW())
+            ");
+            $stmt->execute([$teamId, $userId, $roles[$index], 'active']);
+        }
+        echo "   ✅ Added " . count($dummyUserIds) . " dummy users to team\n";
+        
+        // Create a workspace for the team
+        $stmt = $pdo->prepare("SELECT id FROM workspaces WHERE name = 'Development Workspace' AND workspace_type = 'team' LIMIT 1");
+        $stmt->execute();
+        $existingWorkspace = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+                 if (!$existingWorkspace) {
+             // Create workspace
+             $stmt = $pdo->prepare("
+                 INSERT INTO workspaces (name, description, color, icon, workspace_type, owner_id, created_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, NOW())
+             ");
+             $stmt->execute([
+                 'Development Workspace',
+                 'Main workspace for development tasks and projects',
+                 '#4facfe',
+                 '💻',
+                 'team',
+                 $guestUserId
+             ]);
+            $workspaceId = $pdo->lastInsertId();
+            echo "   ✅ Created Development Workspace (ID: $workspaceId)\n";
+            
+            // Link workspace to team
+            $stmt = $pdo->prepare("
+                INSERT IGNORE INTO team_workspaces (team_id, workspace_id, created_at) 
+                VALUES (?, ?, NOW())
+            ");
+            $stmt->execute([$teamId, $workspaceId]);
+            echo "   ✅ Linked workspace to team\n";
+        } else {
+            $workspaceId = $existingWorkspace['id'];
+            echo "   ℹ️ Development workspace already exists (ID: $workspaceId)\n";
+        }
+        
+        // Create projects
+        $projects = [
+            ['Frontend Development', 'Building responsive user interfaces', '#43e97b', '🎨'],
+            ['Backend API', 'Developing RESTful APIs and database design', '#fa709a', '⚙️'],
+            ['Mobile App', 'Cross-platform mobile application development', '#ffecd2', '📱'],
+            ['Testing & QA', 'Quality assurance and testing procedures', '#667eea', '🧪']
+        ];
+        
+        $projectIds = [];
+                 foreach ($projects as $project) {
+             $stmt = $pdo->prepare("
+                 INSERT INTO projects (name, description, color, status, created_by, workspace_id, created_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, NOW())
+             ");
+             $stmt->execute([
+                 $project[0],
+                 $project[1],
+                 $project[2],
+                 'active',
+                 $guestUserId,
+                 $workspaceId
+             ]);
+             $projectId = $pdo->lastInsertId();
+             $projectIds[] = $projectId;
+            
+            // Link project to team
+            $stmt = $pdo->prepare("
+                INSERT IGNORE INTO team_projects (team_id, project_id, created_at) 
+                VALUES (?, ?, NOW())
+            ");
+            $stmt->execute([$teamId, $projectId]);
+        }
+        echo "   ✅ Created " . count($projectIds) . " projects\n";
+        
+        // Create tasks for each project
+        $tasks = [
+            // Frontend Development tasks
+            [
+                'Design User Interface', 
+                'Create wireframes and mockups for the main dashboard', 
+                'high', 
+                'todo', 
+                date('Y-m-d', strtotime('+3 days')),
+                $projectIds[0],
+                $dummyUserIds[0]
+            ],
+            [
+                'Implement Responsive Layout', 
+                'Build responsive CSS grid system and components', 
+                'medium', 
+                'in_progress', 
+                date('Y-m-d', strtotime('+5 days')),
+                $projectIds[0],
+                $dummyUserIds[1]
+            ],
+            [
+                'Add Interactive Features', 
+                'Implement JavaScript functionality and user interactions', 
+                'medium', 
+                'todo', 
+                date('Y-m-d', strtotime('+7 days')),
+                $projectIds[0],
+                $dummyUserIds[2]
+            ],
+            
+            // Backend API tasks
+            [
+                'Design Database Schema', 
+                'Create ERD and database table structures', 
+                'high', 
+                'done', 
+                date('Y-m-d', strtotime('-2 days')),
+                $projectIds[1],
+                $guestUserId
+            ],
+            [
+                'Implement User Authentication', 
+                'Build JWT-based authentication system', 
+                'high', 
+                'in_progress', 
+                date('Y-m-d', strtotime('+2 days')),
+                $projectIds[1],
+                $dummyUserIds[3]
+            ],
+            [
+                'Create REST API Endpoints', 
+                'Develop CRUD operations for all entities', 
+                'medium', 
+                'todo', 
+                date('Y-m-d', strtotime('+4 days')),
+                $projectIds[1],
+                $dummyUserIds[4]
+            ],
+            
+            // Mobile App tasks
+            [
+                'Setup React Native Project', 
+                'Initialize project structure and dependencies', 
+                'medium', 
+                'done', 
+                date('Y-m-d', strtotime('-1 day')),
+                $projectIds[2],
+                $dummyUserIds[0]
+            ],
+            [
+                'Implement Navigation', 
+                'Create app navigation and routing system', 
+                'medium', 
+                'in_progress', 
+                date('Y-m-d', strtotime('+3 days')),
+                $projectIds[2],
+                $dummyUserIds[1]
+            ],
+            [
+                'Build Core Components', 
+                'Develop reusable UI components for the app', 
+                'low', 
+                'todo', 
+                date('Y-m-d', strtotime('+6 days')),
+                $projectIds[2],
+                $dummyUserIds[2]
+            ],
+            
+            // Testing & QA tasks
+            [
+                'Write Unit Tests', 
+                'Create comprehensive unit tests for all modules', 
+                'high', 
+                'todo', 
+                date('Y-m-d', strtotime('+2 days')),
+                $projectIds[3],
+                $dummyUserIds[3]
+            ],
+            [
+                'Perform Integration Testing', 
+                'Test API endpoints and database interactions', 
+                'medium', 
+                'todo', 
+                date('Y-m-d', strtotime('+4 days')),
+                $projectIds[3],
+                $dummyUserIds[4]
+            ],
+            [
+                'User Acceptance Testing', 
+                'Conduct UAT with stakeholders and end users', 
+                'medium', 
+                'todo', 
+                date('Y-m-d', strtotime('+8 days')),
+                $projectIds[3],
+                $guestUserId
+            ]
+        ];
+        
+        foreach ($tasks as $task) {
+            $stmt = $pdo->prepare("
+                INSERT INTO tasks (title, description, priority, status, due_date, project_id, assigned_to, created_by, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            ");
+            $stmt->execute([
+                $task[0],
+                $task[1],
+                $task[2],
+                $task[3],
+                $task[4],
+                $task[5],
+                $task[6],
+                $guestUserId
+            ]);
+        }
+        echo "   ✅ Created " . count($tasks) . " tasks\n";
+        
+        echo "   🎯 Demo team setup complete: $teamId members, " . count($projectIds) . " projects, " . count($tasks) . " tasks\n";
+        
+    } catch (Exception $e) {
+        echo "   ❌ Error populating demo team data: " . $e->getMessage() . "\n";
+        throw $e;
+    }
+}
+
+/**
  * Create database and tables
  */
 function installDatabase() {
@@ -585,11 +908,17 @@ function installDatabase() {
         $pdo->exec($createViews);
         echo "✅ Analytics views created successfully.\n";
 
+        // Populate with demo team data
+        echo "\n👥 Populating demo team data...\n";
+        populateDemoTeamData($pdo);
+        echo "✅ Demo team data populated successfully.\n";
+
         echo "\n🎉 Database installation completed successfully!\n";
         echo "📊 Analytics tables and views created.\n";
         echo "🔧 User preferences system ready.\n";
         echo "👥 Team collaboration system ready.\n";
         echo "📋 Personal and team workspaces configured.\n";
+        echo "🎯 Demo team with Guest user as admin has been created.\n";
         echo "You can now use your enhanced Kanban board application with team support!\n";
 
         return true;
