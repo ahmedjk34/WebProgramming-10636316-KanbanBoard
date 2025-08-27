@@ -65,6 +65,14 @@
             Analytics
           </button>
 
+          <button
+            id="theme-toggle"
+            class="theme-toggle"
+            title="Toggle Dark/Light Mode"
+          >
+            <span id="theme-icon">🌙</span>
+          </button>
+
           <div class="user-menu">
             <button
               id="user-menu-btn"
@@ -118,6 +126,52 @@
             </div>
           </div>
 
+          <!-- Teams Controls -->
+          <div class="teams-controls">
+            <div class="teams-search">
+              <input
+                type="text"
+                id="teams-search"
+                placeholder="Search teams..."
+                autocomplete="off"
+              />
+            </div>
+            <div class="teams-filters">
+              <button
+                class="filter-btn active"
+                data-filter="status"
+                data-value="all"
+              >
+                All Teams
+              </button>
+              <button
+                class="filter-btn"
+                data-filter="status"
+                data-value="active"
+              >
+                Active
+              </button>
+              <button
+                class="filter-btn"
+                data-filter="status"
+                data-value="archived"
+              >
+                Archived
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div id="teams-loader" class="teams-loader">
+            <div class="loading-spinner"></div>
+            <p>Loading teams...</p>
+          </div>
+
+          <!-- Current Team Display -->
+          <div id="current-team" style="display: none">
+            <!-- Current team info will be displayed here -->
+          </div>
+
           <div id="teams-grid" class="teams-grid">
             <!-- Teams will be loaded dynamically -->
           </div>
@@ -151,11 +205,298 @@
       </div>
     </main>
 
+    <!-- Team Management Dialogs -->
+
+    <!-- Create Team Dialog -->
+    <dialog id="create-team-dialog" class="create-team-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>👥 Create New Team</h3>
+          <button
+            type="button"
+            class="dialog-close"
+            onclick="closeCreateTeamDialog()"
+          >
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Close</span>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <form id="create-team-form">
+            <div class="form-group">
+              <label for="team-name">Team Name *</label>
+              <input
+                type="text"
+                id="team-name"
+                name="name"
+                required
+                placeholder="Enter team name"
+                maxlength="100"
+              />
+            </div>
+            <div class="form-group">
+              <label for="team-description">Description</label>
+              <textarea
+                id="team-description"
+                name="description"
+                placeholder="Enter team description"
+                rows="3"
+                maxlength="500"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label for="team-visibility">Visibility</label>
+              <select id="team-visibility" name="visibility">
+                <option value="private">Private</option>
+                <option value="public">Public</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="team-color">Team Color</label>
+              <input
+                type="color"
+                id="team-color"
+                name="color"
+                value="#667eea"
+              />
+            </div>
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeCreateTeamDialog()"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <span class="btn-icon">🚀</span>
+                Create Team
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Edit Team Dialog -->
+    <dialog id="edit-team-dialog" class="edit-team-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>✏️ Edit Team</h3>
+          <button
+            type="button"
+            class="dialog-close"
+            onclick="closeEditTeamDialog()"
+          >
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Close</span>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <form id="edit-team-form">
+            <input type="hidden" id="edit-team-id" name="id" />
+            <div class="form-group">
+              <label for="edit-team-name">Team Name *</label>
+              <input
+                type="text"
+                id="edit-team-name"
+                name="name"
+                required
+                placeholder="Enter team name"
+                maxlength="100"
+              />
+            </div>
+            <div class="form-group">
+              <label for="edit-team-description">Description</label>
+              <textarea
+                id="edit-team-description"
+                name="description"
+                placeholder="Enter team description"
+                rows="3"
+                maxlength="500"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label for="edit-team-visibility">Visibility</label>
+              <select id="edit-team-visibility" name="visibility">
+                <option value="private">Private</option>
+                <option value="public">Public</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="edit-team-color">Team Color</label>
+              <input
+                type="color"
+                id="edit-team-color"
+                name="color"
+                value="#667eea"
+              />
+            </div>
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeEditTeamDialog()"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <span class="btn-icon">💾</span>
+                Update Team
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Invite Member Dialog -->
+    <dialog id="invite-member-dialog" class="invite-member-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>📧 Invite Team Member</h3>
+          <button
+            type="button"
+            class="dialog-close"
+            onclick="closeInviteMemberDialog()"
+          >
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Close</span>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <form id="invite-member-form">
+            <div class="form-group">
+              <label for="invite-email">Email Address *</label>
+              <input
+                type="email"
+                id="invite-email"
+                name="email"
+                required
+                placeholder="Enter email address"
+              />
+            </div>
+            <div class="form-group">
+              <label for="invite-role">Role</label>
+              <select id="invite-role" name="role">
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+                <option value="viewer">Viewer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="invite-message">Personal Message (Optional)</label>
+              <textarea
+                id="invite-message"
+                name="message"
+                placeholder="Add a personal message to your invitation..."
+                rows="3"
+              ></textarea>
+            </div>
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeInviteMemberDialog()"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <span class="btn-icon">📧</span>
+                Send Invitation
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Team Analytics Dialog -->
+    <dialog id="team-analytics-dialog" class="team-analytics-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>📊 Team Analytics</h3>
+          <div class="dialog-actions">
+            <button
+              class="btn btn-secondary btn-small"
+              onclick="exportTeamAnalytics('json')"
+            >
+              📄 Export JSON
+            </button>
+            <button
+              class="btn btn-secondary btn-small"
+              onclick="exportTeamAnalytics('csv')"
+            >
+              📊 Export CSV
+            </button>
+            <button class="dialog-close" onclick="closeTeamAnalyticsDialog()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+        <div class="dialog-body">
+          <div class="analytics-grid">
+            <div class="analytics-card">
+              <h4>Team Performance</h4>
+              <canvas id="team-performance-chart"></canvas>
+            </div>
+            <div class="analytics-card">
+              <h4>Member Activity</h4>
+              <canvas id="member-activity-chart"></canvas>
+            </div>
+            <div class="analytics-card">
+              <h4>Project Progress</h4>
+              <canvas id="project-progress-chart"></canvas>
+            </div>
+            <div class="analytics-card">
+              <h4>Task Completion</h4>
+              <canvas id="task-completion-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
     <!-- Scripts -->
     <script src="js/auth-check.js"></script>
     <script src="js/analytics-app.js"></script>
     <script src="js/app.js"></script>
-    <script src="modules/ModuleFactory.js"></script>
+
+    <!-- Authentication Enforcement -->
+    <script>
+      // Ensure user is authenticated before loading teams page
+      document.addEventListener("DOMContentLoaded", async function () {
+        try {
+          console.log("🔐 Checking authentication...");
+          // Check authentication
+          const response = await fetch("php/api/auth/check_auth.php");
+          const result = await response.json();
+
+          if (!result.success || !result.authenticated) {
+            // Redirect to login if not authenticated
+            console.log("❌ Not authenticated, redirecting to login");
+            window.location.href = "login.html";
+            return;
+          }
+
+          // Continue with teams page initialization
+          console.log("✅ Authentication verified for teams page");
+          console.log("👤 User data:", result.data);
+
+          // Update user name in the header
+          if (result.data && result.data.user) {
+            const userNameElement = document.getElementById("user-name");
+            if (userNameElement) {
+              userNameElement.textContent =
+                result.data.user.first_name + " " + result.data.user.last_name;
+            }
+          }
+        } catch (error) {
+          console.error("❌ Authentication check failed:", error);
+          window.location.href = "login.html";
+        }
+      });
+    </script>
     <script src="modules/APIManager.js"></script>
     <script src="modules/TaskManager.js"></script>
     <script src="modules/ProjectManager.js"></script>
@@ -170,5 +511,95 @@
     <script src="modules/TeamCollaborationManager.js"></script>
     <script src="modules/TeamAnalyticsManager.js"></script>
     <script src="js/teams-app.js"></script>
+
+    <!-- Theme and User Menu Functions -->
+    <script>
+      // User menu toggle function
+      window.toggleUserMenu = () => {
+        const dropdown = document.getElementById("user-menu-dropdown");
+        const button = document.getElementById("user-menu-btn");
+
+        if (dropdown.classList.contains("show")) {
+          dropdown.classList.remove("show");
+          button.classList.remove("active");
+        } else {
+          dropdown.classList.add("show");
+          button.classList.add("active");
+        }
+      };
+
+      // Theme toggle function
+      window.toggleTheme = () => {
+        const body = document.body;
+        const themeIcon = document.getElementById("theme-icon");
+
+        console.log("🎨 Theme toggle clicked");
+        console.log("Current theme:", localStorage.getItem("theme"));
+        console.log(
+          "Body has dark-mode:",
+          body.classList.contains("dark-mode")
+        );
+
+        if (body.classList.contains("dark-mode")) {
+          body.classList.remove("dark-mode");
+          themeIcon.textContent = "🌙";
+          localStorage.setItem("theme", "light");
+          console.log("✅ Switched to light mode");
+        } else {
+          body.classList.add("dark-mode");
+          themeIcon.textContent = "☀️";
+          localStorage.setItem("theme", "dark");
+          console.log("✅ Switched to dark mode");
+        }
+      };
+
+      // Logout function
+      window.logout = async () => {
+        try {
+          const response = await fetch("php/api/auth/logout.php", {
+            method: "POST",
+          });
+
+          if (response.ok) {
+            window.location.href = "login.html";
+          } else {
+            console.error("Logout failed");
+          }
+        } catch (error) {
+          console.error("Logout error:", error);
+        }
+      };
+
+      // Close user menu when clicking outside
+      document.addEventListener("click", (e) => {
+        const userMenu = document.querySelector(".user-menu");
+        const dropdown = document.getElementById("user-menu-dropdown");
+
+        if (
+          !userMenu.contains(e.target) &&
+          dropdown.classList.contains("show")
+        ) {
+          dropdown.classList.remove("show");
+          document.getElementById("user-menu-btn").classList.remove("active");
+        }
+      });
+
+      // Initialize theme on page load
+      document.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem("theme");
+        const themeIcon = document.getElementById("theme-icon");
+
+        if (savedTheme === "dark") {
+          document.body.classList.add("dark-mode");
+          themeIcon.textContent = "☀️";
+        }
+
+        // Add click handler to theme toggle
+        const themeToggle = document.getElementById("theme-toggle");
+        if (themeToggle) {
+          themeToggle.addEventListener("click", window.toggleTheme);
+        }
+      });
+    </script>
   </body>
 </html>
