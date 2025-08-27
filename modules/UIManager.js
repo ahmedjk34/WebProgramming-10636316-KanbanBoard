@@ -41,6 +41,9 @@ class UIManager {
     const themeToggle = document.getElementById("theme-toggle");
     if (themeToggle) {
       themeToggle.addEventListener("click", this.handleThemeToggle.bind(this));
+      console.log("✅ Theme toggle event listener attached");
+    } else {
+      console.error("❌ Theme toggle button not found!");
     }
 
     // Filter controls
@@ -169,6 +172,18 @@ class UIManager {
     console.log("🎨 Toggling theme...");
     if (window.toggleThemeWrapper) {
       window.toggleThemeWrapper();
+    } else {
+      console.error("❌ toggleThemeWrapper function not found!");
+      // Fallback theme toggle
+      const currentTheme = localStorage.getItem("theme") || "light";
+      const newTheme = currentTheme === "light" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", newTheme);
+      localStorage.setItem("theme", newTheme);
+
+      const themeIcon = document.getElementById("theme-icon");
+      if (themeIcon) {
+        themeIcon.textContent = newTheme === "light" ? "🌙" : "☀️";
+      }
     }
   }
 
