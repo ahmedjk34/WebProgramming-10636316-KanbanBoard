@@ -44,7 +44,7 @@ class TeamManager {
   // ===== TEAM MANAGEMENT =====
 
   /**
-   * Load all teams for the current user
+   * Load teams from the API
    */
   async loadTeams() {
     console.log("📋 Loading teams...");
@@ -54,7 +54,7 @@ class TeamManager {
         throw new Error("APIManager not available");
       }
 
-      const result = await this.apiManager.loadTeams();
+      const result = await this.apiManager.getTeams();
 
       if (result.success) {
         this.teams = result.data || [];
@@ -316,17 +316,17 @@ class TeamManager {
       // Add default values if not provided
       const teamDataWithDefaults = {
         name: teamData.name,
-        description: teamData.description || '',
-        visibility: teamData.visibility || 'private',
-        color: teamData.color || '#667eea',
-        ...teamData
+        description: teamData.description || "",
+        visibility: teamData.visibility || "private",
+        color: teamData.color || "#667eea",
+        ...teamData,
       };
 
       const result = await this.apiManager.createTeam(teamDataWithDefaults);
 
       if (result.success) {
         showSuccessMessage("Team created successfully!");
-        
+
         // Refresh teams list
         await this.loadTeams();
 
@@ -391,10 +391,10 @@ class TeamManager {
       const teamDataWithDefaults = {
         id: teamData.id,
         name: teamData.name,
-        description: teamData.description || '',
-        visibility: teamData.visibility || 'private',
-        color: teamData.color || '#667eea',
-        ...teamData
+        description: teamData.description || "",
+        visibility: teamData.visibility || "private",
+        color: teamData.color || "#667eea",
+        ...teamData,
       };
 
       const result = await this.apiManager.updateTeam(teamDataWithDefaults);

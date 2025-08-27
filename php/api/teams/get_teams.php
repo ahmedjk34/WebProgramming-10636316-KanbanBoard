@@ -30,7 +30,7 @@ try {
     $userId = $_SESSION['user_id'];
     
     // Get database connection
-    $pdo = getDatabaseConnection();
+    $pdo = getDBConnection();
     
     // Query to get teams where user is a member
     $query = "
@@ -39,7 +39,6 @@ try {
             t.name,
             t.description,
             t.color,
-            t.visibility,
             t.created_at,
             tm.role as user_role,
             COUNT(DISTINCT tm2.user_id) as member_count,
@@ -47,9 +46,10 @@ try {
         FROM teams t
         INNER JOIN team_members tm ON t.id = tm.team_id
         LEFT JOIN team_members tm2 ON t.id = tm2.team_id
-        LEFT JOIN projects p ON t.id = p.team_id
+        LEFT JOIN team_workspaces tw ON t.id = tw.team_id
+        LEFT JOIN projects p ON tw.workspace_id = p.workspace_id
         WHERE tm.user_id = :user_id
-        GROUP BY t.id, t.name, t.description, t.color, t.visibility, t.created_at, tm.role
+        GROUP BY t.id, t.name, t.description, t.color, t.created_at, tm.role
         ORDER BY t.created_at DESC
     ";
     
@@ -65,7 +65,6 @@ try {
             'name' => $team['name'],
             'description' => $team['description'],
             'color' => $team['color'],
-            'visibility' => $team['visibility'],
             'created_at' => $team['created_at'],
             'user_role' => $team['user_role'],
             'member_count' => (int)$team['member_count'],

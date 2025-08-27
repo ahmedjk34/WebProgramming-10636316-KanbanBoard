@@ -55,6 +55,8 @@ class AIChatManager {
   }
 
   updateCharCount() {
+    if (!this.inputField || !this.charCount) return;
+
     const length = this.inputField.value.length;
     this.charCount.textContent = `${length}/2000`;
 

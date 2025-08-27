@@ -71,7 +71,23 @@ class ModuleFactory {
     } catch (error) {
       this.loading.delete(name);
       console.error(`❌ Failed to initialize module ${name}:`, error);
-      throw error;
+
+      // Fallback: try to create instance without dependencies
+      try {
+        const ModuleClass = this.modules.get(name);
+        const instance = new ModuleClass();
+        this.modules.set(name + "_instance", instance);
+        this.initialized.add(name);
+        this.loading.delete(name);
+        console.log(`✅ Module ${name} initialized with fallback`);
+        return instance;
+      } catch (fallbackError) {
+        console.error(
+          `❌ Fallback initialization failed for ${name}:`,
+          fallbackError
+        );
+        throw error;
+      }
     }
   }
 
@@ -113,8 +129,6 @@ let aiChatManager;
 
 document.addEventListener("DOMContentLoaded", function () {
   console.log("🎨 Enhanced Kanban Board Application Loaded");
-
-  initializeTheme(currentTheme);
 
   setTimeout(() => {
     console.log("🔍 Checking module availability...");
@@ -175,12 +189,11 @@ function registerModules() {
     "taskManager",
     "uiManager",
   ]);
-  moduleFactory.register("teamCollaborationManager", window.TeamCollaborationManager, [
-    "apiManager",
-    "taskManager",
-    "teamManager",
-    "uiManager",
-  ]);
+  moduleFactory.register(
+    "teamCollaborationManager",
+    window.TeamCollaborationManager,
+    ["apiManager", "taskManager", "teamManager", "uiManager"]
+  );
   moduleFactory.register("teamAnalyticsManager", window.TeamAnalyticsManager, [
     "apiManager",
     "teamManager",
@@ -194,10 +207,50 @@ async function initializeApp() {
   console.log("🚀 Initializing Modular Kanban Board...");
 
   try {
-    showLoading(true);
+    // Show loading state if function exists
+    if (typeof showLoading === "function") {
+      showLoading(true);
+    }
 
     const modules = await moduleFactory.initializeAll();
 
+    // Assign modules to global variables for teams app
+    window.apiManager = modules.apiManager;
+    window.taskManager = modules.taskManager;
+    window.projectManager = modules.projectManager;
+    window.workspaceManager = modules.workspaceManager;
+    window.teamManager = modules.teamManager;
+    window.dragDropManager = modules.dragDropManager;
+    window.uiManager = modules.uiManager;
+    window.aiChatManager = modules.aiChatManager;
+    window.teamCollaborationManager = modules.teamCollaborationManager;
+    window.teamAnalyticsManager = modules.teamAnalyticsManager;
+
+    // Verify that modules are properly instantiated
+    console.log("🔍 Verifying module instances:", {
+      apiManager: typeof window.apiManager?.getTeams === "function",
+      taskManager: typeof window.taskManager?.refreshTasks === "function",
+      workspaceManager:
+        typeof window.workspaceManager?.loadWorkspaces === "function",
+      uiManager: typeof window.uiManager?.setupEventListeners === "function",
+      teamManager: typeof window.teamManager?.loadTeams === "function",
+      teamCollaborationManager:
+        typeof window.teamCollaborationManager?.init === "function",
+      teamAnalyticsManager:
+        typeof window.teamAnalyticsManager?.init === "function",
+    });
+
+    console.log("✅ Global module variables assigned:", {
+      apiManager: !!window.apiManager,
+      taskManager: !!window.taskManager,
+      workspaceManager: !!window.workspaceManager,
+      uiManager: !!window.uiManager,
+      teamManager: !!window.teamManager,
+      teamCollaborationManager: !!window.teamCollaborationManager,
+      teamAnalyticsManager: !!window.teamAnalyticsManager,
+    });
+
+    // Also assign to local variables for backward compatibility
     apiManager = modules.apiManager;
     taskManager = modules.taskManager;
     projectManager = modules.projectManager;
@@ -208,17 +261,6 @@ async function initializeApp() {
     aiChatManager = modules.aiChatManager;
     teamCollaborationManager = modules.teamCollaborationManager;
     teamAnalyticsManager = modules.teamAnalyticsManager;
-
-    window.apiManager = apiManager;
-    window.taskManager = taskManager;
-    window.projectManager = projectManager;
-    window.workspaceManager = workspaceManager;
-    window.teamManager = teamManager;
-    window.dragDropManager = dragDropManager;
-    window.uiManager = uiManager;
-    window.aiChatManager = aiChatManager;
-    window.teamCollaborationManager = teamCollaborationManager;
-    window.teamAnalyticsManager = teamAnalyticsManager;
 
     // Initialize workspace type system
     initializeWorkspaceTypeSystem();
@@ -234,18 +276,62 @@ async function initializeApp() {
     dragDropManager.initializeDragAndDrop();
     taskManager.setupTaskFormHandling();
 
-    showLoading(false);
+    // Hide loading state if function exists
+    if (typeof showLoading === "function") {
+      showLoading(false);
+    }
 
     console.log("🎉 Modular Kanban Board initialized successfully");
 
-    addWelcomeAnimation();
+    if (typeof addWelcomeAnimation === "function") {
+      addWelcomeAnimation();
+    }
   } catch (error) {
     console.error("❌ Failed to initialize Kanban Board:", error);
-    showError("Failed to load data. Please refresh the page.");
-    showLoading(false);
+    if (typeof showError === "function") {
+      showError("Failed to load data. Please refresh the page.");
+    }
+    if (typeof showLoading === "function") {
+      showLoading(false);
+    }
 
     console.log("🔄 Attempting fallback initialization...");
     initializeFallbackMode();
+
+    // Also try to create basic module instances directly
+    try {
+      console.log("🔄 Creating basic module instances...");
+      if (window.APIManager && !window.apiManager) {
+        window.apiManager = new window.APIManager();
+        console.log("✅ Created basic APIManager instance");
+      }
+      if (window.TaskManager && !window.taskManager) {
+        window.taskManager = new window.TaskManager();
+        console.log("✅ Created basic TaskManager instance");
+      }
+      if (window.WorkspaceManager && !window.workspaceManager) {
+        window.workspaceManager = new window.WorkspaceManager();
+        console.log("✅ Created basic WorkspaceManager instance");
+      }
+      if (window.UIManager && !window.uiManager) {
+        window.uiManager = new window.UIManager();
+        console.log("✅ Created basic UIManager instance");
+      }
+      if (window.TeamManager && !window.teamManager) {
+        window.teamManager = new window.TeamManager();
+        console.log("✅ Created basic TeamManager instance");
+      }
+      if (window.TeamCollaborationManager && !window.teamCollaborationManager) {
+        window.teamCollaborationManager = new window.TeamCollaborationManager();
+        console.log("✅ Created basic TeamCollaborationManager instance");
+      }
+      if (window.TeamAnalyticsManager && !window.teamAnalyticsManager) {
+        window.teamAnalyticsManager = new window.TeamAnalyticsManager();
+        console.log("✅ Created basic TeamAnalyticsManager instance");
+      }
+    } catch (fallbackError) {
+      console.error("❌ Fallback module creation failed:", fallbackError);
+    }
   }
 }
 
@@ -676,7 +762,9 @@ function deleteTeamWorkspace(workspaceId) {
 // Team Collaboration Functions
 function refreshTeamActivity() {
   if (window.teamCollaborationManager) {
-    window.teamCollaborationManager.loadTeamActivity(window.teamCollaborationManager.teamId);
+    window.teamCollaborationManager.loadTeamActivity(
+      window.teamCollaborationManager.teamId
+    );
   }
 }
 
@@ -694,7 +782,9 @@ function closeTeamAnalyticsDialog() {
 
 function refreshTeamAnalytics() {
   if (window.teamAnalyticsManager) {
-    window.teamAnalyticsManager.loadTeamAnalytics(window.teamAnalyticsManager.currentTeamId);
+    window.teamAnalyticsManager.loadTeamAnalytics(
+      window.teamAnalyticsManager.currentTeamId
+    );
   }
 }
 
@@ -725,6 +815,29 @@ window.openTeamAnalyticsDialog = openTeamAnalyticsDialog;
 window.closeTeamAnalyticsDialog = closeTeamAnalyticsDialog;
 window.refreshTeamAnalytics = refreshTeamAnalytics;
 window.exportTeamAnalytics = exportTeamAnalytics;
+
+// Utility functions for loading and error states
+function showLoading(show = true) {
+  const loadingElement = document.getElementById("loading-overlay");
+  if (loadingElement) {
+    loadingElement.style.display = show ? "flex" : "none";
+  }
+}
+
+function showError(message) {
+  console.error("❌ Error:", message);
+  // You can implement a proper error display here
+}
+
+function showErrorMessage(message) {
+  console.error("❌ Error:", message);
+  // You can implement a proper error display here
+}
+
+function addWelcomeAnimation() {
+  // Welcome animation implementation
+  console.log("🎉 Welcome animation triggered");
+}
 
 // Initialize workspace type system
 function initializeWorkspaceTypeSystem() {
