@@ -468,12 +468,15 @@ class APIManager {
    */
   async getTeamUpdates(teamId) {
     try {
-      const response = await fetch(`php/api/teams/get_team_updates.php?team_id=${teamId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `php/api/teams/get_team_updates.php?team_id=${teamId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const result = await this.safeJsonParse(response);
 
@@ -496,12 +499,15 @@ class APIManager {
    */
   async getTeamActivity(teamId, limit = 50) {
     try {
-      const response = await fetch(`php/api/teams/get_team_activity.php?team_id=${teamId}&limit=${limit}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `php/api/teams/get_team_activity.php?team_id=${teamId}&limit=${limit}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const result = await this.safeJsonParse(response);
 
@@ -526,12 +532,15 @@ class APIManager {
    */
   async getTeamStats(teamId, days = 30) {
     try {
-      const response = await fetch(`php/api/teams/get_team_stats.php?team_id=${teamId}&days=${days}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `php/api/teams/get_team_stats.php?team_id=${teamId}&days=${days}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const result = await this.safeJsonParse(response);
 
@@ -554,12 +563,15 @@ class APIManager {
    */
   async getMemberPerformance(teamId, days = 30) {
     try {
-      const response = await fetch(`php/api/teams/get_member_performance.php?team_id=${teamId}&days=${days}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `php/api/teams/get_member_performance.php?team_id=${teamId}&days=${days}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const result = await this.safeJsonParse(response);
 
@@ -582,12 +594,15 @@ class APIManager {
    */
   async getProjectMetrics(teamId, days = 30) {
     try {
-      const response = await fetch(`php/api/teams/get_project_metrics.php?team_id=${teamId}&days=${days}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `php/api/teams/get_project_metrics.php?team_id=${teamId}&days=${days}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const result = await this.safeJsonParse(response);
 
@@ -610,12 +625,15 @@ class APIManager {
    */
   async getActivityTimeline(teamId, days = 30) {
     try {
-      const response = await fetch(`php/api/teams/get_activity_timeline.php?team_id=${teamId}&days=${days}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `php/api/teams/get_activity_timeline.php?team_id=${teamId}&days=${days}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const result = await this.safeJsonParse(response);
 
@@ -631,6 +649,32 @@ class APIManager {
   }
 
   /**
+   * Get all teams for the current user
+   * @returns {Promise<Object>} API response
+   */
+  async getTeams() {
+    try {
+      const response = await fetch("php/api/teams/get_teams.php", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error getting teams:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Get productivity heatmap
    * @param {number} teamId - Team ID
    * @param {number} days - Number of days to analyze
@@ -638,12 +682,15 @@ class APIManager {
    */
   async getProductivityHeatmap(teamId, days = 30) {
     try {
-      const response = await fetch(`php/api/teams/get_productivity_heatmap.php?team_id=${teamId}&days=${days}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `php/api/teams/get_productivity_heatmap.php?team_id=${teamId}&days=${days}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const result = await this.safeJsonParse(response);
 
