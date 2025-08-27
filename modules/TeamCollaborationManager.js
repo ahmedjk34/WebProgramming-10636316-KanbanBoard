@@ -26,7 +26,10 @@ class TeamCollaborationManager {
     // Event listeners
     this.eventListeners = new Map();
 
-    console.log("🔧 TeamCollaborationManager initialized with dependencies:", Object.keys(dependencies));
+    console.log(
+      "🔧 TeamCollaborationManager initialized with dependencies:",
+      Object.keys(dependencies)
+    );
   }
 
   // ===== INITIALIZATION =====
@@ -39,7 +42,7 @@ class TeamCollaborationManager {
 
     try {
       // Setup WebSocket connection if available
-      if (typeof WebSocket !== 'undefined') {
+      if (typeof WebSocket !== "undefined") {
         this.setupWebSocketConnection();
       } else {
         console.warn("⚠️ WebSocket not available, falling back to polling");
@@ -65,11 +68,10 @@ class TeamCollaborationManager {
       // For now, we'll simulate WebSocket with polling
       // In production, you'd connect to a real WebSocket server
       console.log("🔌 Setting up simulated WebSocket connection");
-      
+
       // Simulate connection
       this.isConnected = true;
       this.startSimulatedUpdates();
-      
     } catch (error) {
       console.error("❌ WebSocket connection failed:", error);
       this.setupPollingConnection();
@@ -118,34 +120,35 @@ class TeamCollaborationManager {
 
     const activities = [
       {
-        type: 'task_completed',
+        type: "task_completed",
         data: {
           task_id: Math.floor(Math.random() * 100) + 1,
-          user_name: 'John Doe',
-          task_title: 'Design System Implementation',
-          timestamp: new Date().toISOString()
-        }
+          user_name: "John Doe",
+          task_title: "Design System Implementation",
+          timestamp: new Date().toISOString(),
+        },
       },
       {
-        type: 'task_assigned',
+        type: "task_assigned",
         data: {
           task_id: Math.floor(Math.random() * 100) + 1,
-          assignee_name: 'Jane Smith',
-          task_title: 'API Documentation',
-          timestamp: new Date().toISOString()
-        }
+          assignee_name: "Jane Smith",
+          task_title: "API Documentation",
+          timestamp: new Date().toISOString(),
+        },
       },
       {
-        type: 'member_joined',
+        type: "member_joined",
         data: {
-          user_name: 'Mike Johnson',
-          role: 'Developer',
-          timestamp: new Date().toISOString()
-        }
-      }
+          user_name: "Mike Johnson",
+          role: "Developer",
+          timestamp: new Date().toISOString(),
+        },
+      },
     ];
 
-    const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+    const randomActivity =
+      activities[Math.floor(Math.random() * activities.length)];
     this.handleTeamUpdate(randomActivity);
   }
 
@@ -157,26 +160,26 @@ class TeamCollaborationManager {
 
     const updates = [
       {
-        type: 'task_updated',
+        type: "task_updated",
         data: {
           task_id: Math.floor(Math.random() * 100) + 1,
-          field: 'status',
-          old_value: 'in_progress',
-          new_value: 'done',
-          user_name: 'John Doe',
-          timestamp: new Date().toISOString()
-        }
+          field: "status",
+          old_value: "in_progress",
+          new_value: "done",
+          user_name: "John Doe",
+          timestamp: new Date().toISOString(),
+        },
       },
       {
-        type: 'task_priority_changed',
+        type: "task_priority_changed",
         data: {
           task_id: Math.floor(Math.random() * 100) + 1,
-          old_priority: 'medium',
-          new_priority: 'high',
-          user_name: 'Jane Smith',
-          timestamp: new Date().toISOString()
-        }
-      }
+          old_priority: "medium",
+          new_priority: "high",
+          user_name: "Jane Smith",
+          timestamp: new Date().toISOString(),
+        },
+      },
     ];
 
     const randomUpdate = updates[Math.floor(Math.random() * updates.length)];
@@ -192,7 +195,7 @@ class TeamCollaborationManager {
     try {
       const response = await this.apiManager.getTeamUpdates(this.teamId);
       if (response.success && response.data.updates) {
-        response.data.updates.forEach(update => {
+        response.data.updates.forEach((update) => {
           this.handleTeamUpdate(update);
         });
       }
@@ -211,28 +214,28 @@ class TeamCollaborationManager {
     console.log("📡 Received team update:", update);
 
     switch (update.type) {
-      case 'task_completed':
+      case "task_completed":
         this.handleTaskCompleted(update.data);
         break;
-      case 'task_assigned':
+      case "task_assigned":
         this.handleTaskAssigned(update.data);
         break;
-      case 'task_updated':
+      case "task_updated":
         this.handleTaskUpdated(update.data);
         break;
-      case 'task_priority_changed':
+      case "task_priority_changed":
         this.handleTaskPriorityChanged(update.data);
         break;
-      case 'member_joined':
+      case "member_joined":
         this.handleMemberJoined(update.data);
         break;
-      case 'member_left':
+      case "member_left":
         this.handleMemberLeft(update.data);
         break;
-      case 'project_created':
+      case "project_created":
         this.handleProjectCreated(update.data);
         break;
-      case 'workspace_created':
+      case "workspace_created":
         this.handleWorkspaceCreated(update.data);
         break;
       default:
@@ -240,7 +243,7 @@ class TeamCollaborationManager {
     }
 
     // Emit event for other modules
-    this.emit('teamUpdate', update);
+    this.emit("teamUpdate", update);
   }
 
   /**
@@ -250,23 +253,23 @@ class TeamCollaborationManager {
   handleTaskCompleted(data) {
     // Update task in UI
     if (this.taskManager) {
-      this.taskManager.updateTaskStatus(data.task_id, 'done');
+      this.taskManager.updateTaskStatus(data.task_id, "done");
     }
 
     // Show notification
     this.showNotification(
-      '🎉 Task Completed',
+      "🎉 Task Completed",
       `${data.user_name} completed "${data.task_title}"`,
-      'success'
+      "success"
     );
 
     // Update activity feed
     this.addActivityToFeed({
-      type: 'task_completed',
-      icon: '✅',
+      type: "task_completed",
+      icon: "✅",
       text: `${data.user_name} completed "${data.task_title}"`,
       timestamp: data.timestamp,
-      user_name: data.user_name
+      user_name: data.user_name,
     });
   }
 
@@ -282,18 +285,18 @@ class TeamCollaborationManager {
 
     // Show notification
     this.showNotification(
-      '📋 Task Assigned',
+      "📋 Task Assigned",
       `"${data.task_title}" assigned to ${data.assignee_name}`,
-      'info'
+      "info"
     );
 
     // Update activity feed
     this.addActivityToFeed({
-      type: 'task_assigned',
-      icon: '👤',
+      type: "task_assigned",
+      icon: "👤",
       text: `"${data.task_title}" assigned to ${data.assignee_name}`,
       timestamp: data.timestamp,
-      user_name: data.assignee_name
+      user_name: data.assignee_name,
     });
   }
 
@@ -309,18 +312,18 @@ class TeamCollaborationManager {
 
     // Show notification
     this.showNotification(
-      '✏️ Task Updated',
+      "✏️ Task Updated",
       `${data.user_name} updated "${data.field}" of a task`,
-      'info'
+      "info"
     );
 
     // Update activity feed
     this.addActivityToFeed({
-      type: 'task_updated',
-      icon: '✏️',
+      type: "task_updated",
+      icon: "✏️",
       text: `${data.user_name} updated task ${data.field}`,
       timestamp: data.timestamp,
-      user_name: data.user_name
+      user_name: data.user_name,
     });
   }
 
@@ -336,18 +339,18 @@ class TeamCollaborationManager {
 
     // Show notification
     this.showNotification(
-      '🎯 Priority Changed',
+      "🎯 Priority Changed",
       `${data.user_name} changed task priority to ${data.new_priority}`,
-      'warning'
+      "warning"
     );
 
     // Update activity feed
     this.addActivityToFeed({
-      type: 'priority_changed',
-      icon: '🎯',
+      type: "priority_changed",
+      icon: "🎯",
       text: `${data.user_name} changed priority to ${data.new_priority}`,
       timestamp: data.timestamp,
-      user_name: data.user_name
+      user_name: data.user_name,
     });
   }
 
@@ -363,18 +366,18 @@ class TeamCollaborationManager {
 
     // Show notification
     this.showNotification(
-      '👋 New Member',
+      "👋 New Member",
       `${data.user_name} joined the team as ${data.role}`,
-      'success'
+      "success"
     );
 
     // Update activity feed
     this.addActivityToFeed({
-      type: 'member_joined',
-      icon: '👋',
+      type: "member_joined",
+      icon: "👋",
       text: `${data.user_name} joined as ${data.role}`,
       timestamp: data.timestamp,
-      user_name: data.user_name
+      user_name: data.user_name,
     });
   }
 
@@ -390,18 +393,18 @@ class TeamCollaborationManager {
 
     // Show notification
     this.showNotification(
-      '👋 Member Left',
+      "👋 Member Left",
       `${data.user_name} left the team`,
-      'info'
+      "info"
     );
 
     // Update activity feed
     this.addActivityToFeed({
-      type: 'member_left',
-      icon: '👋',
+      type: "member_left",
+      icon: "👋",
       text: `${data.user_name} left the team`,
       timestamp: data.timestamp,
-      user_name: data.user_name
+      user_name: data.user_name,
     });
   }
 
@@ -417,18 +420,18 @@ class TeamCollaborationManager {
 
     // Show notification
     this.showNotification(
-      '📁 New Project',
+      "📁 New Project",
       `${data.user_name} created project "${data.project_name}"`,
-      'success'
+      "success"
     );
 
     // Update activity feed
     this.addActivityToFeed({
-      type: 'project_created',
-      icon: '📁',
+      type: "project_created",
+      icon: "📁",
       text: `${data.user_name} created project "${data.project_name}"`,
       timestamp: data.timestamp,
-      user_name: data.user_name
+      user_name: data.user_name,
     });
   }
 
@@ -444,18 +447,18 @@ class TeamCollaborationManager {
 
     // Show notification
     this.showNotification(
-      '🗂️ New Workspace',
+      "🗂️ New Workspace",
       `${data.user_name} created workspace "${data.workspace_name}"`,
-      'success'
+      "success"
     );
 
     // Update activity feed
     this.addActivityToFeed({
-      type: 'workspace_created',
-      icon: '🗂️',
+      type: "workspace_created",
+      icon: "🗂️",
       text: `${data.user_name} created workspace "${data.workspace_name}"`,
       timestamp: data.timestamp,
-      user_name: data.user_name
+      user_name: data.user_name,
     });
   }
 
@@ -467,24 +470,24 @@ class TeamCollaborationManager {
    * @param {string} message - Notification message
    * @param {string} type - Notification type (success, error, warning, info)
    */
-  showNotification(title, message, type = 'info') {
+  showNotification(title, message, type = "info") {
     // Use existing notification system if available
-    if (typeof showNotification === 'function') {
+    if (typeof showNotification === "function") {
       showNotification(title, message, type);
     } else {
       // Fallback notification
       console.log(`📢 ${title}: ${message}`);
-      
+
       // Create simple notification
-      const notification = document.createElement('div');
+      const notification = document.createElement("div");
       notification.className = `notification notification-${type}`;
       notification.innerHTML = `
         <div class="notification-title">${title}</div>
         <div class="notification-message">${message}</div>
       `;
-      
+
       document.body.appendChild(notification);
-      
+
       // Remove after 5 seconds
       setTimeout(() => {
         notification.remove();
@@ -499,14 +502,14 @@ class TeamCollaborationManager {
    * @param {Object} activity - Activity data
    */
   addActivityToFeed(activity) {
-    const activityFeed = document.getElementById('team-activity-feed');
+    const activityFeed = document.getElementById("team-activity-feed");
     if (!activityFeed) return;
 
     const activityItem = this.createActivityItem(activity);
     activityFeed.insertBefore(activityItem, activityFeed.firstChild);
 
     // Limit feed to 50 items
-    const items = activityFeed.querySelectorAll('.activity-item');
+    const items = activityFeed.querySelectorAll(".activity-item");
     if (items.length > 50) {
       items[items.length - 1].remove();
     }
@@ -518,8 +521,8 @@ class TeamCollaborationManager {
    * @returns {HTMLElement} Activity item element
    */
   createActivityItem(activity) {
-    const activityItem = document.createElement('div');
-    activityItem.className = 'activity-item';
+    const activityItem = document.createElement("div");
+    activityItem.className = "activity-item";
     activityItem.innerHTML = `
       <div class="activity-icon">${activity.icon}</div>
       <div class="activity-content">
@@ -541,16 +544,16 @@ class TeamCollaborationManager {
     const diffInSeconds = Math.floor((now - time) / 1000);
 
     if (diffInSeconds < 60) {
-      return 'Just now';
+      return "Just now";
     } else if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+      return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
     } else if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
     } else {
       const days = Math.floor(diffInSeconds / 86400);
-      return `${days} day${days > 1 ? 's' : ''} ago`;
+      return `${days} day${days > 1 ? "s" : ""} ago`;
     }
   }
 
@@ -561,12 +564,12 @@ class TeamCollaborationManager {
    */
   setupEventListeners() {
     // Listen for team changes
-    document.addEventListener('teamChanged', (event) => {
+    document.addEventListener("teamChanged", (event) => {
       this.switchTeam(event.detail.teamId);
     });
 
     // Listen for user changes
-    document.addEventListener('userChanged', (event) => {
+    document.addEventListener("userChanged", (event) => {
       this.setUserId(event.detail.userId);
     });
   }
@@ -578,10 +581,10 @@ class TeamCollaborationManager {
   switchTeam(teamId) {
     console.log("🔄 Switching to team:", teamId);
     this.teamId = teamId;
-    
+
     // Clear existing activity feed
     this.clearActivityFeed();
-    
+
     // Load team activity
     this.loadTeamActivity(teamId);
   }
@@ -616,12 +619,12 @@ class TeamCollaborationManager {
    * @param {Array} activities - Activity array
    */
   displayTeamActivity(activities) {
-    const activityFeed = document.getElementById('team-activity-feed');
+    const activityFeed = document.getElementById("team-activity-feed");
     if (!activityFeed) return;
 
-    activityFeed.innerHTML = '';
-    
-    activities.forEach(activity => {
+    activityFeed.innerHTML = "";
+
+    activities.forEach((activity) => {
       const activityItem = this.createActivityItem(activity);
       activityFeed.appendChild(activityItem);
     });
@@ -631,9 +634,9 @@ class TeamCollaborationManager {
    * Clear activity feed
    */
   clearActivityFeed() {
-    const activityFeed = document.getElementById('team-activity-feed');
+    const activityFeed = document.getElementById("team-activity-feed");
     if (activityFeed) {
-      activityFeed.innerHTML = '';
+      activityFeed.innerHTML = "";
     }
   }
 
@@ -673,7 +676,7 @@ class TeamCollaborationManager {
    */
   emit(event, data) {
     if (this.eventListeners.has(event)) {
-      this.eventListeners.get(event).forEach(callback => {
+      this.eventListeners.get(event).forEach((callback) => {
         try {
           callback(data);
         } catch (error) {
