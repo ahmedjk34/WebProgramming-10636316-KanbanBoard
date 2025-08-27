@@ -29,7 +29,7 @@ class BaseView {
       filters: {
         project: null,
         workspace: null,
-        status: null,
+
         priority: null,
         search: "",
       },
@@ -115,13 +115,6 @@ class BaseView {
     if (this.config.filters.project) {
       filteredTasks = filteredTasks.filter(
         (task) => task.project_id === this.config.filters.project
-      );
-    }
-
-    // Status filter
-    if (this.config.filters.status) {
-      filteredTasks = filteredTasks.filter(
-        (task) => task.status === this.config.filters.status
       );
     }
 
