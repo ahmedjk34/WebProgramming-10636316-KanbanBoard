@@ -76,14 +76,18 @@ try {
         exit();
     }
 
+    // Get current user ID from session
+    session_start();
+    $userId = $_SESSION['user_id'] ?? 1; // Default to user ID 1 if not set
+    
     // Get next position for the status column
     $positionStmt = $pdo->prepare("SELECT COALESCE(MAX(position), 0) + 1 as next_position FROM tasks WHERE status = :status");
     $positionStmt->execute([':status' => $status]);
     $nextPosition = $positionStmt->fetch(PDO::FETCH_ASSOC)['next_position'];
 
     // Insert new task
-    $sql = "INSERT INTO tasks (title, description, project_id, priority, status, due_date, position, created_at, updated_at)
-            VALUES (:title, :description, :project_id, :priority, :status, :due_date, :position, NOW(), NOW())";
+    $sql = "INSERT INTO tasks (title, description, project_id, priority, status, due_date, position, created_by, created_at, updated_at)
+            VALUES (:title, :description, :project_id, :priority, :status, :due_date, :position, :created_by, NOW(), NOW())";
 
     $stmt = $pdo->prepare($sql);
     $result = $stmt->execute([
@@ -93,7 +97,8 @@ try {
         ':priority' => $priority,
         ':status' => $status,
         ':due_date' => $dueDate,
-        ':position' => $nextPosition
+        ':position' => $nextPosition,
+        ':created_by' => $userId
     ]);
 
     if ($result) {

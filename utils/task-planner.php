@@ -108,21 +108,46 @@ class TaskPlanner {
      * @return int Final workspace ID
      */
     private function determineWorkspace($suggestedWorkspaceId) {
-        // Validate that the suggested workspace exists and is appropriate
-        $validWorkspaces = [1, 2, 3]; // Personal, Work, Creative
+        // Get current user ID from session
+        $userId = $_SESSION['user_id'] ?? 1;
         
-        if (in_array($suggestedWorkspaceId, $validWorkspaces)) {
-            // Check if workspace exists in database
-            $stmt = $this->pdo->prepare("SELECT id FROM workspaces WHERE id = ? AND is_default = TRUE");
-            $stmt->execute([$suggestedWorkspaceId]);
-            
-            if ($stmt->fetch()) {
-                return $suggestedWorkspaceId;
-            }
+        // Map AI suggestions to workspace types
+        $workspaceTypes = [
+            1 => 'Personal Workspace',
+            2 => 'Work Workspace', 
+            3 => 'Creative Projects'
+        ];
+        
+        $targetType = $workspaceTypes[$suggestedWorkspaceId] ?? 'Personal Workspace';
+        
+        // Find the user's workspace of this type
+        $stmt = $this->pdo->prepare("
+            SELECT id FROM workspaces 
+            WHERE owner_id = ? AND name = ?
+        ");
+        $stmt->execute([$userId, $targetType]);
+        $workspace = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($workspace) {
+            return $workspace['id'];
         }
         
-        // Default to Personal Workspace if suggestion is invalid
-        return 1;
+        // Fallback: get the user's first workspace
+        $stmt = $this->pdo->prepare("
+            SELECT id FROM workspaces 
+            WHERE owner_id = ? 
+            ORDER BY is_default DESC, id ASC 
+            LIMIT 1
+        ");
+        $stmt->execute([$userId]);
+        $fallbackWorkspace = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($fallbackWorkspace) {
+            return $fallbackWorkspace['id'];
+        }
+        
+        // Last resort: return the original suggestion
+        return $suggestedWorkspaceId;
     }
 
     /**
@@ -132,15 +157,19 @@ class TaskPlanner {
      * @return int Created project ID
      */
     private function createProject($projectData, $workspaceId) {
-        $sql = "INSERT INTO projects (workspace_id, name, description, color, status, created_at) 
-                VALUES (?, ?, ?, ?, 'active', NOW())";
+        // Get current user ID from session
+        $userId = $_SESSION['user_id'] ?? 1; // Default to user ID 1 if not set
+        
+        $sql = "INSERT INTO projects (workspace_id, name, description, color, status, created_by, created_at) 
+                VALUES (?, ?, ?, ?, 'active', ?, NOW())";
         
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $workspaceId,
             sanitizeAndValidate($projectData['name'], 'string'),
             sanitizeAndValidate($projectData['description'] ?? '', 'string'),
-            sanitizeAndValidate($projectData['color'] ?? '#4facfe', 'string')
+            sanitizeAndValidate($projectData['color'] ?? '#4facfe', 'string'),
+            $userId
         ]);
         
         return $this->pdo->lastInsertId();
@@ -156,8 +185,11 @@ class TaskPlanner {
         $taskIds = [];
         $position = 1;
         
-        $sql = "INSERT INTO tasks (project_id, title, description, status, priority, due_date, position, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+        // Get current user ID from session
+        $userId = $_SESSION['user_id'] ?? 1; // Default to user ID 1 if not set
+        
+        $sql = "INSERT INTO tasks (project_id, title, description, status, priority, due_date, position, created_by, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
         
         $stmt = $this->pdo->prepare($sql);
         
@@ -175,7 +207,8 @@ class TaskPlanner {
                 sanitizeAndValidate($taskData['status'], 'string'),
                 sanitizeAndValidate($taskData['priority'], 'string'),
                 $dueDate,
-                $position++
+                $position++,
+                $userId
             ]);
             
             $taskIds[] = $this->pdo->lastInsertId();

@@ -47,7 +47,9 @@ class APIManager {
 
   async loadWorkspaces() {
     try {
-      const response = await fetch("php/api/workspaces/get_workspaces.php");
+      const response = await fetch("php/api/workspaces/get_workspaces.php", {
+        credentials: "include", // Include cookies for session
+      });
       const result = await this.safeJsonParse(response);
 
       if (!result.success) {
@@ -111,6 +113,7 @@ class APIManager {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Include cookies for session
         body: JSON.stringify(projectData),
       });
 
@@ -217,6 +220,7 @@ class APIManager {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Include cookies for session
         body: JSON.stringify(taskData),
       });
 

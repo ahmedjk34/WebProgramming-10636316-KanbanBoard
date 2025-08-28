@@ -66,6 +66,10 @@ try {
     // Default color if not provided
     $color = $projectData['color'] ?? '#3498db';
     
+    // Get current user ID from session
+    session_start();
+    $userId = $_SESSION['user_id'] ?? 1; // Default to user ID 1 if not set
+    
     // Prepare SQL for project insertion
     $sql = "INSERT INTO projects (
                 name,
@@ -73,6 +77,7 @@ try {
                 color,
                 status,
                 workspace_id,
+                created_by,
                 created_at,
                 updated_at
             ) VALUES (
@@ -81,6 +86,7 @@ try {
                 :color,
                 :status,
                 :workspace_id,
+                :created_by,
                 NOW(),
                 NOW()
             )";
@@ -90,7 +96,8 @@ try {
         ':description' => $projectData['description'] ?? '',
         ':color' => $color,
         ':status' => $projectData['status'] ?? 'active',
-        ':workspace_id' => (int)$input['workspace_id']
+        ':workspace_id' => (int)$input['workspace_id'],
+        ':created_by' => $userId
     ];
     
     // Execute insertion

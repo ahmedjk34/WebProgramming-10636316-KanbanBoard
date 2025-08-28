@@ -9,9 +9,13 @@
 error_reporting(E_ERROR | E_PARSE);
 
 // Include required files
+require_once __DIR__ . '/../../config/session.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../../utils/php-utils.php';
 require_once __DIR__ . '/../../../utils/task-planner.php';
+
+// Start session to get user information
+safeSessionStart();
 
 // Set JSON response headers
 header('Content-Type: application/json');
