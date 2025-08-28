@@ -22,6 +22,44 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body class="teams-page">
+    <!-- Loading Screen -->
+    <div id="teams-loading" class="app-loading-screen">
+      <div class="loading-brand">
+        <div class="loading-logo">👥</div>
+        <h1 class="loading-app-title">Team Collaboration</h1>
+        <p class="loading-subtitle">Loading team workspaces...</p>
+      </div>
+
+      <div class="loading-spinner"></div>
+
+      <div class="loading-progress">
+        <div class="loading-progress-bar">
+          <div class="loading-progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="loading-status">Initializing team collaboration...</div>
+
+      <div class="loading-steps">
+        <div class="loading-step" data-step="auth">
+          <div class="loading-step-icon">1</div>
+          <div class="loading-step-text">Checking authentication</div>
+        </div>
+        <div class="loading-step" data-step="teams">
+          <div class="loading-step-icon">2</div>
+          <div class="loading-step-text">Loading teams</div>
+        </div>
+        <div class="loading-step" data-step="workspaces">
+          <div class="loading-step-icon">3</div>
+          <div class="loading-step-text">Loading workspaces</div>
+        </div>
+        <div class="loading-step" data-step="ready">
+          <div class="loading-step-icon">4</div>
+          <div class="loading-step-text">Ready to collaborate</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Notification Container -->
     <div id="notification-container" class="notification-container"></div>
 
@@ -622,6 +660,82 @@
 
         // Update user info
         updateUserInfo();
+
+        // Teams page loading screen
+        const loadingScreen = document.getElementById("teams-loading");
+        const progressFill = loadingScreen?.querySelector(
+          ".loading-progress-fill"
+        );
+        const statusElement = loadingScreen?.querySelector(".loading-status");
+
+        let progress = 0;
+        const steps = ["auth", "teams", "workspaces", "ready"];
+        let currentStep = 0;
+
+        function updateProgress(percentage, status) {
+          progress = percentage;
+          if (progressFill) progressFill.style.width = percentage + "%";
+          if (statusElement) statusElement.textContent = status;
+        }
+
+        function completeStep(stepName) {
+          const stepElement = loadingScreen?.querySelector(
+            `[data-step="${stepName}"]`
+          );
+          if (stepElement) {
+            stepElement.classList.remove("active");
+            stepElement.classList.add("completed");
+            stepElement.querySelector(".loading-step-icon").textContent = "✓";
+          }
+        }
+
+        function activateStep(stepName) {
+          const stepElement = loadingScreen?.querySelector(
+            `[data-step="${stepName}"]`
+          );
+          if (stepElement) {
+            stepElement.classList.add("active");
+          }
+        }
+
+        // Start loading process
+        updateProgress(0, "Initializing team collaboration...");
+        activateStep("auth");
+
+        // Simulate loading steps
+        setTimeout(() => {
+          completeStep("auth");
+          activateStep("teams");
+          updateProgress(25, "Loading teams...");
+        }, 1000);
+
+        setTimeout(() => {
+          completeStep("teams");
+          activateStep("workspaces");
+          updateProgress(50, "Loading workspaces...");
+        }, 2000);
+
+        setTimeout(() => {
+          completeStep("workspaces");
+          activateStep("ready");
+          updateProgress(75, "Preparing collaboration tools...");
+        }, 3000);
+
+        setTimeout(() => {
+          completeStep("ready");
+          updateProgress(100, "Ready to collaborate!");
+
+          setTimeout(() => {
+            if (loadingScreen) {
+              loadingScreen.classList.add("fade-out");
+              setTimeout(() => {
+                if (loadingScreen.parentNode) {
+                  loadingScreen.parentNode.removeChild(loadingScreen);
+                }
+              }, 500);
+            }
+          }, 1000);
+        }, 4000);
       });
     </script>
   </body>

@@ -1,5 +1,8 @@
 // Enhanced Kanban Board Application - Modular Architecture
 
+// Global loading manager instance
+let loadingManager = null;
+
 class ModuleFactory {
   constructor() {
     this.modules = new Map();
@@ -97,8 +100,20 @@ class ModuleFactory {
     );
     const instances = {};
 
+    // Update loading progress for module initialization
+    if (loadingManager) {
+      loadingManager.updateProgress(20, "Initializing modules...");
+      loadingManager.completeStep("auth");
+    }
+
     for (const name of moduleNames) {
       instances[name] = await this.get(name);
+    }
+
+    // Update loading progress after modules are initialized
+    if (loadingManager) {
+      loadingManager.updateProgress(40, "Modules initialized");
+      loadingManager.completeStep("modules");
     }
 
     return instances;
@@ -134,6 +149,13 @@ let aiChatManager;
 
 document.addEventListener("DOMContentLoaded", function () {
   console.log("🎨 Enhanced Kanban Board Application Loaded");
+
+  // Initialize loading manager first
+  if (typeof LoadingManager !== "undefined") {
+    loadingManager = new LoadingManager();
+    loadingManager.startLoading();
+    console.log("🔄 Loading manager started");
+  }
 
   // Initialize theme immediately
   if (typeof initializeTheme === "function") {
@@ -331,6 +353,12 @@ async function initializeApp() {
       showLoading(true);
     }
 
+    // Update loading progress for data loading
+    if (loadingManager) {
+      loadingManager.updateProgress(60, "Loading data...");
+      loadingManager.completeStep("data");
+    }
+
     const modules = await moduleFactory.initializeAll();
 
     // Assign modules to global variables for teams app
@@ -395,12 +423,29 @@ async function initializeApp() {
     dragDropManager.initializeDragAndDrop();
     taskManager.setupTaskFormHandling();
 
+    // Update loading progress for UI initialization
+    if (loadingManager) {
+      loadingManager.updateProgress(80, "Initializing interface...");
+      loadingManager.completeStep("ui");
+    }
+
     // Hide loading state if function exists
     if (typeof showLoading === "function") {
       showLoading(false);
     }
 
     console.log("🎉 Modular Kanban Board initialized successfully");
+
+    // Complete loading process
+    if (loadingManager) {
+      loadingManager.updateProgress(100, "Application ready!");
+      loadingManager.completeStep("ready");
+
+      // Hide loading screen after a short delay
+      setTimeout(() => {
+        loadingManager.hideLoadingScreen();
+      }, 1000);
+    }
 
     if (typeof addWelcomeAnimation === "function") {
       addWelcomeAnimation();
