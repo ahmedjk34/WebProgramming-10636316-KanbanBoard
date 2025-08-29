@@ -78,16 +78,6 @@ try {
         ]);
         exit;
     }
-    
-    // Check if email is verified (optional - you can remove this check)
-    if (!$user['email_verified']) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Please verify your email address before logging in'
-        ]);
-        exit;
-    }
-    
     // Update last login time
     $updateStmt = $pdo->prepare("
         UPDATE users 
@@ -99,9 +89,7 @@ try {
     // Generate session token
     $token = generateSecureToken();
     $tokenExpiry = $rememberMe ? date('Y-m-d H:i:s', strtotime('+30 days')) : date('Y-m-d H:i:s', strtotime('+24 hours'));
-    
-    // Store token in database (you might want to create a sessions table)
-    // For now, we'll use a simple approach with user preferences
+
     $tokenStmt = $pdo->prepare("
         INSERT INTO user_preferences (user_id, preference_key, preference_value) 
         VALUES (?, 'auth_token', ?) 
@@ -142,12 +130,5 @@ try {
         'success' => false,
         'message' => 'An error occurred during login. Please try again.'
     ]);
-}
-
-/**
- * Generate a secure random token
- */
-function generateSecureToken($length = 64) {
-    return bin2hex(random_bytes($length / 2));
 }
 ?>
