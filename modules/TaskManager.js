@@ -308,17 +308,35 @@ class TaskManager {
    * Refresh tasks from API
    */
   async refreshTasks() {
+    console.log("🔄 TaskManager.refreshTasks() called");
+    console.log("📊 TaskManager state:", {
+      hasApiManager: !!this.apiManager,
+      currentTasksCount: this.tasks.length,
+      apiManagerMethods: this.apiManager
+        ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.apiManager))
+        : [],
+    });
+
     if (this.apiManager) {
       try {
+        console.log("📡 Calling apiManager.loadTasks()...");
         const result = await this.apiManager.loadTasks();
+        console.log("📡 API response:", result);
+
         if (result.success) {
+          console.log("✅ API call successful, updating UI...");
           this.setTasks(result.data.tasks);
           this.displayTasks(result.data.tasks_by_status);
           this.updateTaskCounts(result.data.counts);
+          console.log("✅ UI updated successfully");
+        } else {
+          console.warn("⚠️ API call returned success: false", result);
         }
       } catch (error) {
         console.error("❌ Error refreshing tasks:", error);
       }
+    } else {
+      console.warn("⚠️ No apiManager available for refresh");
     }
   }
 

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Management Test</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <style>
+      body {
+        padding: 20px;
+        background: #f5f5f5;
+        font-family: Arial, sans-serif;
+      }
+      .test-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .workspace-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+      .debug-info {
+        background: #e9ecef;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        margin: 10px 0;
+        white-space: pre-wrap;
+      }
+      .test-result {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .test-result.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .test-result.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-container">
+      <h1>Project Management Test</h1>
+
+      <div class="test-section">
+        <h2>Test 1: Project Management Button</h2>
+        <div class="workspace-actions">
+          <button
+            id="manage-projects-btn"
+            class="btn btn-info btn-small"
+            onclick="testOpenProjectManagement()"
+          >
+            <span class="btn-icon">🗂️</span>
+            <span class="btn-text">Manage Projects</span>
+          </button>
+        </div>
+        <div class="debug-info" id="button-test-result"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>Test 2: Dialog Functionality</h2>
+        <button onclick="testDialogFunctions()" class="btn btn-secondary">
+          Test Dialog Functions
+        </button>
+        <div class="debug-info" id="dialog-test-result"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>Test 3: Event Log</h2>
+        <div class="debug-info" id="event-log"></div>
+      </div>
+    </div>
+
+    <script>
+      function logEvent(message) {
+        const log = document.getElementById("event-log");
+        const timestamp = new Date().toLocaleTimeString();
+        log.innerHTML += `[${timestamp}] ${message}\n`;
+        console.log(message);
+      }
+
+      function testOpenProjectManagement() {
+        logEvent("✅ Manage Projects button clicked");
+
+        // Check if the function exists
+        if (typeof openProjectManagementDialog === "function") {
+          logEvent("✅ openProjectManagementDialog function found");
+          openProjectManagementDialog();
+        } else {
+          logEvent("❌ openProjectManagementDialog function not found");
+        }
+
+        // Check if the dialog exists
+        const dialog = document.getElementById("project-management-dialog");
+        if (dialog) {
+          logEvent("✅ Project management dialog found");
+          document.getElementById("button-test-result").textContent =
+            "Project management dialog found and should be opening!";
+        } else {
+          logEvent("❌ Project management dialog not found");
+          document.getElementById("button-test-result").textContent =
+            "Project management dialog not found!";
+        }
+      }
+
+      function testDialogFunctions() {
+        logEvent("🔍 Testing dialog functions...");
+
+        const functions = [
+          "openProjectManagementDialog",
+          "closeProjectManagementDialog",
+          "openAddProjectDialog",
+          "closeAddProjectDialog",
+        ];
+
+        let results = "";
+        functions.forEach((funcName) => {
+          if (typeof window[funcName] === "function") {
+            results += `✅ ${funcName} function found\n`;
+            logEvent(`✅ ${funcName} function found`);
+          } else {
+            results += `❌ ${funcName} function not found\n`;
+            logEvent(`❌ ${funcName} function not found`);
+          }
+        });
+
+        document.getElementById("dialog-test-result").textContent = results;
+      }
+
+      // Test page load
+      window.addEventListener("load", function () {
+        logEvent("📄 Project Management Test page loaded");
+
+        // Check if elements exist
+        const manageBtn = document.getElementById("manage-projects-btn");
+        const dialog = document.getElementById("project-management-dialog");
+
+        if (manageBtn) {
+          logEvent("✅ Manage projects button found");
+        } else {
+          logEvent("❌ Manage projects button not found");
+        }
+
+        if (dialog) {
+          logEvent("✅ Project management dialog found");
+        } else {
+          logEvent("❌ Project management dialog not found");
+        }
+
+        // Check if UIManager is available
+        if (window.uiManager) {
+          logEvent("✅ UIManager is available");
+        } else {
+          logEvent("⚠️ UIManager not available, will use fallback");
+        }
+      });
+
+      // Mock functions for testing if they don't exist
+      if (typeof openProjectManagementDialog === "undefined") {
+        window.openProjectManagementDialog = function () {
+          logEvent("🔄 Using fallback openProjectManagementDialog");
+          const dialog = document.getElementById("project-management-dialog");
+          if (dialog) {
+            dialog.showModal();
+          }
+        };
+      }
+
+      if (typeof closeProjectManagementDialog === "undefined") {
+        window.closeProjectManagementDialog = function () {
+          logEvent("🔄 Using fallback closeProjectManagementDialog");
+          const dialog = document.getElementById("project-management-dialog");
+          if (dialog) {
+            dialog.close();
+          }
+        };
+      }
+    </script>
+  </body>
+</html>

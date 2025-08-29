@@ -31,7 +31,7 @@
 }
 
 /* Dark Mode Variables */
-.dark-mode {
+[data-theme="dark"] {
   --teams-bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   --teams-bg-secondary: linear-gradient(135deg, #0f3460 0%, #533483 100%);
   --teams-bg-accent: linear-gradient(135deg, #2d5a27 0%, #1e3a1e 100%);

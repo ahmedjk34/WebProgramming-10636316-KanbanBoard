@@ -19,7 +19,41 @@
     <!-- Preload critical resources -->
     <link rel="preload" href="js/auth.js" as="script" />
   </head>
-  <body data-theme="light">
+  <body>
+    <!-- Loading Screen -->
+    <div id="login-loading" class="app-loading-screen">
+      <div class="loading-brand">
+        <div class="loading-logo">🔐</div>
+        <h1 class="loading-app-title">Authentication</h1>
+        <p class="loading-subtitle">Preparing login system...</p>
+      </div>
+
+      <div class="loading-spinner"></div>
+
+      <div class="loading-progress">
+        <div class="loading-progress-bar">
+          <div class="loading-progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="loading-status">Initializing authentication...</div>
+
+      <div class="loading-steps">
+        <div class="loading-step" data-step="init">
+          <div class="loading-step-icon">1</div>
+          <div class="loading-step-text">Initializing system</div>
+        </div>
+        <div class="loading-step" data-step="auth">
+          <div class="loading-step-icon">2</div>
+          <div class="loading-step-text">Loading authentication</div>
+        </div>
+        <div class="loading-step" data-step="ready">
+          <div class="loading-step-icon">3</div>
+          <div class="loading-step-text">Ready to sign in</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Notification Container -->
     <div id="notification-container" class="notification-container"></div>
 
@@ -162,5 +196,74 @@
     <!-- JavaScript -->
     <script src="utils/js-utils.js"></script>
     <script src="js/auth.js"></script>
+
+    <!-- Login Loading Script -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const loadingScreen = document.getElementById("login-loading");
+        const progressFill = loadingScreen?.querySelector(
+          ".loading-progress-fill"
+        );
+        const statusElement = loadingScreen?.querySelector(".loading-status");
+
+        function updateProgress(percentage, status) {
+          if (progressFill) progressFill.style.width = percentage + "%";
+          if (statusElement) statusElement.textContent = status;
+        }
+
+        function completeStep(stepName) {
+          const stepElement = loadingScreen?.querySelector(
+            `[data-step="${stepName}"]`
+          );
+          if (stepElement) {
+            stepElement.classList.remove("active");
+            stepElement.classList.add("completed");
+            stepElement.querySelector(".loading-step-icon").textContent = "✓";
+          }
+        }
+
+        function activateStep(stepName) {
+          const stepElement = loadingScreen?.querySelector(
+            `[data-step="${stepName}"]`
+          );
+          if (stepElement) {
+            stepElement.classList.add("active");
+          }
+        }
+
+        // Start loading process
+        updateProgress(0, "Initializing authentication system...");
+        activateStep("init");
+
+        // Simulate loading steps
+        setTimeout(() => {
+          completeStep("init");
+          activateStep("auth");
+          updateProgress(33, "Loading authentication...");
+        }, 800);
+
+        setTimeout(() => {
+          completeStep("auth");
+          activateStep("ready");
+          updateProgress(66, "Preparing login form...");
+        }, 1600);
+
+        setTimeout(() => {
+          completeStep("ready");
+          updateProgress(100, "Ready to sign in!");
+
+          setTimeout(() => {
+            if (loadingScreen) {
+              loadingScreen.classList.add("fade-out");
+              setTimeout(() => {
+                if (loadingScreen.parentNode) {
+                  loadingScreen.parentNode.removeChild(loadingScreen);
+                }
+              }, 500);
+            }
+          }, 800);
+        }, 2400);
+      });
+    </script>
   </body>
 </html>

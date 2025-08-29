@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle Test</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --text-primary: #1a1a1a;
+            --border-color: #e1e5e9;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --text-primary: #f1f5f9;
+            --border-color: rgba(148, 163, 184, 0.1);
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .theme-toggle {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="test-container">
+        <h1>🎨 Theme Toggle Test</h1>
+        
+        <div class="test-section">
+            <h3>Test Controls</h3>
+            <button id="theme-toggle" class="theme-toggle">
+                <span id="theme-icon">🌙</span> Toggle Theme
+            </button>
+            <button onclick="testThemeFunctions()" class="theme-toggle">Test Theme Functions</button>
+            <button onclick="resetTheme()" class="theme-toggle">Reset Theme</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Current Status</h3>
+            <div id="status-container">
+                <div class="status">Ready to test theme toggling...</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Theme Information</h3>
+            <p><strong>Current Theme:</strong> <span id="current-theme">light</span></p>
+            <p><strong>LocalStorage Theme:</strong> <span id="localstorage-theme">light</span></p>
+            <p><strong>Data Attribute:</strong> <span id="data-attribute">light</span></p>
+        </div>
+    </div>
+
+    <script>
+        // Import theme functions from js-utils.js
+        function loadThemeFunctions() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'utils/js-utils.js';
+                script.onload = () => resolve();
+                script.onerror = () => reject(new Error('Failed to load js-utils.js'));
+                document.head.appendChild(script);
+            });
+        }
+
+        // Theme toggle function (simplified version)
+        function toggleTheme(currentTheme) {
+            const newTheme = currentTheme === "light" ? "dark" : "light";
+            document.documentElement.setAttribute("data-theme", newTheme);
+            localStorage.setItem("theme", newTheme);
+            
+            const themeIcon = document.getElementById("theme-icon");
+            if (themeIcon) {
+                themeIcon.textContent = newTheme === "light" ? "🌙" : "☀️";
+            }
+            
+            updateThemeInfo();
+            return newTheme;
+        }
+
+        // Update theme information display
+        function updateThemeInfo() {
+            const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+            const localStorageTheme = localStorage.getItem("theme") || "light";
+            const dataAttribute = document.documentElement.getAttribute("data-theme") || "light";
+            
+            document.getElementById("current-theme").textContent = currentTheme;
+            document.getElementById("localstorage-theme").textContent = localStorageTheme;
+            document.getElementById("data-attribute").textContent = dataAttribute;
+        }
+
+        // Test theme functions
+        function testThemeFunctions() {
+            const statusContainer = document.getElementById("status-container");
+            statusContainer.innerHTML = '';
+            
+            // Test 1: Check if theme functions are available
+            if (typeof window.toggleTheme === 'function') {
+                statusContainer.innerHTML += '<div class="status success">✅ toggleTheme function is available</div>';
+            } else {
+                statusContainer.innerHTML += '<div class="status error">❌ toggleTheme function is not available</div>';
+            }
+            
+            // Test 2: Check if initializeTheme is available
+            if (typeof window.initializeTheme === 'function') {
+                statusContainer.innerHTML += '<div class="status success">✅ initializeTheme function is available</div>';
+            } else {
+                statusContainer.innerHTML += '<div class="status error">❌ initializeTheme function is not available</div>';
+            }
+            
+            // Test 3: Test theme toggle
+            const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+            const newTheme = toggleTheme(currentTheme);
+            statusContainer.innerHTML += `<div class="status success">✅ Theme toggled from ${currentTheme} to ${newTheme}</div>`;
+            
+            // Test 4: Check localStorage
+            const storedTheme = localStorage.getItem("theme");
+            if (storedTheme === newTheme) {
+                statusContainer.innerHTML += '<div class="status success">✅ Theme saved to localStorage correctly</div>';
+            } else {
+                statusContainer.innerHTML += '<div class="status error">❌ Theme not saved to localStorage correctly</div>';
+            }
+        }
+
+        // Reset theme
+        function resetTheme() {
+            document.documentElement.setAttribute("data-theme", "light");
+            localStorage.setItem("theme", "light");
+            const themeIcon = document.getElementById("theme-icon");
+            if (themeIcon) {
+                themeIcon.textContent = "🌙";
+            }
+            updateThemeInfo();
+            
+            const statusContainer = document.getElementById("status-container");
+            statusContainer.innerHTML = '<div class="status success">✅ Theme reset to light mode</div>';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await loadThemeFunctions();
+                console.log("✅ Theme functions loaded successfully");
+                
+                // Initialize theme
+                const savedTheme = localStorage.getItem("theme") || "light";
+                document.documentElement.setAttribute("data-theme", savedTheme);
+                
+                const themeIcon = document.getElementById("theme-icon");
+                if (themeIcon) {
+                    themeIcon.textContent = savedTheme === "light" ? "🌙" : "☀️";
+                }
+                
+                updateThemeInfo();
+                
+                // Setup theme toggle
+                const themeToggle = document.getElementById("theme-toggle");
+                if (themeToggle) {
+                    themeToggle.addEventListener("click", function() {
+                        const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+                        toggleTheme(currentTheme);
+                    });
+                }
+                
+            } catch (error) {
+                console.error("❌ Failed to load theme functions:", error);
+                document.getElementById("status-container").innerHTML = 
+                    '<div class="status error">❌ Failed to load theme functions: ' + error.message + '</div>';
+            }
+        });
+    </script>
+</body>
+</html>

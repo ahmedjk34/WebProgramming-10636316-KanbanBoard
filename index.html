@@ -84,6 +84,14 @@
             <span class="btn-icon">➕</span>
             <span class="btn-text">New Workspace</span>
           </button>
+          <button
+            id="manage-projects-btn"
+            class="btn btn-info btn-small"
+            onclick="openProjectManagementDialog()"
+          >
+            <span class="btn-icon">🗂️</span>
+            <span class="btn-text">Manage Projects</span>
+          </button>
         </div>
 
         <div class="workspaces-list">
@@ -202,10 +210,12 @@
 
     <!-- Main Content -->
     <main class="main-content">
-      <!-- Loading Indicator -->
-      <div id="loading-indicator" class="loading-indicator">
-        <div class="spinner"></div>
-        <p>Loading tasks...</p>
+      <!-- Enhanced Loading Indicator -->
+      <div id="loading-indicator" class="section-loading" style="display: none">
+        <div class="section-loading-spinner"></div>
+        <div class="section-loading-text">
+          Loading your tasks and projects...
+        </div>
       </div>
 
       <!-- View Container for Multiple Views -->
@@ -668,6 +678,186 @@
       </div>
     </dialog>
 
+    <!-- Edit Project Dialog -->
+    <dialog id="edit-project-dialog" class="edit-project-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>✏️ Edit Project</h3>
+          <button
+            type="button"
+            class="dialog-close"
+            onclick="closeEditProjectDialog()"
+          >
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Close</span>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <form id="edit-project-form">
+            <input type="hidden" id="edit-project-id" name="id" />
+            
+            <div class="form-group">
+              <label for="edit-project-name">Project Name *</label>
+              <input
+                type="text"
+                id="edit-project-name"
+                name="name"
+                required
+                maxlength="100"
+                placeholder="Enter project name..."
+                autocomplete="off"
+              />
+              <div class="form-error" id="edit-project-name-error"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="edit-project-description">Description</label>
+              <textarea
+                id="edit-project-description"
+                name="description"
+                rows="3"
+                placeholder="Enter project description..."
+              ></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="edit-project-color">Project Color</label>
+                <div class="color-picker">
+                  <input
+                    type="color"
+                    id="edit-project-color"
+                    name="color"
+                    value="#667eea"
+                  />
+                  <div class="color-presets">
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#667eea"
+                      style="background: #667eea"
+                    ></button>
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#f093fb"
+                      style="background: #f093fb"
+                    ></button>
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#4facfe"
+                      style="background: #4facfe"
+                    ></button>
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#43e97b"
+                      style="background: #43e97b"
+                    ></button>
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#fa709a"
+                      style="background: #fa709a"
+                    ></button>
+                    <button
+                      type="button"
+                      class="color-preset"
+                      data-color="#ffecd2"
+                      style="background: #ffecd2"
+                    ></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="edit-project-status">Status</label>
+                <select id="edit-project-status" name="status">
+                  <option value="planning">📋 Planning</option>
+                  <option value="active">🟢 Active</option>
+                  <option value="on_hold">🟡 On Hold</option>
+                  <option value="completed">✅ Completed</option>
+                  <option value="archived">📦 Archived</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeEditProjectDialog()"
+              >
+                <span class="btn-icon">❌</span>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                id="edit-project-submit-btn"
+              >
+                <span class="btn-icon">💾</span>
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Delete Project Confirmation Dialog -->
+    <dialog id="delete-project-dialog" class="delete-project-dialog">
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>🗑️ Delete Project</h3>
+          <button
+            type="button"
+            class="dialog-close"
+            onclick="closeDeleteProjectDialog()"
+          >
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Close</span>
+          </button>
+        </div>
+        <div class="dialog-body">
+          <div class="delete-warning">
+            <div class="warning-icon">⚠️</div>
+            <h4>Are you sure you want to delete this project?</h4>
+            <p id="delete-project-name" class="delete-project-name"></p>
+            <div class="warning-details">
+              <p><strong>This action cannot be undone.</strong></p>
+              <ul>
+                <li>All tasks associated with this project will be deleted</li>
+                <li>Project data and statistics will be permanently removed</li>
+                <li>This will affect your analytics and reports</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeDeleteProjectDialog()"
+            >
+              <span class="btn-icon">❌</span>
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              id="confirm-delete-project-btn"
+              onclick="confirmDeleteProject()"
+            >
+              <span class="btn-icon">🗑️</span>
+              Delete Project
+            </button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
     <!-- Create Workspace Dialog -->
     <dialog id="create-workspace-dialog" class="create-workspace-dialog">
       <div class="dialog-content">
@@ -924,6 +1114,9 @@
     <!-- JavaScript Utilities -->
     <script src="utils/js-utils.js"></script>
 
+    <!-- Loading Manager -->
+    <script src="modules/LoadingManager.js"></script>
+
     <!-- Fix for app title visibility -->
     <script>
       document.addEventListener("DOMContentLoaded", function () {
@@ -994,6 +1187,7 @@
     <script src="js/auth-check.js"></script>
 
     <!-- Main Application JavaScript -->
+    <script src="utils/js-utils.js"></script>
     <script src="js/app.js"></script>
 
     <!-- Integration Scripts -->
@@ -1071,6 +1265,40 @@
 
       // Start waiting for managers after DOM loads
       document.addEventListener("DOMContentLoaded", function () {
+        // Initialize theme
+        const savedTheme = localStorage.getItem("theme") || "light";
+        if (typeof window.initializeTheme === "function") {
+          window.initializeTheme(savedTheme);
+        } else {
+          // Fallback theme initialization
+          document.documentElement.setAttribute("data-theme", savedTheme);
+          const themeIcon = document.getElementById("theme-icon");
+          if (themeIcon) {
+            themeIcon.textContent = savedTheme === "light" ? "🌙" : "☀️";
+          }
+        }
+
+        // Setup theme toggle
+        const themeToggle = document.getElementById("theme-toggle");
+        if (themeToggle) {
+          themeToggle.addEventListener("click", () => {
+            const currentTheme =
+              document.documentElement.getAttribute("data-theme") || "light";
+            if (typeof window.toggleTheme === "function") {
+              window.toggleTheme(currentTheme);
+            } else {
+              // Fallback theme toggle
+              const newTheme = currentTheme === "light" ? "dark" : "light";
+              document.documentElement.setAttribute("data-theme", newTheme);
+              localStorage.setItem("theme", newTheme);
+              const themeIcon = document.getElementById("theme-icon");
+              if (themeIcon) {
+                themeIcon.textContent = newTheme === "light" ? "🌙" : "☀️";
+              }
+            }
+          });
+        }
+
         // Start checking for managers after a short delay
         setTimeout(waitForManagers, 1500);
 

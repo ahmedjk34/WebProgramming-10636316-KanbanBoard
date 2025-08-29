@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workspace Functionality Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .test-section {
+        background: white;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .test-button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      .test-button:hover {
+        background: #0056b3;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .status.info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Workspace Functionality Test</h1>
+
+    <div class="test-section">
+      <h2>Test 1: Check Workspace Manager Initialization</h2>
+      <button class="test-button" onclick="testWorkspaceManagerInit()">
+        Test Workspace Manager
+      </button>
+      <div id="test1-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 2: Check Create Workspace Button</h2>
+      <button class="test-button" onclick="testCreateWorkspaceButton()">
+        Test Create Button
+      </button>
+      <div id="test2-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 3: Check Edit Workspace Functionality</h2>
+      <button class="test-button" onclick="testEditWorkspace()">
+        Test Edit Workspace
+      </button>
+      <div id="test3-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 4: Check Workspace Dialog</h2>
+      <button class="test-button" onclick="testWorkspaceDialog()">
+        Test Dialog
+      </button>
+      <div id="test4-result"></div>
+    </div>
+
+    <script>
+      function showResult(elementId, message, type = "info") {
+        const element = document.getElementById(elementId);
+        element.innerHTML = `<div class="status ${type}">${message}</div>`;
+      }
+
+      function testWorkspaceManagerInit() {
+        try {
+          if (window.workspaceManager) {
+            showResult(
+              "test1-result",
+              "✅ Workspace Manager is initialized and available",
+              "success"
+            );
+          } else {
+            showResult(
+              "test1-result",
+              "❌ Workspace Manager is not initialized",
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult("test1-result", `❌ Error: ${error.message}`, "error");
+        }
+      }
+
+      function testCreateWorkspaceButton() {
+        try {
+          const createBtn = document.getElementById("create-workspace-btn");
+          if (createBtn) {
+            showResult(
+              "test2-result",
+              "✅ Create workspace button found in sidebar",
+              "success"
+            );
+          } else {
+            showResult(
+              "test2-result",
+              "❌ Create workspace button not found",
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult("test2-result", `❌ Error: ${error.message}`, "error");
+        }
+      }
+
+      function testEditWorkspace() {
+        try {
+          if (typeof window.editWorkspace === "function") {
+            showResult(
+              "test3-result",
+              "✅ Edit workspace function is available",
+              "success"
+            );
+          } else {
+            showResult(
+              "test3-result",
+              "❌ Edit workspace function is not available",
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult("test3-result", `❌ Error: ${error.message}`, "error");
+        }
+      }
+
+      function testWorkspaceDialog() {
+        try {
+          const dialog = document.getElementById("create-workspace-dialog");
+          if (dialog) {
+            showResult("test4-result", "✅ Workspace dialog found", "success");
+          } else {
+            showResult(
+              "test4-result",
+              "❌ Workspace dialog not found",
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult("test4-result", `❌ Error: ${error.message}`, "error");
+        }
+      }
+
+      // Auto-run tests when page loads
+      window.addEventListener("load", function () {
+        setTimeout(() => {
+          testWorkspaceManagerInit();
+          testCreateWorkspaceButton();
+          testEditWorkspace();
+          testWorkspaceDialog();
+        }, 1000);
+      });
+    </script>
+  </body>
+</html>

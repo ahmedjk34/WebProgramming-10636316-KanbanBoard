@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loading Screens Demo - Kanban Board</title>
+    <meta
+      name="description"
+      content="Demo of all loading screen types and animations"
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico" />
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-theme="light">
+    <!-- Loading Screen -->
+    <div id="demo-loading" class="app-loading-screen">
+      <div class="loading-brand">
+        <div class="loading-logo">🎬</div>
+        <h1 class="loading-app-title">Loading Screens Demo</h1>
+        <p class="loading-subtitle">Showcasing all loading animations</p>
+      </div>
+
+      <div class="loading-spinner"></div>
+
+      <div class="loading-progress">
+        <div class="loading-progress-bar">
+          <div class="loading-progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="loading-status">Initializing demo...</div>
+
+      <div class="loading-steps">
+        <div class="loading-step" data-step="init">
+          <div class="loading-step-icon">1</div>
+          <div class="loading-step-text">Initializing demo</div>
+        </div>
+        <div class="loading-step" data-step="screens">
+          <div class="loading-step-icon">2</div>
+          <div class="loading-step-text">Loading screens</div>
+        </div>
+        <div class="loading-step" data-step="ready">
+          <div class="loading-step-icon">3</div>
+          <div class="loading-step-text">Demo ready</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-container">
+        <div class="header-left">
+          <h1 class="app-title">
+            <span class="app-icon">🎬</span>
+            Loading Screens Demo
+          </h1>
+        </div>
+        <div class="header-controls">
+          <button
+            id="theme-toggle"
+            class="theme-toggle"
+            title="Toggle Dark/Light Mode"
+          >
+            <span id="theme-icon">🌙</span>
+          </button>
+          <a href="index.html" class="btn btn-primary">
+            <span class="btn-icon">🏠</span>
+            Back to App
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="demo-container">
+        <h2>Loading Screen Types</h2>
+
+        <!-- Full Page Loading -->
+        <section class="demo-section">
+          <h3>1. Full Page Loading Screen</h3>
+          <p>Shows when the entire application is loading</p>
+          <button class="btn btn-primary" onclick="showFullPageLoading()">
+            <span class="btn-icon">🔄</span>
+            Show Full Page Loading
+          </button>
+        </section>
+
+        <!-- Section Loading -->
+        <section class="demo-section">
+          <h3>2. Section Loading</h3>
+          <p>Shows when specific sections are loading</p>
+          <div id="section-demo" class="demo-area">
+            <p>This area will show section loading</p>
+          </div>
+          <button class="btn btn-secondary" onclick="showSectionLoading()">
+            <span class="btn-icon">📦</span>
+            Show Section Loading
+          </button>
+          <button class="btn btn-secondary" onclick="hideSectionLoading()">
+            <span class="btn-icon">✅</span>
+            Hide Section Loading
+          </button>
+        </section>
+
+        <!-- Skeleton Loading -->
+        <section class="demo-section">
+          <h3>3. Skeleton Loading</h3>
+          <p>Shows placeholder content while loading</p>
+          <div id="skeleton-demo" class="demo-area">
+            <p>This area will show skeleton loading</p>
+          </div>
+          <div class="demo-buttons">
+            <button class="btn btn-info" onclick="showSkeletonCards()">
+              <span class="btn-icon">🃏</span>
+              Cards Skeleton
+            </button>
+            <button class="btn btn-info" onclick="showSkeletonList()">
+              <span class="btn-icon">📋</span>
+              List Skeleton
+            </button>
+            <button class="btn btn-info" onclick="showSkeletonKanban()">
+              <span class="btn-icon">📊</span>
+              Kanban Skeleton
+            </button>
+            <button class="btn btn-secondary" onclick="clearSkeleton()">
+              <span class="btn-icon">🗑️</span>
+              Clear
+            </button>
+          </div>
+        </section>
+
+        <!-- Progress Loading -->
+        <section class="demo-section">
+          <h3>4. Progress Loading</h3>
+          <p>Shows progress with percentage</p>
+          <div id="progress-demo" class="demo-area">
+            <div class="loading-progress">
+              <div class="loading-progress-bar">
+                <div class="loading-progress-fill" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="loading-status">Ready to start...</div>
+          </div>
+          <button class="btn btn-success" onclick="startProgressDemo()">
+            <span class="btn-icon">▶️</span>
+            Start Progress Demo
+          </button>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p>
+          &copy; 2025 Web Programming 10636316 Project | Loading Screens Demo
+        </p>
+      </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="utils/js-utils.js"></script>
+    <script src="modules/LoadingManager.js"></script>
+
+    <script>
+      let loadingManager = null;
+      let progressInterval = null;
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Initialize loading manager
+        loadingManager = new LoadingManager();
+
+        // Start initial loading screen
+        const loadingScreen = document.getElementById("demo-loading");
+        const progressFill = loadingScreen?.querySelector(
+          ".loading-progress-fill"
+        );
+        const statusElement = loadingScreen?.querySelector(".loading-status");
+
+        function updateProgress(percentage, status) {
+          if (progressFill) progressFill.style.width = percentage + "%";
+          if (statusElement) statusElement.textContent = status;
+        }
+
+        function completeStep(stepName) {
+          const stepElement = loadingScreen?.querySelector(
+            `[data-step="${stepName}"]`
+          );
+          if (stepElement) {
+            stepElement.classList.remove("active");
+            stepElement.classList.add("completed");
+            stepElement.querySelector(".loading-step-icon").textContent = "✓";
+          }
+        }
+
+        function activateStep(stepName) {
+          const stepElement = loadingScreen?.querySelector(
+            `[data-step="${stepName}"]`
+          );
+          if (stepElement) {
+            stepElement.classList.add("active");
+          }
+        }
+
+        // Start loading process
+        updateProgress(0, "Initializing demo...");
+        activateStep("init");
+
+        setTimeout(() => {
+          completeStep("init");
+          activateStep("screens");
+          updateProgress(50, "Loading demo screens...");
+        }, 1500);
+
+        setTimeout(() => {
+          completeStep("screens");
+          activateStep("ready");
+          updateProgress(100, "Demo ready!");
+
+          setTimeout(() => {
+            if (loadingScreen) {
+              loadingScreen.classList.add("fade-out");
+              setTimeout(() => {
+                if (loadingScreen.parentNode) {
+                  loadingScreen.parentNode.removeChild(loadingScreen);
+                }
+              }, 500);
+            }
+          }, 1000);
+        }, 3000);
+
+        // Theme toggle
+        const themeToggle = document.getElementById("theme-toggle");
+        const themeIcon = document.getElementById("theme-icon");
+
+        themeToggle.addEventListener("click", function () {
+          const body = document.body;
+          const currentTheme = body.getAttribute("data-theme");
+          const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+          body.setAttribute("data-theme", newTheme);
+          themeIcon.textContent = newTheme === "dark" ? "☀️" : "🌙";
+          localStorage.setItem("theme", newTheme);
+        });
+      });
+
+      // Demo functions
+      function showFullPageLoading() {
+        if (loadingManager) {
+          loadingManager.simulateLoading();
+        }
+      }
+
+      function showSectionLoading() {
+        const demoArea = document.getElementById("section-demo");
+        if (loadingManager) {
+          loadingManager.showSectionLoading(
+            "section-demo",
+            "Loading section content..."
+          );
+        }
+      }
+
+      function hideSectionLoading() {
+        const demoArea = document.getElementById("section-demo");
+        if (loadingManager) {
+          loadingManager.hideSectionLoading("section-demo");
+          demoArea.innerHTML = "<p>Section loading completed!</p>";
+        }
+      }
+
+      function showSkeletonCards() {
+        const demoArea = document.getElementById("skeleton-demo");
+        if (loadingManager) {
+          loadingManager.showSkeletonLoading("skeleton-demo", "cards", 3);
+        }
+      }
+
+      function showSkeletonList() {
+        const demoArea = document.getElementById("skeleton-demo");
+        if (loadingManager) {
+          loadingManager.showSkeletonLoading("skeleton-demo", "list", 2);
+        }
+      }
+
+      function showSkeletonKanban() {
+        const demoArea = document.getElementById("skeleton-demo");
+        if (loadingManager) {
+          loadingManager.showSkeletonLoading("skeleton-demo", "kanban", 1);
+        }
+      }
+
+      function clearSkeleton() {
+        const demoArea = document.getElementById("skeleton-demo");
+        demoArea.innerHTML = "<p>Skeleton loading cleared!</p>";
+      }
+
+      function startProgressDemo() {
+        const progressFill = document.querySelector(
+          "#progress-demo .loading-progress-fill"
+        );
+        const statusElement = document.querySelector(
+          "#progress-demo .loading-status"
+        );
+        let progress = 0;
+
+        if (progressInterval) {
+          clearInterval(progressInterval);
+        }
+
+        progressInterval = setInterval(() => {
+          progress += 2;
+          if (progressFill) progressFill.style.width = progress + "%";
+          if (statusElement)
+            statusElement.textContent = `Loading... ${progress}%`;
+
+          if (progress >= 100) {
+            clearInterval(progressInterval);
+            if (statusElement) statusElement.textContent = "Loading completed!";
+          }
+        }, 100);
+      }
+    </script>
+
+    <style>
+      .demo-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .demo-section {
+        background: var(--bg-glass);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        margin-bottom: 24px;
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color);
+      }
+
+      .demo-section h3 {
+        color: var(--text-primary);
+        margin-bottom: 12px;
+        font-size: 1.3rem;
+      }
+
+      .demo-section p {
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+      }
+
+      .demo-area {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 16px;
+        min-height: 100px;
+        border: 1px solid var(--border-color);
+      }
+
+      .demo-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .demo-buttons .btn {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+      }
+
+      @media (max-width: 768px) {
+        .demo-buttons {
+          flex-direction: column;
+        }
+
+        .demo-buttons .btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </body>
+</html>

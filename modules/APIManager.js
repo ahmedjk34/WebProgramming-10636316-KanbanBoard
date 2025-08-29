@@ -86,6 +86,55 @@ class APIManager {
     }
   }
 
+  async deleteWorkspace(workspaceId) {
+    try {
+      const response = await fetch("php/api/workspaces/delete_workspace.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: workspaceId }),
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error deleting workspace:", error);
+      throw error;
+    }
+  }
+
+  async updateWorkspace(workspaceId, workspaceData) {
+    try {
+      const response = await fetch("php/api/workspaces/update_workspace.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: workspaceId,
+          ...workspaceData,
+        }),
+      });
+
+      const result = await this.safeJsonParse(response);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("❌ Error updating workspace:", error);
+      throw error;
+    }
+  }
+
   async loadProjects() {
     try {
       const response = await fetch(

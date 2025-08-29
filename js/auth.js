@@ -49,15 +49,16 @@ class AuthManager {
     if (themeToggle && themeIcon) {
       // Load saved theme
       const savedTheme = localStorage.getItem("theme") || "light";
-      document.body.setAttribute("data-theme", savedTheme);
-      themeIcon.textContent = savedTheme === "dark" ? "☀️" : "🌙";
+      document.documentElement.setAttribute("data-theme", savedTheme);
+      themeIcon.textContent = savedTheme === "light" ? "🌙" : "☀️";
 
       themeToggle.addEventListener("click", () => {
-        const currentTheme = document.body.getAttribute("data-theme");
-        const newTheme = currentTheme === "dark" ? "light" : "dark";
+        const currentTheme =
+          document.documentElement.getAttribute("data-theme") || "light";
+        const newTheme = currentTheme === "light" ? "dark" : "light";
 
-        document.body.setAttribute("data-theme", newTheme);
-        themeIcon.textContent = newTheme === "dark" ? "☀️" : "🌙";
+        document.documentElement.setAttribute("data-theme", newTheme);
+        themeIcon.textContent = newTheme === "light" ? "🌙" : "☀️";
         localStorage.setItem("theme", newTheme);
       });
     }

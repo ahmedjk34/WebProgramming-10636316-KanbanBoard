@@ -9,9 +9,13 @@
 // Include required files
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../../utils/php-utils.php';
+require_once __DIR__ . '/../includes/auth_middleware.php';
 
 // Only allow POST requests
 checkRequestMethod('POST');
+
+// Require authentication
+$currentUser = requireAuth();
 
 try {
     // Get JSON input
@@ -53,8 +57,8 @@ try {
     
     // Insert new workspace
     $stmt = $pdo->prepare("
-        INSERT INTO workspaces (name, description, icon, color, is_default, created_at, updated_at) 
-        VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+        INSERT INTO workspaces (name, description, icon, color, is_default, owner_id, created_at, updated_at) 
+        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
     ");
     
     $success = $stmt->execute([
@@ -62,7 +66,8 @@ try {
         $workspaceData['description'],
         $workspaceData['icon'],
         $workspaceData['color'],
-        $workspaceData['is_default']
+        $workspaceData['is_default'],
+        $currentUser['id']
     ]);
     
     if ($success) {

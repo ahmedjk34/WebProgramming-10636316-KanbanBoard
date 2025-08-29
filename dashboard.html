@@ -24,6 +24,44 @@
     <link rel="preload" href="js/app.js" as="script" />
   </head>
   <body data-theme="light">
+    <!-- Loading Screen -->
+    <div id="dashboard-loading" class="app-loading-screen">
+      <div class="loading-brand">
+        <div class="loading-logo">📊</div>
+        <h1 class="loading-app-title">Analytics Dashboard</h1>
+        <p class="loading-subtitle">Loading your analytics data...</p>
+      </div>
+
+      <div class="loading-spinner"></div>
+
+      <div class="loading-progress">
+        <div class="loading-progress-bar">
+          <div class="loading-progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="loading-status">Initializing dashboard...</div>
+
+      <div class="loading-steps">
+        <div class="loading-step" data-step="auth">
+          <div class="loading-step-icon">1</div>
+          <div class="loading-step-text">Checking authentication</div>
+        </div>
+        <div class="loading-step" data-step="data">
+          <div class="loading-step-icon">2</div>
+          <div class="loading-step-text">Loading analytics data</div>
+        </div>
+        <div class="loading-step" data-step="charts">
+          <div class="loading-step-icon">3</div>
+          <div class="loading-step-text">Initializing charts</div>
+        </div>
+        <div class="loading-step" data-step="ready">
+          <div class="loading-step-icon">4</div>
+          <div class="loading-step-text">Dashboard ready</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Notification Container -->
     <div id="notification-container" class="notification-container"></div>
 
@@ -278,6 +316,9 @@
     <!-- JavaScript Utilities -->
     <script src="utils/js-utils.js"></script>
 
+    <!-- Loading Manager -->
+    <script src="modules/LoadingManager.js"></script>
+
     <!-- Analytics Modules -->
     <script src="modules/APIManager.js"></script>
     <script src="modules/AnalyticsDataManager.js"></script>
@@ -286,5 +327,85 @@
 
     <!-- Main Analytics Application -->
     <script src="js/analytics-app.js"></script>
+
+    <!-- Dashboard Loading Script -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const loadingScreen = document.getElementById("dashboard-loading");
+        const progressFill = loadingScreen?.querySelector(
+          ".loading-progress-fill"
+        );
+        const statusElement = loadingScreen?.querySelector(".loading-status");
+
+        let progress = 0;
+        const steps = ["auth", "data", "charts", "ready"];
+        let currentStep = 0;
+
+        function updateProgress(percentage, status) {
+          progress = percentage;
+          if (progressFill) progressFill.style.width = percentage + "%";
+          if (statusElement) statusElement.textContent = status;
+        }
+
+        function completeStep(stepName) {
+          const stepElement = loadingScreen?.querySelector(
+            `[data-step="${stepName}"]`
+          );
+          if (stepElement) {
+            stepElement.classList.remove("active");
+            stepElement.classList.add("completed");
+            stepElement.querySelector(".loading-step-icon").textContent = "✓";
+          }
+        }
+
+        function activateStep(stepName) {
+          const stepElement = loadingScreen?.querySelector(
+            `[data-step="${stepName}"]`
+          );
+          if (stepElement) {
+            stepElement.classList.add("active");
+          }
+        }
+
+        // Start loading process
+        updateProgress(0, "Initializing dashboard...");
+        activateStep("auth");
+
+        // Simulate loading steps
+        setTimeout(() => {
+          completeStep("auth");
+          activateStep("data");
+          updateProgress(25, "Loading analytics data...");
+        }, 1000);
+
+        setTimeout(() => {
+          completeStep("data");
+          activateStep("charts");
+          updateProgress(50, "Initializing charts...");
+        }, 2000);
+
+        setTimeout(() => {
+          completeStep("charts");
+          activateStep("ready");
+          updateProgress(75, "Preparing dashboard...");
+        }, 3000);
+
+        setTimeout(() => {
+          completeStep("ready");
+          updateProgress(100, "Dashboard ready!");
+
+          setTimeout(() => {
+            if (loadingScreen) {
+              loadingScreen.classList.add("fade-out");
+              setTimeout(() => {
+                if (loadingScreen.parentNode) {
+                  loadingScreen.parentNode.removeChild(loadingScreen);
+                }
+              }, 500);
+            }
+          }, 1000);
+        }, 4000);
+      });
+    </script>
   </body>
 </html>

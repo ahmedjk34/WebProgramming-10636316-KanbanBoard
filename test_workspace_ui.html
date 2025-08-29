@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workspace UI Test</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <style>
+      body {
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .test-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .workspace-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        margin-bottom: 8px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        cursor: pointer;
+        position: relative;
+      }
+      .workspace-actions {
+        display: flex;
+        gap: 4px;
+        opacity: 1;
+        margin-left: auto;
+        position: relative;
+        z-index: 10;
+      }
+      .workspace-action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        position: relative;
+        z-index: 20;
+      }
+      .workspace-action-btn.edit {
+        background: linear-gradient(135deg, #4ade80, #22c55e);
+        color: white;
+      }
+      .workspace-action-btn.delete {
+        background: linear-gradient(135deg, #f87171, #ef4444);
+        color: white;
+      }
+      .debug-info {
+        background: #e9ecef;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-container">
+      <h1>Workspace UI Test</h1>
+
+      <div class="test-section">
+        <h2>Test 1: Create Workspace Button</h2>
+        <div class="workspace-actions">
+          <button
+            id="create-workspace-btn"
+            class="btn btn-primary btn-small"
+            onclick="testCreateWorkspace()"
+          >
+            <span class="btn-icon">➕</span>
+            <span class="btn-text">New Workspace</span>
+          </button>
+        </div>
+        <div class="debug-info" id="create-btn-debug"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>Test 2: Workspace Item with Action Buttons</h2>
+        <div class="workspace-item" onclick="testWorkspaceClick()">
+          <div class="workspace-icon" style="color: #667eea">🏢</div>
+          <div class="workspace-details">
+            <div class="workspace-name">Test Workspace</div>
+            <div class="workspace-description">This is a test workspace</div>
+          </div>
+          <div class="workspace-actions">
+            <button
+              class="workspace-action-btn edit"
+              onclick="event.stopPropagation(); testEditWorkspace(1)"
+              title="Edit Workspace"
+            >
+              <span class="action-icon">✏️</span>
+            </button>
+            <button
+              class="workspace-action-btn delete"
+              onclick="event.stopPropagation(); testDeleteWorkspace(1)"
+              title="Delete Workspace"
+            >
+              <span class="action-icon">🗑️</span>
+            </button>
+          </div>
+        </div>
+        <div class="debug-info" id="workspace-item-debug"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>Test 3: Workspace Dialog</h2>
+        <button onclick="testOpenDialog()" class="btn btn-secondary">
+          Open Workspace Dialog
+        </button>
+        <div class="debug-info" id="dialog-debug"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>Test 4: Event Log</h2>
+        <div class="debug-info" id="event-log"></div>
+      </div>
+    </div>
+
+    <script>
+      function logEvent(message) {
+        const log = document.getElementById("event-log");
+        const timestamp = new Date().toLocaleTimeString();
+        log.innerHTML += `[${timestamp}] ${message}\n`;
+        console.log(message);
+      }
+
+      function testCreateWorkspace() {
+        logEvent("✅ Create workspace button clicked");
+        document.getElementById("create-btn-debug").textContent =
+          "Create workspace button is working!";
+      }
+
+      function testWorkspaceClick() {
+        logEvent(
+          "✅ Workspace item clicked (should not happen when clicking action buttons)"
+        );
+        document.getElementById("workspace-item-debug").textContent =
+          "Workspace item clicked - this should not happen when clicking action buttons";
+      }
+
+      function testEditWorkspace(id) {
+        logEvent(`✅ Edit workspace button clicked for workspace ${id}`);
+        document.getElementById(
+          "workspace-item-debug"
+        ).textContent = `Edit workspace ${id} clicked - this should work!`;
+      }
+
+      function testDeleteWorkspace(id) {
+        logEvent(`✅ Delete workspace button clicked for workspace ${id}`);
+        document.getElementById(
+          "workspace-item-debug"
+        ).textContent = `Delete workspace ${id} clicked - this should work!`;
+      }
+
+      function testOpenDialog() {
+        logEvent("✅ Open dialog button clicked");
+        document.getElementById("dialog-debug").textContent =
+          "Dialog open button clicked - this should work!";
+      }
+
+      // Test page load
+      window.addEventListener("load", function () {
+        logEvent("📄 Test page loaded");
+
+        // Check if create workspace button exists
+        const createBtn = document.getElementById("create-workspace-btn");
+        if (createBtn) {
+          logEvent("✅ Create workspace button found");
+        } else {
+          logEvent("❌ Create workspace button not found");
+        }
+
+        // Check if workspace actions are visible
+        const actions = document.querySelector(".workspace-actions");
+        if (actions) {
+          logEvent("✅ Workspace actions container found");
+        } else {
+          logEvent("❌ Workspace actions container not found");
+        }
+
+        // Check if action buttons are visible
+        const actionBtns = document.querySelectorAll(".workspace-action-btn");
+        logEvent(`✅ Found ${actionBtns.length} action buttons`);
+      });
+    </script>
+  </body>
+</html>
