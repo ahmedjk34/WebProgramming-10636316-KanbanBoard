@@ -141,13 +141,33 @@ class WorkspaceManager {
     element.className = `workspace-item ${
       workspace.id === this.currentWorkspaceId ? "active" : ""
     }`;
-    element.onclick = () => this.switchWorkspace(workspace.id);
+
+    // Prevent click on action buttons from triggering workspace switch
+    element.onclick = (e) => {
+      // Don't switch workspace if clicking on action buttons or their children
+      if (
+        e.target.closest(".workspace-action-btn") ||
+        e.target.closest(".action-icon")
+      ) {
+        e.stopPropagation();
+        return;
+      }
+      this.switchWorkspace(workspace.id);
+    };
 
     element.innerHTML = `
       <div class="workspace-icon" style="color: ${workspace.color}">${workspace.icon}</div>
       <div class="workspace-details">
         <div class="workspace-name">${workspace.name}</div>
         <div class="workspace-description">${workspace.description}</div>
+      </div>
+      <div class="workspace-actions">
+        <button class="workspace-action-btn edit" onclick="event.stopPropagation(); console.log('Edit button clicked for workspace', ${workspace.id}); editWorkspace(${workspace.id})" title="Edit Workspace">
+          <span class="action-icon">✏️</span>
+        </button>
+        <button class="workspace-action-btn delete" onclick="event.stopPropagation(); console.log('Delete button clicked for workspace', ${workspace.id}); deleteWorkspace(${workspace.id})" title="Delete Workspace">
+          <span class="action-icon">🗑️</span>
+        </button>
       </div>
     `;
 
@@ -293,6 +313,37 @@ class WorkspaceManager {
     if (dialog) {
       dialog.close();
       unlockScroll();
+
+      // Reset form state
+      const form = dialog.querySelector("#create-workspace-form");
+      if (form) {
+        form.reset();
+        form.dataset.isEditing = "false";
+        form.dataset.workspaceId = "";
+      }
+
+      // Reset dialog title and button
+      const title = dialog.querySelector(".dialog-header h3");
+      const submitBtn = dialog.querySelector("#create-workspace-submit-btn");
+
+      if (title) title.textContent = "🏢 Create New Workspace";
+      if (submitBtn) {
+        // Clear the button content first
+        submitBtn.innerHTML = "";
+
+        // Create the icon span
+        const iconSpan = document.createElement("span");
+        iconSpan.className = "btn-icon";
+        iconSpan.textContent = "🚀";
+
+        // Create the text span
+        const textSpan = document.createElement("span");
+        textSpan.textContent = "Create Workspace";
+
+        // Add both to the button
+        submitBtn.appendChild(iconSpan);
+        submitBtn.appendChild(textSpan);
+      }
     }
   }
 
@@ -348,7 +399,7 @@ class WorkspaceManager {
   }
 
   /**
-   * Handle create workspace form submission
+   * Handle create/edit workspace form submission
    * @param {Event} e - Form submit event
    */
   async handleCreateWorkspaceSubmit(e) {
@@ -362,39 +413,84 @@ class WorkspaceManager {
       color: formData.get("color"),
     };
 
-    console.log("📝 Creating workspace:", workspaceData);
+    const isEditing = e.target.dataset.isEditing === "true";
+    const workspaceId = e.target.dataset.workspaceId;
 
-    try {
-      if (this.apiManager) {
-        // Try to create via API
-        const result = await this.apiManager.createWorkspace(workspaceData);
+    if (isEditing) {
+      console.log("✏️ Updating workspace:", workspaceId, workspaceData);
 
-        if (result.success) {
+      try {
+        if (this.apiManager) {
+          // Try to update via API
+          const result = await this.apiManager.updateWorkspace(
+            workspaceId,
+            workspaceData
+          );
+
+          if (result.success) {
+            showSuccessMessage("Workspace updated successfully!");
+            this.closeCreateWorkspaceDialog();
+
+            // Refresh workspace display
+            await this.loadWorkspaces();
+          }
+        } else {
+          // Fallback: update local array
+          const workspaceIndex = this.workspaces.findIndex(
+            (w) => w.id === parseInt(workspaceId)
+          );
+          if (workspaceIndex !== -1) {
+            this.workspaces[workspaceIndex] = {
+              ...this.workspaces[workspaceIndex],
+              ...workspaceData,
+            };
+
+            showSuccessMessage("Workspace updated successfully!");
+            this.closeCreateWorkspaceDialog();
+
+            // Refresh workspace display
+            this.displayWorkspaces();
+          }
+        }
+      } catch (error) {
+        console.error("❌ Error updating workspace:", error);
+        showErrorMessage("Failed to update workspace");
+      }
+    } else {
+      console.log("📝 Creating workspace:", workspaceData);
+
+      try {
+        if (this.apiManager) {
+          // Try to create via API
+          const result = await this.apiManager.createWorkspace(workspaceData);
+
+          if (result.success) {
+            showSuccessMessage("Workspace created successfully!");
+            this.closeCreateWorkspaceDialog();
+
+            // Refresh workspace display
+            await this.loadWorkspaces();
+          }
+        } else {
+          // Fallback: add to local array
+          const newWorkspace = {
+            id: this.workspaces.length + 1,
+            ...workspaceData,
+            is_default: false,
+          };
+
+          this.workspaces.push(newWorkspace);
+
           showSuccessMessage("Workspace created successfully!");
           this.closeCreateWorkspaceDialog();
 
           // Refresh workspace display
-          await this.loadWorkspaces();
+          this.displayWorkspaces();
         }
-      } else {
-        // Fallback: add to local array
-        const newWorkspace = {
-          id: this.workspaces.length + 1,
-          ...workspaceData,
-          is_default: false,
-        };
-
-        this.workspaces.push(newWorkspace);
-
-        showSuccessMessage("Workspace created successfully!");
-        this.closeCreateWorkspaceDialog();
-
-        // Refresh workspace display
-        this.displayWorkspaces();
+      } catch (error) {
+        console.error("❌ Error creating workspace:", error);
+        showErrorMessage("Failed to create workspace");
       }
-    } catch (error) {
-      console.error("❌ Error creating workspace:", error);
-      showErrorMessage("Failed to create workspace");
     }
   }
 
@@ -408,6 +504,212 @@ class WorkspaceManager {
       document.getElementById("workspace-icon").value = "🏢";
       document.getElementById("workspace-color").value = "#667eea";
     }
+  }
+
+  /**
+   * Edit an existing workspace
+   * @param {number} workspaceId - Workspace ID to edit
+   */
+  async editWorkspace(workspaceId) {
+    try {
+      console.log("✏️ Editing workspace:", workspaceId);
+      console.log("Available workspaces:", this.workspaces);
+
+      const workspace = this.workspaces.find((w) => w.id === workspaceId);
+      if (!workspace) {
+        console.error("Workspace not found:", workspaceId);
+        showErrorMessage("Workspace not found");
+        return;
+      }
+
+      console.log("Found workspace:", workspace);
+      // Open edit dialog with current workspace data
+      this.openEditWorkspaceDialog(workspace);
+    } catch (error) {
+      console.error("❌ Error editing workspace:", error);
+      showErrorMessage("Failed to edit workspace");
+    }
+  }
+
+  /**
+   * Delete a workspace
+   * @param {number} workspaceId - Workspace ID to delete
+   */
+  async deleteWorkspace(workspaceId) {
+    try {
+      console.log("🗑️ Deleting workspace:", workspaceId);
+
+      const workspace = this.workspaces.find((w) => w.id === workspaceId);
+      if (!workspace) {
+        showErrorMessage("Workspace not found");
+        return;
+      }
+
+      // Show confirmation dialog
+      const confirmed = await this.showDeleteConfirmation(workspace);
+      if (!confirmed) return;
+
+      const result = await this.apiManager.deleteWorkspace(workspaceId);
+
+      if (result.success) {
+        // Remove from local array
+        this.workspaces = this.workspaces.filter((w) => w.id !== workspaceId);
+
+        // If this was the current workspace, switch to first available
+        if (workspaceId === this.currentWorkspaceId) {
+          const firstWorkspace = this.workspaces[0];
+          if (firstWorkspace) {
+            await this.switchWorkspace(firstWorkspace.id);
+          } else {
+            // No workspaces left, create a default one
+            await this.createDefaultWorkspace();
+          }
+        }
+
+        showSuccessMessage("Workspace deleted successfully!");
+        this.displayWorkspaces();
+      }
+    } catch (error) {
+      console.error("❌ Error deleting workspace:", error);
+      showErrorMessage("Failed to delete workspace");
+    }
+  }
+
+  /**
+   * Show delete confirmation dialog
+   * @param {Object} workspace - Workspace to delete
+   * @returns {Promise<boolean>} - Whether user confirmed deletion
+   */
+  async showDeleteConfirmation(workspace) {
+    return new Promise((resolve) => {
+      // Create dialog element following the same structure as task delete dialog
+      const dialog = document.createElement("dialog");
+      dialog.className = "delete-workspace-dialog";
+      dialog.innerHTML = `
+        <div class="dialog-content dialog-small">
+          <div class="dialog-header">
+            <h3>🗑️ Delete Workspace</h3>
+            <button
+              type="button"
+              class="dialog-close"
+              onclick="this.closest('.delete-workspace-dialog').remove(); resolve(false);"
+            >
+              <span aria-hidden="true">&times;</span>
+              <span class="sr-only">Close</span>
+            </button>
+          </div>
+          <div class="dialog-body">
+            <div class="delete-warning">
+              <div class="warning-icon">⚠️</div>
+              <p>Are you sure you want to delete the workspace <strong>"${workspace.name}"</strong>?</p>
+              <p class="workspace-title-preview">${workspace.name}</p>
+              <p class="warning-text">⚠️ This action cannot be undone. All projects and tasks in this workspace will be permanently deleted.</p>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="this.closest('.delete-workspace-dialog').remove(); resolve(false);"
+              >
+                <span class="btn-icon">❌</span>
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                onclick="this.closest('.delete-workspace-dialog').remove(); resolve(true);"
+              >
+                <span class="btn-icon">🗑️</span>
+                Delete Workspace
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(dialog);
+      dialog.showModal();
+
+      // Auto-close on overlay click
+      dialog.addEventListener("click", (e) => {
+        if (e.target === dialog) {
+          dialog.remove();
+          resolve(false);
+        }
+      });
+    });
+  }
+
+  /**
+   * Open edit workspace dialog
+   * @param {Object} workspace - Workspace to edit
+   */
+  openEditWorkspaceDialog(workspace) {
+    console.log("🔧 Opening edit workspace dialog for:", workspace);
+    // Reuse the create workspace dialog but populate with existing data
+    const dialog = document.getElementById("create-workspace-dialog");
+    if (!dialog) {
+      console.error("❌ Edit dialog not found!");
+      showErrorMessage("Edit dialog not found");
+      return;
+    }
+
+    // Update dialog title and button
+    const title = dialog.querySelector(".dialog-header h3");
+    const submitBtn = dialog.querySelector("#create-workspace-submit-btn");
+    const form = dialog.querySelector("#create-workspace-form");
+
+    if (title) title.textContent = "✏️ Edit Workspace";
+    if (submitBtn) {
+      // Clear the button content first
+      submitBtn.innerHTML = "";
+
+      // Create the icon span
+      const iconSpan = document.createElement("span");
+      iconSpan.className = "btn-icon";
+      iconSpan.textContent = "💾";
+
+      // Create the text span
+      const textSpan = document.createElement("span");
+      textSpan.textContent = "Update Workspace";
+
+      // Add both to the button
+      submitBtn.appendChild(iconSpan);
+      submitBtn.appendChild(textSpan);
+    }
+
+    // Populate form with existing data
+    const nameInput = dialog.querySelector("#workspace-name");
+    const descInput = dialog.querySelector("#workspace-description");
+    const iconInput = dialog.querySelector("#workspace-icon");
+    const colorInput = dialog.querySelector("#workspace-color");
+
+    if (nameInput) nameInput.value = workspace.name;
+    if (descInput) descInput.value = workspace.description;
+    if (iconInput) iconInput.value = workspace.icon;
+    if (colorInput) colorInput.value = workspace.color;
+
+    // Add workspace ID to form for update
+    form.dataset.workspaceId = workspace.id;
+    form.dataset.isEditing = "true";
+
+    // Show dialog
+    dialog.showModal();
+  }
+
+  /**
+   * Create a default workspace when none exist
+   */
+  async createDefaultWorkspace() {
+    const defaultWorkspace = {
+      name: "My Workspace",
+      description: "Default workspace",
+      icon: "🏢",
+      color: "#667eea",
+    };
+
+    await this.createWorkspace(defaultWorkspace);
   }
 
   // ===== WORKSPACE TYPE MANAGEMENT =====
