@@ -1,0 +1,778 @@
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Kanban Board Project Documentation</title>
+            <style>
+                body {
+                    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f9f9f9;
+                }
+                
+                .container {
+                    background-color: white;
+                    padding: 40px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                
+                h1 {
+                    color: #2c3e50;
+                    border-bottom: 3px solid #3498db;
+                    padding-bottom: 10px;
+                    margin-bottom: 30px;
+                }
+                
+                h2 {
+                    color: #34495e;
+                    border-left: 4px solid #3498db;
+                    padding-left: 15px;
+                    margin-top: 40px;
+                    margin-bottom: 20px;
+                }
+                
+                h3 {
+                    color: #2c3e50;
+                    margin-top: 30px;
+                    margin-bottom: 15px;
+                }
+                
+                p {
+                    margin-bottom: 15px;
+                    text-align: justify;
+                }
+                
+                code {
+                    background-color: #f8f9fa;
+                    padding: 2px 6px;
+                    border-radius: 3px;
+                    font-family: "Courier New", monospace;
+                    color: #e74c3c;
+                }
+                
+                pre {
+                    background-color: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 5px;
+                    overflow-x: auto;
+                    border-left: 4px solid #3498db;
+                }
+                
+                pre code {
+                    background-color: transparent;
+                    padding: 0;
+                    color: #333;
+                }
+                
+                ul, ol {
+                    margin-bottom: 15px;
+                    padding-left: 30px;
+                }
+                
+                li {
+                    margin-bottom: 8px;
+                }
+                
+                a {
+                    color: #3498db;
+                    text-decoration: none;
+                }
+                
+                a:hover {
+                    text-decoration: underline;
+                }
+                
+                .highlight {
+                    background-color: #fff3cd;
+                    padding: 15px;
+                    border-radius: 5px;
+                    border-left: 4px solid #ffc107;
+                    margin: 20px 0;
+                }
+                
+                .info-box {
+                    background-color: #d1ecf1;
+                    padding: 15px;
+                    border-radius: 5px;
+                    border-left: 4px solid #17a2b8;
+                    margin: 20px 0;
+                }
+                
+                .warning-box {
+                    background-color: #f8d7da;
+                    padding: 15px;
+                    border-radius: 5px;
+                    border-left: 4px solid #dc3545;
+                    margin: 20px 0;
+                }
+                
+                .success-box {
+                    background-color: #d4edda;
+                    padding: 15px;
+                    border-radius: 5px;
+                    border-left: 4px solid #28a745;
+                    margin: 20px 0;
+                }
+                
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                }
+                
+                th, td {
+                    border: 1px solid #ddd;
+                    padding: 12px;
+                    text-align: left;
+                }
+                
+                th {
+                    background-color: #f8f9fa;
+                    font-weight: bold;
+                }
+                
+                .footer {
+                    margin-top: 50px;
+                    padding-top: 20px;
+                    border-top: 1px solid #ddd;
+                    text-align: center;
+                    color: #666;
+                    font-size: 0.9em;
+                }
+                
+                @media print {
+                    body {
+                        background-color: white;
+                        margin: 0;
+                        padding: 20px;
+                    }
+                    
+                    .container {
+                        box-shadow: none;
+                        padding: 0;
+                    }
+                    
+                    h1, h2, h3 {
+                        page-break-after: avoid;
+                    }
+                    
+                    pre, .highlight, .info-box, .warning-box, .success-box {
+                        page-break-inside: avoid;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <p><h1>🗂️ Kanban Board Project Documentation</h1>
+<h2>Web Programming 10636316 - An-Najah National University</h2>
+
+---
+
+<h2>📋 Table of Contents</h2>
+
+1. <a href="#project-overview">Project Overview</a>
+2. <a href="#course-information">Course Information</a>
+3. <a href="#technical-architecture">Technical Architecture</a>
+4. <a href="#features--functionality">Features & Functionality</a>
+5. <a href="#database-schema">Database Schema</a>
+6. <a href="#api-documentation">API Documentation</a>
+7. <a href="#installation-guide">Installation Guide</a>
+8. <a href="#user-guide">User Guide</a>
+9. <a href="#development-phases">Development Phases</a>
+10. <a href="#ai-integration">AI Integration</a>
+11. <a href="#authentication-system">Authentication System</a>
+12. <a href="#testing--debugging">Testing & Debugging</a>
+13. <a href="#project-structure">Project Structure</a>
+
+---
+
+<h2>🎯 Project Overview</h2>
+
+The Kanban Board is a comprehensive task management application built using core web technologies. It provides a visual, drag-and-drop interface for managing tasks across different stages of completion, with advanced features including AI assistance, user authentication, analytics, and multi-board support.
+
+<h3>Key Highlights</h3>
+<li><strong>Visual Kanban Interface</strong>: Intuitive drag-and-drop task management</li>
+<li><strong>Multi-Project Support</strong>: Organize tasks across different projects</li>
+<li><strong>AI Integration</strong>: Intelligent task breakdown and prioritization</li>
+<li><strong>Real-time Analytics</strong>: Comprehensive project insights and metrics</li>
+<li><strong>User Authentication</strong>: Secure login and registration system</li>
+<li><strong>Responsive Design</strong>: Works seamlessly across all devices</li>
+
+---
+
+<h2>📚 Course Information</h2>
+
+<li><strong>Course Code</strong>: Web Programming (10636316)</li>
+<li><strong>Instructor</strong>: Dr. Sufyan Samara</li>
+<li><strong>University</strong>: An-Najah National University</li>
+<li><strong>Semester</strong>: Spring 2025</li>
+<li><strong>Project Type</strong>: Course Project</li>
+
+---
+
+<h2>🏗️ Technical Architecture</h2>
+
+<h3>Frontend Technologies</h3>
+<li><strong>HTML5</strong>: Semantic markup and structure</li>
+<li><strong>CSS3</strong>: Modern styling with responsive design</li>
+<li><strong>JavaScript (Vanilla)</strong>: Interactive functionality and AJAX</li>
+<li><strong>Bootstrap</strong>: Optional framework for enhanced UI</li>
+<li><strong>HTML5 Drag-and-Drop API</strong>: Native drag-and-drop functionality</li>
+
+<h3>Backend Technologies</h3>
+<li><strong>PHP</strong>: Server-side logic and API endpoints</li>
+<li><strong>MySQL</strong>: Relational database management</li>
+<li><strong>AJAX</strong>: Asynchronous data communication</li>
+<li><strong>PDO</strong>: Secure database connections</li>
+<li><strong>JSON</strong>: Data exchange format</li>
+
+<h3>Development Tools</h3>
+<li><strong>XAMPP/WAMP/MAMP</strong>: Local development environment</li>
+<li><strong>Git</strong>: Version control</li>
+<li><strong>Text Editor/IDE</strong>: Code development</li>
+
+---
+
+<h2>✨ Features & Functionality</h2>
+
+<h3>Core Features</h3>
+1. <strong>Task Management</strong>
+   - Create, edit, and delete tasks
+   - Drag-and-drop between columns
+   - Priority levels (Low, Medium, High)
+   - Due date assignment
+   - Task descriptions and details
+
+2. <strong>Project Organization</strong>
+   - Multiple project support
+   - Project-specific task filtering
+   - Color-coded project identification
+   - Project statistics and metrics
+
+3. <strong>Visual Interface</strong>
+   - Three-column Kanban layout (To Do, In Progress, Done)
+   - Real-time updates
+   - Responsive design for all devices
+   - Modern, intuitive UI
+
+<h3>Advanced Features</h3>
+1. <strong>AI Integration</strong>
+   - Task breakdown suggestions
+   - Priority recommendations
+   - Intelligent task categorization
+   - Natural language processing
+
+2. <strong>Analytics Dashboard</strong>
+   - Project progress tracking
+   - Task completion statistics
+   - Performance metrics
+   - Visual charts and graphs
+
+3. <strong>User Authentication</strong>
+   - Secure registration and login
+   - Session management
+   - User-specific data isolation
+   - Guest user support
+
+4. <strong>Multi-Board Views</strong>
+   - Multiple board instances
+   - Board-specific configurations
+   - Cross-board task management
+
+---
+
+<h2>🗃️ Database Schema</h2>
+
+<h3>Core Tables</h3>
+
+#### Projects Table
+<code></code>`sql
+CREATE TABLE projects (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  color VARCHAR(7) DEFAULT '#3498db',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+<code></code>`
+
+#### Tasks Table
+<code></code>`sql
+CREATE TABLE tasks (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  project_id INT,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  status ENUM('todo', 'in_progress', 'done') DEFAULT 'todo',
+  priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+  due_date DATE,
+  position INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL
+);
+<code></code>`
+
+#### Users Table
+<code></code>`sql
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_login TIMESTAMP NULL
+);
+<code></code>`
+
+#### Analytics Table
+<code></code>`sql
+CREATE TABLE analytics (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  project_id INT,
+  metric_name VARCHAR(100) NOT NULL,
+  metric_value TEXT,
+  recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+<code></code>`
+
+---
+
+<h2>🔌 API Documentation</h2>
+
+<h3>Base URL</h3>
+<code>http://localhost:8000/php/api/</code>
+
+<h3>Tasks API Endpoints</h3>
+
+#### GET /tasks/get_tasks.php
+Retrieve all tasks with optional filtering.
+
+<strong>Parameters:</strong>
+<li><code>project_id</code> (int) - Filter by project ID</li>
+<li><code>priority</code> (string) - Filter by priority level</li>
+
+<strong>Response:</strong>
+<code></code>`json
+{
+  "success": true,
+  "message": "Tasks retrieved successfully",
+  "data": {
+    "tasks": [...],
+    "tasks_by_status": {
+      "todo": [...],
+      "in_progress": [...],
+      "done": [...]
+    },
+    "total_count": 10,
+    "counts": {
+      "todo": 3,
+      "in_progress": 2,
+      "done": 5
+    }
+  }
+}
+<code></code>`
+
+#### POST /tasks/create_task.php
+Create a new task.
+
+<strong>Required Fields:</strong>
+<li><code>title</code> (string) - Task title</li>
+<li><code>project_id</code> (int) - Project ID</li>
+
+<strong>Optional Fields:</strong>
+<li><code>description</code> (string) - Task description</li>
+<li><code>status</code> (string) - Initial status</li>
+<li><code>priority</code> (string) - Priority level</li>
+<li><code>due_date</code> (string) - Due date (YYYY-MM-DD)</li>
+
+#### PUT /tasks/update_task.php
+Update an existing task.
+
+#### PATCH /tasks/update_status.php
+Update task status for drag-and-drop operations.
+
+#### DELETE /tasks/delete_task.php
+Delete a task.
+
+<h3>Projects API Endpoints</h3>
+
+#### GET /projects/get_projects.php
+Retrieve all projects with task counts.
+
+#### POST /projects/create_project.php
+Create a new project.
+
+#### PUT /projects/update_project.php
+Update an existing project.
+
+#### DELETE /projects/delete_project.php
+Delete a project.
+
+<h3>Authentication API Endpoints</h3>
+
+#### POST /auth/register.php
+Register a new user.
+
+#### POST /auth/login.php
+Authenticate user login.
+
+#### POST /auth/logout.php
+Logout user.
+
+---
+
+<h2>🚀 Installation Guide</h2>
+
+<h3>Prerequisites</h3>
+<li><strong>XAMPP/WAMP/MAMP</strong> or local web server</li>
+<li><strong>PHP 7.4+</strong> with MySQL support</li>
+<li><strong>MySQL 5.7+</strong> database server</li>
+<li><strong>Web browser</strong> (Chrome, Firefox, Safari, Edge)</li>
+<li><strong>Text editor or IDE</strong></li>
+
+<h3>Step-by-Step Installation</h3>
+
+1. <strong>Download Project</strong>
+   <code></code>`bash
+   git clone [repository-url]
+   cd WebProgramming-10636316-KanbanBoard
+   <code></code>`
+
+2. <strong>Configure Database</strong>
+   - Edit <code>php/config/database.php</code>
+   - Update MySQL credentials:
+   <code></code>`php
+   define('DB_HOST', 'localhost');
+   define('DB_NAME', 'kanban_board');
+   define('DB_USER', 'your_username');
+   define('DB_PASS', 'your_password');
+   <code></code>`
+
+3. <strong>Install Database</strong>
+   - <strong>Option A</strong>: Run installer script
+     <code></code>`bash
+     php php/setup/install.php
+     <code></code>`
+   - <strong>Option B</strong>: Import SQL file
+     <code></code>`bash
+     mysql -u username -p database_name < database_setup.sql
+     <code></code>`
+
+4. <strong>Test Setup</strong>
+   - Open <code>test_connection.php</code> in browser
+   - Verify database connection and table creation
+
+5. <strong>Launch Application</strong>
+   - Open <code>index.html</code> in web browser
+   - Application should load with default project
+
+<h3>Configuration Options</h3>
+
+Edit <code>config.php</code> for application settings:
+<code></code>`php
+// Debug mode
+define('DEBUG_MODE', true);
+
+// AI API settings
+define('AI_API_KEY', 'your_api_key');
+define('AI_API_URL', 'https://api.openai.com/v1/');
+
+// Security settings
+define('SESSION_TIMEOUT', 3600);
+define('MAX_LOGIN_ATTEMPTS', 5);
+<code></code>`
+
+---
+
+<h2>👥 User Guide</h2>
+
+<h3>Getting Started</h3>
+
+1. <strong>Access the Application</strong>
+   - Open <code>index.html</code> in your web browser
+   - The application loads with a default project
+
+2. <strong>Creating Tasks</strong>
+   - Click "Add Task" button in any column
+   - Fill in task details (title, description, priority, due date)
+   - Click "Create Task" to save
+
+3. <strong>Managing Tasks</strong>
+   - <strong>Drag and Drop</strong>: Move tasks between columns
+   - <strong>Edit</strong>: Click task title to modify details
+   - <strong>Delete</strong>: Click delete icon to remove task
+   - <strong>Priority</strong>: Use priority indicators for organization
+
+4. <strong>Project Management</strong>
+   - Create new projects from the project selector
+   - Assign colors to projects for visual organization
+   - Filter tasks by project using the dropdown
+
+<h3>Advanced Features</h3>
+
+1. <strong>AI Assistant</strong>
+   - Use AI to break down complex tasks
+   - Get priority recommendations
+   - Receive task categorization suggestions
+
+2. <strong>Analytics Dashboard</strong>
+   - View project progress statistics
+   - Monitor task completion rates
+   - Analyze productivity metrics
+
+3. <strong>User Authentication</strong>
+   - Register for a personal account
+   - Login to save your data
+   - Access your tasks across sessions
+
+---
+
+<h2>📈 Development Phases</h2>
+
+<h3>Phase 1: Database Extensions ✅</h3>
+<li>Extended database schema</li>
+<li>Added user authentication tables</li>
+<li>Implemented analytics tracking</li>
+<li>Enhanced security features</li>
+
+<h3>Phase 2: Analytics Backend APIs ✅</h3>
+<li>Created comprehensive analytics endpoints</li>
+<li>Implemented data aggregation functions</li>
+<li>Added performance metrics tracking</li>
+<li>Built reporting infrastructure</li>
+
+<h3>Phase 3: Analytics Dashboard Frontend ✅</h3>
+<li>Developed interactive dashboard interface</li>
+<li>Created visual charts and graphs</li>
+<li>Implemented real-time data updates</li>
+<li>Added filtering and export capabilities</li>
+
+<h3>Phase 4: Multiple Board Views Infrastructure ✅</h3>
+<li>Built multi-board support system</li>
+<li>Implemented board-specific configurations</li>
+<li>Added cross-board task management</li>
+<li>Enhanced user experience with board switching</li>
+
+---
+
+<h2>🤖 AI Integration</h2>
+
+<h3>Features</h3>
+<li><strong>Task Breakdown</strong>: AI suggests subtasks for complex tasks</li>
+<li><strong>Priority Recommendations</strong>: Intelligent priority assignment</li>
+<li><strong>Natural Language Processing</strong>: Understand task descriptions</li>
+<li><strong>Smart Categorization</strong>: Automatic task organization</li>
+
+<h3>Implementation</h3>
+<li><strong>API Integration</strong>: OpenAI/GROQ API integration</li>
+<li><strong>Response Processing</strong>: Structured AI responses</li>
+<li><strong>Error Handling</strong>: Graceful fallback for API failures</li>
+<li><strong>Rate Limiting</strong>: Efficient API usage management</li>
+
+<h3>Usage Examples</h3>
+<code></code>`javascript
+// AI task breakdown
+const aiResponse = await fetch('php/api/ai/breakdown_task.php', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ task: 'Complete project documentation' })
+});
+<code></code>`
+
+---
+
+<h2>🔐 Authentication System</h2>
+
+<h3>Security Features</h3>
+<li><strong>Password Hashing</strong>: Secure password storage with bcrypt</li>
+<li><strong>Session Management</strong>: Secure session handling</li>
+<li><strong>Input Validation</strong>: Comprehensive input sanitization</li>
+<li><strong>SQL Injection Prevention</strong>: PDO prepared statements</li>
+<li><strong>XSS Protection</strong>: Output encoding and sanitization</li>
+
+<h3>User Management</h3>
+<li><strong>Registration</strong>: Secure user account creation</li>
+<li><strong>Login</strong>: Multi-factor authentication support</li>
+<li><strong>Password Reset</strong>: Secure password recovery</li>
+<li><strong>Account Management</strong>: User profile and settings</li>
+
+<h3>Guest User Support</h3>
+<li><strong>Anonymous Access</strong>: Use without registration</li>
+<li><strong>Data Persistence</strong>: Local storage for guest data</li>
+<li><strong>Upgrade Path</strong>: Convert guest data to registered account</li>
+
+---
+
+<h2>🧪 Testing & Debugging</h2>
+
+<h3>Testing Tools</h3>
+<li><strong>API Testing</strong>: <code>test_apis.html</code> - Interactive API testing</li>
+<li><strong>Database Testing</strong>: <code>test_connection.php</code> - Database verification</li>
+<li><strong>Authentication Testing</strong>: <code>test_auth_flow.html</code> - Auth flow testing</li>
+<li><strong>AI Integration Testing</strong>: <code>test_ai_refresh.html</code> - AI feature testing</li>
+
+<h3>Debug Features</h3>
+<li><strong>Error Logging</strong>: Comprehensive error tracking</li>
+<li><strong>Debug Mode</strong>: Detailed error messages</li>
+<li><strong>Performance Monitoring</strong>: Response time tracking</li>
+<li><strong>Data Validation</strong>: Input/output verification</li>
+
+<h3>Common Issues & Solutions</h3>
+
+1. <strong>Database Connection Issues</strong>
+   - Verify MySQL service is running
+   - Check database credentials in config
+   - Ensure database exists and is accessible
+
+2. <strong>API Endpoint Errors</strong>
+   - Check file permissions
+   - Verify PHP configuration
+   - Review error logs for details
+
+3. <strong>AI Integration Problems</strong>
+   - Verify API key configuration
+   - Check network connectivity
+   - Review rate limiting settings
+
+---
+
+<h2>📁 Project Structure</h2>
+
+<code></code>`
+WebProgramming-10636316-KanbanBoard/
+├── index.html                 # Main application interface
+├── dashboard.html             # Analytics dashboard
+├── login.html                 # User authentication
+├── signup.html                # User registration
+├── teams.html                 # Team management interface
+├── config.php                 # Application configuration
+├── database_setup.sql         # Database schema
+├── README.md                  # Project overview
+├── API_DOCUMENTATION.md       # API reference
+├── css/                       # Stylesheets
+│   ├── styles.css
+│   └── dashboard.css
+├── js/                        # JavaScript files
+│   ├── app.js                 # Main application logic
+│   ├── dragdrop.js            # Drag-and-drop functionality
+│   ├── api.js                 # API communication
+│   └── analytics.js           # Analytics features
+├── php/                       # Backend PHP files
+│   ├── config/
+│   │   └── database.php       # Database configuration
+│   ├── api/                   # API endpoints
+│   │   ├── tasks/             # Task management APIs
+│   │   ├── projects/          # Project management APIs
+│   │   ├── auth/              # Authentication APIs
+│   │   └── analytics/         # Analytics APIs
+│   ├── includes/              # Shared PHP functions
+│   │   ├── functions.php      # Utility functions
+│   │   └── security.php       # Security functions
+│   └── setup/                 # Installation scripts
+│       └── install.php        # Database installer
+├── assets/                    # Static assets
+│   └── images/                # Application images
+├── modules/                   # Modular components
+└── utils/                     # Utility scripts
+<code></code>`
+
+---
+
+<h2>📊 Performance & Optimization</h2>
+
+<h3>Database Optimization</h3>
+<li><strong>Indexed Queries</strong>: Optimized database indexes</li>
+<li><strong>Prepared Statements</strong>: Efficient query execution</li>
+<li><strong>Connection Pooling</strong>: Resource management</li>
+<li><strong>Query Optimization</strong>: Minimal data transfer</li>
+
+<h3>Frontend Performance</h3>
+<li><strong>Lazy Loading</strong>: On-demand content loading</li>
+<li><strong>Caching</strong>: Browser and application caching</li>
+<li><strong>Minification</strong>: Compressed assets</li>
+<li><strong>CDN Integration</strong>: Fast content delivery</li>
+
+<h3>Security Measures</h3>
+<li><strong>Input Sanitization</strong>: XSS prevention</li>
+<li><strong>SQL Injection Protection</strong>: Parameterized queries</li>
+<li><strong>CSRF Protection</strong>: Cross-site request forgery prevention</li>
+<li><strong>Rate Limiting</strong>: API abuse prevention</li>
+
+---
+
+<h2>🔮 Future Enhancements</h2>
+
+<h3>Planned Features</h3>
+1. <strong>Real-time Collaboration</strong>: Multi-user editing
+2. <strong>Mobile Application</strong>: Native mobile app
+3. <strong>Advanced Analytics</strong>: Machine learning insights
+4. <strong>Integration APIs</strong>: Third-party service integration
+5. <strong>Advanced Permissions</strong>: Role-based access control
+
+<h3>Technical Improvements</h3>
+1. <strong>Microservices Architecture</strong>: Scalable backend
+2. <strong>GraphQL API</strong>: Flexible data querying
+3. <strong>Progressive Web App</strong>: Offline functionality
+4. <strong>Containerization</strong>: Docker deployment
+5. <strong>CI/CD Pipeline</strong>: Automated testing and deployment
+
+---
+
+<h2>📞 Support & Contact</h2>
+
+<h3>Documentation</h3>
+<li><strong>API Documentation</strong>: <code>API_DOCUMENTATION.md</code></li>
+<li><strong>Installation Guide</strong>: This document</li>
+<li><strong>User Guide</strong>: Application help system</li>
+
+<h3>Development Resources</h3>
+<li><strong>GitHub Repository</strong>: Project source code</li>
+<li><strong>Issue Tracking</strong>: Bug reports and feature requests</li>
+<li><strong>Wiki</strong>: Detailed technical documentation</li>
+
+<h3>Contact Information</h3>
+<li><strong>Course Instructor</strong>: Dr. Sufyan Samara</li>
+<li><strong>University</strong>: An-Najah National University</li>
+<li><strong>Course</strong>: Web Programming (10636316)</li>
+
+---
+
+<h2>📄 License & Acknowledgments</h2>
+
+<h3>License</h3>
+This project is developed as part of the Web Programming course at An-Najah National University. All rights reserved.
+
+<h3>Acknowledgments</h3>
+<li><strong>Course Instructor</strong>: Dr. Sufyan Samara</li>
+<li><strong>University</strong>: An-Najah National University</li>
+<li><strong>Technologies</strong>: HTML5, CSS3, JavaScript, PHP, MySQL</li>
+<li><strong>Frameworks</strong>: Bootstrap, PDO, AJAX</li>
+
+---
+
+<em>Document generated on: January 2025</em>
+<em>Project Version: 1.0</em>
+<em>Last Updated: January 2025</em>
+</p>
+                
+                <div class="footer">
+                    <p><strong>Kanban Board Project Documentation</strong></p>
+                    <p>Web Programming (10636316) - An-Najah National University</p>
+                    <p>Generated on: August 28, 2025</p>
+                    <p>Course Instructor: Dr. Sufyan Samara</p>
+                </div>
+            </div>
+        </body>
+        </html>
