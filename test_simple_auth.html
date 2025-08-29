@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Auth Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #f5f7fa;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+      }
+      .error {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+      }
+      .info {
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        font-family: monospace;
+      }
+      .result.success {
+        background-color: #d4edda;
+      }
+      .result.error {
+        background-color: #f8d7da;
+      }
+      .result.info {
+        background-color: #d1ecf1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔐 Simple Authentication Test</h1>
+
+      <div class="test-section info">
+        <h3>📋 Test Status</h3>
+        <div id="status">Initializing...</div>
+      </div>
+
+      <div class="test-section">
+        <h3>🔑 Test Guest Login</h3>
+        <button onclick="testGuestLogin()">Test Guest Login</button>
+        <div id="guest-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>📝 Test Signup</h3>
+        <button onclick="testSignup()">Test Signup</button>
+        <div id="signup-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>🔑 Test Login</h3>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>🌐 Test API Endpoints</h3>
+        <button onclick="testEndpoints()">Test All Endpoints</button>
+        <div id="endpoints-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>📁 Test File Loading</h3>
+        <button onclick="testFiles()">Test Files</button>
+        <div id="files-result" class="result"></div>
+      </div>
+    </div>
+
+    <script>
+      function showResult(elementId, message, type = "info") {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.className = `result ${type}`;
+      }
+
+      function updateStatus(message) {
+        document.getElementById("status").textContent = message;
+      }
+
+      async function testGuestLogin() {
+        showResult("guest-result", "Testing guest login...", "info");
+
+        try {
+          const response = await fetch("php/api/auth/guest_login.php", {
+            method: "POST",
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const result = await response.json();
+
+          if (result.success) {
+            showResult(
+              "guest-result",
+              `✅ Guest login successful!\nUser: ${result.data.user.username}\nIs Guest: ${result.data.is_guest}`,
+              "success"
+            );
+          } else {
+            showResult(
+              "guest-result",
+              `❌ Guest login failed: ${result.message}`,
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult("guest-result", `❌ Error: ${error.message}`, "error");
+        }
+      }
+
+      async function testSignup() {
+        showResult("signup-result", "Testing signup...", "info");
+
+        try {
+          const formData = new FormData();
+          formData.append("first_name", "Test");
+          formData.append("last_name", "User");
+          formData.append("email", "testuser" + Date.now() + "@example.com");
+          formData.append("username", "testuser" + Date.now());
+          formData.append("password", "TestPassword123!");
+          formData.append("confirm_password", "TestPassword123!");
+          formData.append("terms", "on");
+
+          const response = await fetch("php/api/auth/signup.php", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const result = await response.json();
+
+          if (result.success) {
+            showResult(
+              "signup-result",
+              `✅ Signup successful!\nUser: ${result.data.user.username}\nAuto-login: ${result.data.auto_login}`,
+              "success"
+            );
+          } else {
+            showResult(
+              "signup-result",
+              `❌ Signup failed: ${result.message}`,
+              "error"
+            );
+          }
+        } catch (error) {
+          showResult("signup-result", `❌ Error: ${error.message}`, "error");
+        }
+      }
+
+      async function testLogin() {
+        showResult("login-result", "Testing login...", "info");
+
+        try {
+          const formData = new FormData();
+          formData.append("email", "test@example.com");
+          formData.append("password", "wrongpassword");
+
+          const response = await fetch("php/api/auth/login.php", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const result = await response.json();
+
+          if (result.success) {
+            showResult(
+              "login-result",
+              `✅ Login successful!\nUser: ${result.data.user.username}`,
+              "success"
+            );
+          } else {
+            showResult(
+              "login-result",
+              `✅ Login correctly rejected: ${result.message}`,
+              "success"
+            );
+          }
+        } catch (error) {
+          showResult("login-result", `❌ Error: ${error.message}`, "error");
+        }
+      }
+
+      async function testEndpoints() {
+        showResult("endpoints-result", "Testing all endpoints...", "info");
+
+        const endpoints = [
+          { name: "Login", url: "php/api/auth/login.php" },
+          { name: "Signup", url: "php/api/auth/signup.php" },
+          { name: "Guest Login", url: "php/api/auth/guest_login.php" },
+        ];
+
+        let results = [];
+
+        for (const endpoint of endpoints) {
+          try {
+            const response = await fetch(endpoint.url, {
+              method: "POST",
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              results.push(
+                `✅ ${endpoint.name}: ${
+                  result.success ? "Success" : "Failed - " + result.message
+                }`
+              );
+            } else {
+              results.push(`❌ ${endpoint.name}: HTTP ${response.status}`);
+            }
+          } catch (error) {
+            results.push(`❌ ${endpoint.name}: ${error.message}`);
+          }
+        }
+
+        showResult("endpoints-result", results.join("\n"), "info");
+      }
+
+      async function testFiles() {
+        showResult("files-result", "Testing file loading...", "info");
+
+        const files = [
+          "js/auth.js",
+          "utils/js-utils.js",
+          "css/styles.css",
+          "login.html",
+          "signup.html",
+        ];
+
+        let results = [];
+
+        for (const file of files) {
+          try {
+            const response = await fetch(file);
+            if (response.ok) {
+              results.push(`✅ ${file} - Loaded successfully`);
+            } else {
+              results.push(`❌ ${file} - HTTP ${response.status}`);
+            }
+          } catch (error) {
+            results.push(`❌ ${file} - ${error.message}`);
+          }
+        }
+
+        showResult("files-result", results.join("\n"), "info");
+      }
+
+      // Initialize page
+      window.addEventListener("load", function () {
+        updateStatus(
+          "✅ Page loaded successfully. Ready to test authentication."
+        );
+        console.log("🔐 Simple auth test page loaded");
+      });
+    </script>
+  </body>
+</html>
