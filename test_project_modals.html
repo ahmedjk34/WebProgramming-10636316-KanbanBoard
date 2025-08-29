@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Modals Test</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .test-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .test-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .test-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .test-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        .test-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .btn-add {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-edit {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+        .btn-delete {
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            color: white;
+        }
+        .btn-manage {
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            color: #333;
+        }
+        .test-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            color: white;
+        }
+        .test-info h3 {
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .test-info ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .test-info li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 5px;
+        }
+        .status-success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            border: 1px solid #4caf50;
+        }
+        .status-warning {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid #ffc107;
+        }
+        .status-error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🔧 Project Modals Test</h1>
+            <p>Testing the new Add, Edit, and Delete project modals in the Project Manager</p>
+        </div>
+
+        <div class="test-buttons">
+            <button class="test-btn btn-manage" onclick="openProjectManagementDialog()">
+                🗂️ Open Project Manager
+            </button>
+            <button class="test-btn btn-add" onclick="openAddProjectDialog()">
+                ➕ Add Project Modal
+            </button>
+            <button class="test-btn btn-edit" onclick="testEditProject()">
+                ✏️ Edit Project Modal
+            </button>
+            <button class="test-btn btn-delete" onclick="testDeleteProject()">
+                🗑️ Delete Project Modal
+            </button>
+        </div>
+
+        <div class="test-info">
+            <h3>📋 Test Instructions:</h3>
+            <ul>
+                <li><strong>Open Project Manager:</strong> Opens the main project management modal with all projects</li>
+                <li><strong>Add Project Modal:</strong> Opens the create new project dialog</li>
+                <li><strong>Edit Project Modal:</strong> Opens the edit project dialog (requires a project to exist)</li>
+                <li><strong>Delete Project Modal:</strong> Opens the delete confirmation dialog (requires a project to exist)</li>
+            </ul>
+            
+            <h3>✅ Expected Behavior:</h3>
+            <ul>
+                <li>All modals should open with proper styling and animations</li>
+                <li>Forms should be properly populated and functional</li>
+                <li>Color pickers should work in both Add and Edit modals</li>
+                <li>Delete modal should show proper warning message</li>
+                <li>All modals should close properly with Cancel/Close buttons</li>
+            </ul>
+
+            <h3>🔍 Test Status:</h3>
+            <div id="test-status">
+                <div class="status-indicator status-warning">Ready to test...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test functions
+        function openProjectManagementDialog() {
+            console.log('🧪 Testing: Opening Project Management Dialog');
+            updateTestStatus('Opening Project Manager...', 'warning');
+            
+            if (typeof window.uiManager !== 'undefined') {
+                window.uiManager.openProjectManagementDialog();
+                updateTestStatus('Project Manager opened successfully!', 'success');
+            } else {
+                updateTestStatus('Error: UIManager not found', 'error');
+            }
+        }
+
+        function openAddProjectDialog() {
+            console.log('🧪 Testing: Opening Add Project Dialog');
+            updateTestStatus('Opening Add Project Modal...', 'warning');
+            
+            if (typeof window.projectManager !== 'undefined') {
+                window.projectManager.openAddProjectDialog();
+                updateTestStatus('Add Project Modal opened successfully!', 'success');
+            } else {
+                updateTestStatus('Error: ProjectManager not found', 'error');
+            }
+        }
+
+        function testEditProject() {
+            console.log('🧪 Testing: Opening Edit Project Dialog');
+            updateTestStatus('Opening Edit Project Modal...', 'warning');
+            
+            // Create a mock project for testing
+            const mockProject = {
+                id: 999,
+                name: "Test Project",
+                description: "This is a test project for modal testing",
+                color: "#667eea",
+                status: "active"
+            };
+            
+            if (typeof window.projectManager !== 'undefined') {
+                // Temporarily add the mock project
+                window.projectManager.projects = [mockProject];
+                window.projectManager.openEditProjectDialog(999);
+                updateTestStatus('Edit Project Modal opened successfully!', 'success');
+            } else {
+                updateTestStatus('Error: ProjectManager not found', 'error');
+            }
+        }
+
+        function testDeleteProject() {
+            console.log('🧪 Testing: Opening Delete Project Dialog');
+            updateTestStatus('Opening Delete Project Modal...', 'warning');
+            
+            // Create a mock project for testing
+            const mockProject = {
+                id: 999,
+                name: "Test Project for Deletion",
+                description: "This project will be deleted",
+                color: "#fa709a",
+                status: "active"
+            };
+            
+            if (typeof window.projectManager !== 'undefined') {
+                // Temporarily add the mock project
+                window.projectManager.projects = [mockProject];
+                window.projectManager.openDeleteProjectDialog(999);
+                updateTestStatus('Delete Project Modal opened successfully!', 'success');
+            } else {
+                updateTestStatus('Error: ProjectManager not found', 'error');
+            }
+        }
+
+        function updateTestStatus(message, type) {
+            const statusElement = document.getElementById('test-status');
+            const statusClass = type === 'success' ? 'status-success' : 
+                               type === 'error' ? 'status-error' : 'status-warning';
+            
+            statusElement.innerHTML = `<div class="status-indicator ${statusClass}">${message}</div>`;
+        }
+
+        // Check if required modules are loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 Project Modals Test initialized');
+            
+            // Check for required modules
+            const modules = {
+                'UIManager': typeof window.uiManager !== 'undefined',
+                'ProjectManager': typeof window.projectManager !== 'undefined',
+                'APIManager': typeof window.apiManager !== 'undefined'
+            };
+            
+            console.log('📦 Module Status:', modules);
+            
+            let allModulesLoaded = true;
+            Object.entries(modules).forEach(([name, loaded]) => {
+                if (!loaded) {
+                    console.warn(`⚠️ ${name} not loaded`);
+                    allModulesLoaded = false;
+                }
+            });
+            
+            if (allModulesLoaded) {
+                updateTestStatus('All modules loaded successfully! Ready to test.', 'success');
+            } else {
+                updateTestStatus('Some modules are missing. Please load the main application first.', 'error');
+            }
+        });
+    </script>
+
+    <!-- Load required scripts -->
+    <script src="utils/js-utils.js"></script>
+    <script src="modules/LoadingManager.js"></script>
+    <script src="modules/APIManager.js"></script>
+    <script src="modules/ProjectManager.js"></script>
+    <script src="modules/UIManager.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
