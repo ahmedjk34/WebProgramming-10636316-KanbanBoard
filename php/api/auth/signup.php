@@ -149,28 +149,30 @@ try {
     
     // Create default workspace for the user
     $workspaceStmt = $pdo->prepare("
-        INSERT INTO workspaces (name, description, color, icon, is_default) 
-        VALUES (?, ?, ?, ?, TRUE)
+        INSERT INTO workspaces (name, description, color, icon, owner_id, is_default) 
+        VALUES (?, ?, ?, ?, ?, TRUE)
     ");
     $workspaceStmt->execute([
         $firstName . "'s Workspace",
         'Your personal workspace for tasks and projects',
         '#667eea',
-        '👤'
+        '👤',
+        $userId
     ]);
     
     $workspaceId = $pdo->lastInsertId();
     
     // Create default project
     $projectStmt = $pdo->prepare("
-        INSERT INTO projects (workspace_id, name, description, color, status) 
-        VALUES (?, ?, ?, ?, 'active')
+        INSERT INTO projects (workspace_id, name, description, color, status, created_by) 
+        VALUES (?, ?, ?, ?, 'active', ?)
     ");
     $projectStmt->execute([
         $workspaceId,
         'Personal Tasks',
         'Your personal tasks and reminders',
-        '#3498db'
+        '#3498db',
+        $userId
     ]);
     
     // Set default user preferences
@@ -247,12 +249,5 @@ try {
         'success' => false,
         'message' => 'An error occurred during registration. Please try again.'
     ]);
-}
-
-/**
- * Generate a secure random token
- */
-function generateSecureToken($length = 64) {
-    return bin2hex(random_bytes($length / 2));
 }
 ?>
