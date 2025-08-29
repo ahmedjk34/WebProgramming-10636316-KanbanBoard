@@ -292,6 +292,9 @@ class AIChatManager {
   }
 
   editPlan() {
+    console.log("✏️ editPlan method called");
+    console.log("Current plan:", this.currentPlan);
+
     if (this.currentPlan) {
       // Pre-fill input with a suggestion to modify the plan
       this.inputField.value = "Please modify my previous plan: ";
@@ -301,12 +304,18 @@ class AIChatManager {
         this.inputField.value.length
       );
       this.closePlanPreview();
+      console.log("✅ Edit plan action completed");
+    } else {
+      console.log("❌ No current plan available for editing");
+      // Still close the preview and focus on input
+      this.inputField.value = "Please describe your plan: ";
+      this.inputField.focus();
+      this.closePlanPreview();
     }
   }
 
   async confirmPlan() {
     console.log("🚀 confirmPlan method called!");
-    console.log("Current plan:", this.currentPlan);
 
     if (!this.currentPlan) {
       console.log("❌ No current plan found!");
@@ -319,109 +328,35 @@ class AIChatManager {
     this.updateStatus("Creating tasks...");
 
     try {
-      // The plan is already created in the database, so we just need to refresh the UI
-      this.addMessage(
-        "Perfect! Your tasks have been successfully added to your Kanban board. You can now see them in your task list."
-      );
-
-      // Try to refresh the UI using the most reliable method
-      let refreshSuccess = false;
-
-      // Method 1: Use the injected taskManager dependency (most reliable)
-      if (
-        this.dependencies.taskManager &&
-        typeof this.dependencies.taskManager.refreshTasks === "function"
-      ) {
-        console.log("🔄 Method 1: Using injected TaskManager dependency...");
-        try {
-          await this.dependencies.taskManager.refreshTasks();
-          refreshSuccess = true;
-          console.log("✅ Tasks refreshed via injected TaskManager");
-        } catch (error) {
-          console.warn("❌ Injected TaskManager refresh failed:", error);
-        }
-      }
-
-      // Method 2: Use global taskManager as fallback
-      if (
-        !refreshSuccess &&
-        window.taskManager &&
-        typeof window.taskManager.refreshTasks === "function"
-      ) {
-        console.log("🔄 Method 2: Using global taskManager...");
-        try {
-          await window.taskManager.refreshTasks();
-          refreshSuccess = true;
-          console.log("✅ Tasks refreshed via global taskManager");
-        } catch (error) {
-          console.warn("❌ Global taskManager refresh failed:", error);
-        }
-      }
-
-      // Method 3: Direct API call and manual UI update
-      if (!refreshSuccess) {
-        console.log("🔄 Method 3: Direct API call and manual UI update...");
-        try {
-          // Get current workspace ID
-          const currentWorkspaceId =
-            this.dependencies.apiManager?.getCurrentWorkspaceId() || 1;
-
-          // Fetch tasks directly
-          const response = await fetch(
-            `php/api/tasks/get_tasks.php?workspace_id=${currentWorkspaceId}`,
-            {
-              credentials: "include",
-            }
-          );
-
-          if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-              // Update the global taskManager directly if available
-              if (
-                window.taskManager &&
-                typeof window.taskManager.setTasks === "function"
-              ) {
-                window.taskManager.setTasks(result.data.tasks);
-                window.taskManager.displayTasks(result.data.tasks_by_status);
-                window.taskManager.updateTaskCounts(result.data.counts);
-                refreshSuccess = true;
-                console.log("✅ Tasks updated via direct API call");
-              }
-            }
-          }
-        } catch (error) {
-          console.warn("❌ Direct API call failed:", error);
-        }
-      }
-
-      // Method 4: Force page reload as last resort
-      if (!refreshSuccess) {
-        console.log("🔄 Method 4: Forcing page reload...");
-        this.addMessage(
-          "Your tasks have been created successfully! The page will reload in a moment to show the new tasks."
-        );
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
-      }
-
       // Close preview
       this.closePlanPreview();
       this.updateStatus("Tasks created successfully");
 
-      // Show success message
-      this.showNotification(
-        "✅ Tasks created successfully! Check your Kanban board.",
-        "success"
-      );
-
-      // Add appropriate message based on refresh success
-      if (refreshSuccess) {
-        this.addMessage(
-          "Your tasks have been added and the board has been updated. You should see them in your task list now!"
+      // Show success notification
+      if (typeof showSuccessMessage === "function") {
+        showSuccessMessage(
+          "✅ AI Plan Confirmed! Your tasks have been created successfully. The page will refresh to show your new tasks.",
+          "AI Plan Confirmed"
+        );
+      } else {
+        this.showNotification(
+          "✅ Tasks created successfully! The page will refresh to show your new tasks.",
+          "success"
         );
       }
+
+      // Add message to chat
+      this.addMessage(
+        "🎉 Perfect! Your AI-generated tasks have been successfully created and added to your Kanban board. The page will refresh in a moment to show your new tasks."
+      );
+
+      // Hard refresh the page after a short delay
+      setTimeout(() => {
+        console.log("🔄 Hard refreshing page to show new tasks...");
+        window.location.reload();
+      }, 2000);
+
+      console.log("🎯 AI Plan confirmed successfully - page will refresh");
     } catch (error) {
       this.addMessage(
         "I apologize, but there was an error creating your tasks. Please try again."
@@ -496,8 +431,26 @@ window.closePlanPreview = function () {
 };
 
 window.editPlan = function () {
-  if (window.aiChatManager) {
+  console.log("🔘 Edit Plan button clicked!");
+  console.log("aiChatManager available:", !!window.aiChatManager);
+  console.log("aiChatManager type:", typeof window.aiChatManager);
+  console.log(
+    "aiChatManager methods:",
+    Object.keys(window.aiChatManager || {})
+  );
+
+  if (
+    window.aiChatManager &&
+    typeof window.aiChatManager.editPlan === "function"
+  ) {
+    console.log("✅ aiChatManager found, calling editPlan...");
     window.aiChatManager.editPlan();
+  } else {
+    console.error("❌ aiChatManager not found or editPlan method missing!");
+    console.log(
+      "Available methods:",
+      Object.getOwnPropertyNames(window.aiChatManager || {})
+    );
   }
 };
 
