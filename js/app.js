@@ -327,6 +327,7 @@ function registerModules() {
     "teamManager",
   ]);
   moduleFactory.register("aiChatManager", window.AIChatManager, [
+    "apiManager",
     "taskManager",
     "uiManager",
   ]);
@@ -421,7 +422,8 @@ async function initializeApp() {
 
     uiManager.setupEventListeners();
     dragDropManager.initializeDragAndDrop();
-    taskManager.setupTaskFormHandling();
+    // Removed taskManager.setupTaskFormHandling() to prevent duplicate event listeners
+    // Task form handling is now managed by UIManager.setupTaskFormHandler()
 
     // Update loading progress for UI initialization
     if (loadingManager) {
@@ -474,7 +476,9 @@ async function initializeApp() {
         console.log("✅ Created basic TaskManager instance");
       }
       if (window.WorkspaceManager && !window.workspaceManager) {
-        window.workspaceManager = new window.WorkspaceManager();
+        window.workspaceManager = new window.WorkspaceManager({
+          apiManager: window.apiManager,
+        });
         console.log("✅ Created basic WorkspaceManager instance");
       }
       if (window.UIManager && !window.uiManager) {
@@ -545,7 +549,9 @@ function initializeModules() {
     projectManager = new window.ProjectManager();
 
     console.log("📦 Creating WorkspaceManager...");
-    workspaceManager = new window.WorkspaceManager();
+    workspaceManager = new window.WorkspaceManager({
+      apiManager: apiManager,
+    });
 
     console.log("📦 Creating DragDropManager...");
     dragDropManager = new window.DragDropManager();
@@ -630,7 +636,7 @@ function initializeFallbackMode() {
   window.workspaceManager = {
     loadWorkspaces: async () => {
       console.log("🏢 Loading workspaces (fallback mode)");
-      return { success: true, data: [] };
+      return { success: true, data: { workspaces: [] } };
     },
     openSidebar: () => {
       const sidebar = document.getElementById("workspace-sidebar");
@@ -656,6 +662,34 @@ function initializeFallbackMode() {
       console.log("🏢 Loading workspaces for type (fallback mode)"),
     refreshCurrentWorkspace: () =>
       console.log("🔄 Refreshing current workspace (fallback mode)"),
+    editWorkspace: (workspaceId) => {
+      console.log("✏️ Editing workspace (fallback mode):", workspaceId);
+      const dialog = document.getElementById("create-workspace-dialog");
+      if (dialog) {
+        // Update dialog title and button for edit mode
+        const title = dialog.querySelector(".dialog-header h3");
+        const submitBtn = dialog.querySelector("#create-workspace-submit-btn");
+        const form = dialog.querySelector("#create-workspace-form");
+
+        if (title) title.textContent = "✏️ Edit Workspace";
+        if (submitBtn) {
+          submitBtn.textContent = "Update Workspace";
+          submitBtn.querySelector(".btn-icon").textContent = "💾";
+        }
+        if (form) {
+          form.dataset.isEditing = "true";
+          form.dataset.workspaceId = workspaceId;
+        }
+
+        dialog.showModal();
+      }
+    },
+    deleteWorkspace: (workspaceId) => {
+      console.log("🗑️ Deleting workspace (fallback mode):", workspaceId);
+      if (confirm("Are you sure you want to delete this workspace?")) {
+        console.log("Workspace deleted (fallback mode)");
+      }
+    },
   };
 
   window.dragDropManager = {
@@ -700,8 +734,13 @@ function initializeFallbackMode() {
       if (dialog) dialog.close();
     },
     openProjectManagementDialog: () => {
+      console.log("🗂️ Opening project management dialog (fallback mode)");
       const dialog = document.getElementById("project-management-dialog");
-      if (dialog) dialog.showModal();
+      if (dialog) {
+        dialog.showModal();
+      } else {
+        console.error("❌ Project management dialog not found!");
+      }
     },
     closeProjectManagementDialog: () => {
       const dialog = document.getElementById("project-management-dialog");
@@ -730,6 +769,54 @@ function initializeFallbackMode() {
         aiChatPanel.classList.remove("active");
       }
     },
+    editPlan: () => {
+      console.log("✏️ Edit Plan (fallback mode)");
+      const inputField = document.getElementById("ai-chat-input");
+      const planPreview = document.getElementById("ai-plan-preview");
+      if (inputField) {
+        inputField.value = "Please modify my previous plan: ";
+        inputField.focus();
+        inputField.setSelectionRange(
+          inputField.value.length,
+          inputField.value.length
+        );
+      }
+      if (planPreview) {
+        planPreview.style.display = "none";
+      }
+    },
+    closePlanPreview: () => {
+      console.log("📋 Close Plan Preview (fallback mode)");
+      const planPreview = document.getElementById("ai-plan-preview");
+      if (planPreview) {
+        planPreview.style.display = "none";
+      }
+    },
+    sendMessage: () => {
+      console.log("📤 Send Message (fallback mode)");
+      alert(
+        "AI Chat is not fully loaded. Please refresh the page and try again."
+      );
+    },
+    insertQuickText: (type) => {
+      console.log("⚡ Insert Quick Text (fallback mode)");
+      const inputField = document.getElementById("ai-chat-input");
+      if (inputField) {
+        const quickTexts = {
+          study: "I need to study ",
+          workout: "I want to workout ",
+          work: "I need to work on ",
+        };
+        const quickText = quickTexts[type] || "";
+        const currentValue = inputField.value;
+        if (currentValue && !currentValue.endsWith(" ")) {
+          inputField.value = currentValue + ". " + quickText;
+        } else {
+          inputField.value = currentValue + quickText;
+        }
+        inputField.focus();
+      }
+    },
   };
 
   // Hide loading indicator
@@ -742,9 +829,10 @@ function initializeFallbackMode() {
 }
 
 function toggleThemeWrapper() {
+  const currentTheme = localStorage.getItem("theme") || "light";
   console.log("🎨 Toggling theme from:", currentTheme);
-  currentTheme = toggleTheme(currentTheme);
-  console.log("🎨 Theme toggled to:", currentTheme);
+  const newTheme = toggleTheme(currentTheme);
+  console.log("🎨 Theme toggled to:", newTheme);
 }
 
 // Make theme functions globally available
@@ -887,8 +975,18 @@ function closeDeleteDialog() {
 }
 
 function openProjectManagementDialog() {
+  console.log("🗂️ Opening project management dialog");
   if (window.uiManager) {
     window.uiManager.openProjectManagementDialog();
+  } else {
+    // Fallback: open dialog directly
+    const dialog = document.getElementById("project-management-dialog");
+    if (dialog) {
+      console.log("✅ Opening project management dialog (fallback)");
+      dialog.showModal();
+    } else {
+      console.error("❌ Project management dialog not found!");
+    }
   }
 }
 
@@ -907,6 +1005,38 @@ function openAddProjectDialog() {
 function closeAddProjectDialog() {
   if (window.projectManager) {
     window.projectManager.closeAddProjectDialog();
+  }
+}
+
+// Edit Project Dialog Functions
+function openEditProjectDialog(projectId) {
+  if (window.projectManager) {
+    window.projectManager.openEditProjectDialog(projectId);
+  }
+}
+
+function closeEditProjectDialog() {
+  if (window.projectManager) {
+    window.projectManager.closeEditProjectDialog();
+  }
+}
+
+// Delete Project Dialog Functions
+function openDeleteProjectDialog(projectId) {
+  if (window.projectManager) {
+    window.projectManager.openDeleteProjectDialog(projectId);
+  }
+}
+
+function closeDeleteProjectDialog() {
+  if (window.projectManager) {
+    window.projectManager.closeDeleteProjectDialog();
+  }
+}
+
+function confirmDeleteProject() {
+  if (window.projectManager) {
+    window.projectManager.confirmDeleteProject();
   }
 }
 
@@ -1218,18 +1348,75 @@ window.closePlanPreview = function () {
 };
 
 window.editPlan = function () {
-  console.log("✏️ Edit plan clicked...");
-  // Implementation would go here
+  console.log("🔘 Edit Plan button clicked!");
+  console.log("aiChatManager available:", !!window.aiChatManager);
+  console.log("aiChatManager type:", typeof window.aiChatManager);
+  console.log(
+    "aiChatManager methods:",
+    Object.keys(window.aiChatManager || {})
+  );
+
+  if (
+    window.aiChatManager &&
+    typeof window.aiChatManager.editPlan === "function"
+  ) {
+    console.log("✅ aiChatManager found, calling editPlan...");
+    window.aiChatManager.editPlan();
+  } else {
+    console.error("❌ aiChatManager not found or editPlan method missing!");
+    console.log(
+      "Available methods:",
+      Object.getOwnPropertyNames(window.aiChatManager || {})
+    );
+    // Fallback implementation
+    const inputField = document.getElementById("ai-chat-input");
+    const planPreview = document.getElementById("ai-plan-preview");
+    if (inputField) {
+      inputField.value = "Please modify my previous plan: ";
+      inputField.focus();
+      inputField.setSelectionRange(
+        inputField.value.length,
+        inputField.value.length
+      );
+    }
+    if (planPreview) {
+      planPreview.style.display = "none";
+    }
+  }
 };
 
 window.confirmPlan = function () {
-  console.log("✅ Confirm plan clicked...");
-  // Implementation would go here
+  console.log("🔘 Confirm Plan button clicked!");
+  if (
+    window.aiChatManager &&
+    typeof window.aiChatManager.confirmPlan === "function"
+  ) {
+    console.log("✅ aiChatManager found, calling confirmPlan...");
+    window.aiChatManager.confirmPlan();
+  } else {
+    console.error("❌ aiChatManager not found or confirmPlan method missing!");
+    console.log(
+      "Available methods:",
+      Object.getOwnPropertyNames(window.aiChatManager || {})
+    );
+  }
 };
 
 window.sendMessage = function () {
-  console.log("📤 Send message clicked...");
-  // Implementation would go here
+  console.log("🔘 Send Message button clicked!");
+  if (
+    window.aiChatManager &&
+    typeof window.aiChatManager.sendMessage === "function"
+  ) {
+    console.log("✅ aiChatManager found, calling sendMessage...");
+    window.aiChatManager.sendMessage();
+  } else {
+    console.error("❌ aiChatManager not found or sendMessage method missing!");
+    console.log(
+      "Available methods:",
+      Object.getOwnPropertyNames(window.aiChatManager || {})
+    );
+  }
 };
 
 window.insertQuickText = function (type) {
@@ -1288,3 +1475,16 @@ function initializeWorkspaceTypeSystem() {
 
   console.log(`✅ Workspace type system initialized with type: ${savedType}`);
 }
+
+// Global workspace edit and delete functions
+window.editWorkspace = function (workspaceId) {
+  if (window.workspaceManager) {
+    window.workspaceManager.editWorkspace(workspaceId);
+  }
+};
+
+window.deleteWorkspace = function (workspaceId) {
+  if (window.workspaceManager) {
+    window.workspaceManager.deleteWorkspace(workspaceId);
+  }
+};
