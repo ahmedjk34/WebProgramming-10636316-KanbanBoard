@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workspace Actions Test</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <style>
+      body {
+        padding: 20px;
+        background: #f5f5f5;
+        font-family: Arial, sans-serif;
+      }
+      .test-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .workspace-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        margin-bottom: 8px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        cursor: pointer;
+        position: relative;
+        min-height: 60px;
+      }
+      .workspace-details {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .workspace-actions {
+        display: flex;
+        gap: 4px;
+        opacity: 1;
+        margin-left: auto;
+        position: relative;
+        z-index: 10;
+        flex-shrink: 0;
+      }
+      .workspace-action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        position: relative;
+        z-index: 20;
+      }
+      .workspace-action-btn.edit {
+        background: linear-gradient(135deg, #4ade80, #22c55e);
+        color: white;
+      }
+      .workspace-action-btn.delete {
+        background: linear-gradient(135deg, #f87171, #ef4444);
+        color: white;
+      }
+      .debug-info {
+        background: #e9ecef;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        margin: 10px 0;
+        white-space: pre-wrap;
+      }
+      .test-result {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .test-result.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .test-result.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-container">
+      <h1>Workspace Actions Test</h1>
+
+      <div class="test-section">
+        <h2>Test Workspace Item with Action Buttons</h2>
+        <div class="workspace-item" onclick="testWorkspaceClick()">
+          <div class="workspace-icon" style="color: #667eea">🏢</div>
+          <div class="workspace-details">
+            <div class="workspace-name">Test Workspace</div>
+            <div class="workspace-description">
+              This is a test workspace with a longer description to test text
+              overflow
+            </div>
+          </div>
+          <div class="workspace-actions">
+            <button
+              class="workspace-action-btn edit"
+              onclick="event.stopPropagation(); testEditWorkspace(1)"
+              title="Edit Workspace"
+            >
+              <span class="action-icon">✏️</span>
+            </button>
+            <button
+              class="workspace-action-btn delete"
+              onclick="event.stopPropagation(); testDeleteWorkspace(1)"
+              title="Delete Workspace"
+            >
+              <span class="action-icon">🗑️</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="debug-info" id="click-log"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="test-results"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>CSS Debug Info</h2>
+        <div class="debug-info" id="css-debug"></div>
+      </div>
+    </div>
+
+    <script>
+      let clickCount = 0;
+      let editClickCount = 0;
+      let deleteClickCount = 0;
+      let workspaceClickCount = 0;
+
+      function logClick(message) {
+        const log = document.getElementById("click-log");
+        const timestamp = new Date().toLocaleTimeString();
+        log.innerHTML += `[${timestamp}] ${message}\n`;
+        console.log(message);
+      }
+
+      function testWorkspaceClick() {
+        workspaceClickCount++;
+        logClick(`✅ Workspace item clicked (${workspaceClickCount} times)`);
+        updateTestResults();
+      }
+
+      function testEditWorkspace(id) {
+        editClickCount++;
+        logClick(
+          `✅ Edit workspace button clicked for workspace ${id} (${editClickCount} times)`
+        );
+        updateTestResults();
+      }
+
+      function testDeleteWorkspace(id) {
+        deleteClickCount++;
+        logClick(
+          `✅ Delete workspace button clicked for workspace ${id} (${deleteClickCount} times)`
+        );
+        updateTestResults();
+      }
+
+      function updateTestResults() {
+        const results = document.getElementById("test-results");
+        results.innerHTML = `
+                <div class="test-result success">
+                    ✅ Test Results:
+                    - Workspace item clicks: ${workspaceClickCount}
+                    - Edit button clicks: ${editClickCount}
+                    - Delete button clicks: ${deleteClickCount}
+                </div>
+            `;
+      }
+
+      function debugCSS() {
+        const workspaceItem = document.querySelector(".workspace-item");
+        const actions = document.querySelector(".workspace-actions");
+        const editBtn = document.querySelector(".workspace-action-btn.edit");
+        const deleteBtn = document.querySelector(
+          ".workspace-action-btn.delete"
+        );
+
+        const debug = document.getElementById("css-debug");
+        debug.innerHTML = `
+Workspace Item:
+- Display: ${getComputedStyle(workspaceItem).display}
+- Flex Direction: ${getComputedStyle(workspaceItem).flexDirection}
+- Align Items: ${getComputedStyle(workspaceItem).alignItems}
+- Gap: ${getComputedStyle(workspaceItem).gap}
+- Width: ${getComputedStyle(workspaceItem).width}
+- Height: ${getComputedStyle(workspaceItem).height}
+
+Workspace Actions:
+- Display: ${getComputedStyle(actions).display}
+- Gap: ${getComputedStyle(actions).gap}
+- Margin Left: ${getComputedStyle(actions).marginLeft}
+- Z-Index: ${getComputedStyle(actions).zIndex}
+- Width: ${getComputedStyle(actions).width}
+- Height: ${getComputedStyle(actions).height}
+
+Edit Button:
+- Display: ${getComputedStyle(editBtn).display}
+- Width: ${getComputedStyle(editBtn).width}
+- Height: ${getComputedStyle(editBtn).height}
+- Z-Index: ${getComputedStyle(editBtn).zIndex}
+- Position: ${getComputedStyle(editBtn).position}
+
+Delete Button:
+- Display: ${getComputedStyle(deleteBtn).display}
+- Width: ${getComputedStyle(deleteBtn).width}
+- Height: ${getComputedStyle(deleteBtn).height}
+- Z-Index: ${getComputedStyle(deleteBtn).zIndex}
+- Position: ${getComputedStyle(deleteBtn).position}
+            `;
+      }
+
+      // Test page load
+      window.addEventListener("load", function () {
+        logClick("📄 Test page loaded");
+        debugCSS();
+
+        // Check if elements exist
+        const workspaceItem = document.querySelector(".workspace-item");
+        const actions = document.querySelector(".workspace-actions");
+        const editBtn = document.querySelector(".workspace-action-btn.edit");
+        const deleteBtn = document.querySelector(
+          ".workspace-action-btn.delete"
+        );
+
+        if (workspaceItem) logClick("✅ Workspace item found");
+        if (actions) logClick("✅ Workspace actions container found");
+        if (editBtn) logClick("✅ Edit button found");
+        if (deleteBtn) logClick("✅ Delete button found");
+
+        // Check if buttons are side by side
+        const editRect = editBtn.getBoundingClientRect();
+        const deleteRect = deleteBtn.getBoundingClientRect();
+
+        if (editRect.right <= deleteRect.left) {
+          logClick("✅ Buttons are positioned side by side correctly");
+        } else {
+          logClick("❌ Buttons are overlapping or positioned incorrectly");
+        }
+      });
+    </script>
+  </body>
+</html>
