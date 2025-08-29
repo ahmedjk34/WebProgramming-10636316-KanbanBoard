@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Authentication Flow Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #f5f7fa;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+      }
+      .error {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+      }
+      .info {
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+      }
+      .form-group {
+        margin: 15px 0;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input,
+      button {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        cursor: pointer;
+        margin: 10px 0;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .result {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+      }
+      .result.success {
+        background-color: #d4edda;
+      }
+      .result.error {
+        background-color: #f8d7da;
+      }
+      .result.info {
+        background-color: #d1ecf1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔐 Authentication Flow Test</h1>
+
+      <div class="test-section info">
+        <h3>📋 Test Instructions</h3>
+        <p>
+          This page will help us test the authentication system step by step.
+          Use the forms below to test different authentication scenarios.
+        </p>
+      </div>
+
+      <!-- Test 1: Login Form Test -->
+      <div class="test-section">
+        <h3>🔑 Test Login</h3>
+        <form id="login-test-form">
+          <div class="form-group">
+            <label for="login-email">Email:</label>
+            <input
+              type="email"
+              id="login-email"
+              name="email"
+              value="test@example.com"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password:</label>
+            <input
+              type="password"
+              id="login-password"
+              name="password"
+              value="testpassword123"
+              required
+            />
+          </div>
+          <button type="submit">Test Login</button>
+        </form>
+        <div id="login-result" class="result"></div>
+      </div>
+
+      <!-- Test 2: Signup Form Test -->
+      <div class="test-section">
+        <h3>📝 Test Signup</h3>
+        <form id="signup-test-form">
+          <div class="form-group">
+            <label for="signup-first-name">First Name:</label>
+            <input
+              type="text"
+              id="signup-first-name"
+              name="first_name"
+              value="Test"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="signup-last-name">Last Name:</label>
+            <input
+              type="text"
+              id="signup-last-name"
+              name="last_name"
+              value="User"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="signup-email">Email:</label>
+            <input
+              type="email"
+              id="signup-email"
+              name="email"
+              value="testuser@example.com"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="signup-username">Username:</label>
+            <input
+              type="text"
+              id="signup-username"
+              name="username"
+              value="testuser123"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="signup-password">Password:</label>
+            <input
+              type="password"
+              id="signup-password"
+              name="password"
+              value="TestPassword123!"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="signup-confirm-password">Confirm Password:</label>
+            <input
+              type="password"
+              id="signup-confirm-password"
+              name="confirm_password"
+              value="TestPassword123!"
+              required
+            />
+          </div>
+          <button type="submit">Test Signup</button>
+        </form>
+        <div id="signup-result" class="result"></div>
+      </div>
+
+      <!-- Test 3: Guest Login Test -->
+      <div class="test-section">
+        <h3>👤 Test Guest Login</h3>
+        <button id="guest-login-test">Test Guest Login</button>
+        <div id="guest-result" class="result"></div>
+      </div>
+
+      <!-- Test 4: API Endpoint Test -->
+      <div class="test-section">
+        <h3>🌐 API Endpoint Test</h3>
+        <button id="test-login-api">Test Login API</button>
+        <button id="test-signup-api">Test Signup API</button>
+        <button id="test-guest-api">Test Guest API</button>
+        <div id="api-result" class="result"></div>
+      </div>
+
+      <!-- Test 5: File Loading Test -->
+      <div class="test-section">
+        <h3>📁 File Loading Test</h3>
+        <button id="test-files">Test File Loading</button>
+        <div id="files-result" class="result"></div>
+      </div>
+    </div>
+
+    <script>
+      // Utility function to show results
+      function showResult(elementId, message, type = "info") {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.className = `result ${type}`;
+      }
+
+      // Test login form
+      document
+        .getElementById("login-test-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+
+          showResult("login-result", "Testing login...", "info");
+
+          try {
+            const response = await fetch("php/api/auth/login.php", {
+              method: "POST",
+              body: formData,
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              showResult(
+                "login-result",
+                `✅ Login successful!\nUser: ${
+                  result.data.user.username
+                }\nToken: ${result.data.token.substring(0, 20)}...`,
+                "success"
+              );
+            } else {
+              showResult(
+                "login-result",
+                `❌ Login failed: ${result.message}`,
+                "error"
+              );
+            }
+          } catch (error) {
+            showResult(
+              "login-result",
+              `❌ Network error: ${error.message}`,
+              "error"
+            );
+          }
+        });
+
+      // Test signup form
+      document
+        .getElementById("signup-test-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+
+          showResult("signup-result", "Testing signup...", "info");
+
+          try {
+            const response = await fetch("php/api/auth/signup.php", {
+              method: "POST",
+              body: formData,
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              showResult(
+                "signup-result",
+                `✅ Signup successful!\nUser: ${result.data.user.username}\nAuto-login: ${result.data.auto_login}`,
+                "success"
+              );
+            } else {
+              showResult(
+                "signup-result",
+                `❌ Signup failed: ${result.message}`,
+                "error"
+              );
+            }
+          } catch (error) {
+            showResult(
+              "signup-result",
+              `❌ Network error: ${error.message}`,
+              "error"
+            );
+          }
+        });
+
+      // Test guest login
+      document
+        .getElementById("guest-login-test")
+        .addEventListener("click", async function () {
+          showResult("guest-result", "Testing guest login...", "info");
+
+          try {
+            const response = await fetch("php/api/auth/guest_login.php", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              showResult(
+                "guest-result",
+                `✅ Guest login successful!\nUser: ${result.data.user.username}\nIs Guest: ${result.data.is_guest}`,
+                "success"
+              );
+            } else {
+              showResult(
+                "guest-result",
+                `❌ Guest login failed: ${result.message}`,
+                "error"
+              );
+            }
+          } catch (error) {
+            showResult(
+              "guest-result",
+              `❌ Network error: ${error.message}`,
+              "error"
+            );
+          }
+        });
+
+      // Test API endpoints directly
+      document
+        .getElementById("test-login-api")
+        .addEventListener("click", async function () {
+          showResult("api-result", "Testing login API...", "info");
+
+          try {
+            const response = await fetch("php/api/auth/login.php", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: "email=test@example.com&password=wrongpassword",
+            });
+
+            const result = await response.json();
+            showResult(
+              "api-result",
+              `Login API Response:\n${JSON.stringify(result, null, 2)}`,
+              result.success ? "success" : "error"
+            );
+          } catch (error) {
+            showResult("api-result", `❌ API Error: ${error.message}`, "error");
+          }
+        });
+
+      document
+        .getElementById("test-signup-api")
+        .addEventListener("click", async function () {
+          showResult("api-result", "Testing signup API...", "info");
+
+          try {
+            const response = await fetch("php/api/auth/signup.php", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: "first_name=Test&last_name=User&email=invalid-email&username=test&password=123",
+            });
+
+            const result = await response.json();
+            showResult(
+              "api-result",
+              `Signup API Response:\n${JSON.stringify(result, null, 2)}`,
+              result.success ? "success" : "error"
+            );
+          } catch (error) {
+            showResult("api-result", `❌ API Error: ${error.message}`, "error");
+          }
+        });
+
+      document
+        .getElementById("test-guest-api")
+        .addEventListener("click", async function () {
+          showResult("api-result", "Testing guest API...", "info");
+
+          try {
+            const response = await fetch("php/api/auth/guest_login.php", {
+              method: "POST",
+            });
+
+            const result = await response.json();
+            showResult(
+              "api-result",
+              `Guest API Response:\n${JSON.stringify(result, null, 2)}`,
+              result.success ? "success" : "error"
+            );
+          } catch (error) {
+            showResult("api-result", `❌ API Error: ${error.message}`, "error");
+          }
+        });
+
+      // Test file loading
+      document
+        .getElementById("test-files")
+        .addEventListener("click", async function () {
+          showResult("files-result", "Testing file loading...", "info");
+
+          const files = ["js/auth.js", "utils/js-utils.js", "css/styles.css"];
+
+          let results = [];
+
+          for (const file of files) {
+            try {
+              const response = await fetch(file);
+              if (response.ok) {
+                results.push(`✅ ${file} - Loaded successfully`);
+              } else {
+                results.push(`❌ ${file} - HTTP ${response.status}`);
+              }
+            } catch (error) {
+              results.push(`❌ ${file} - ${error.message}`);
+            }
+          }
+
+          showResult("files-result", results.join("\n"), "info");
+        });
+
+      // Page load test
+      window.addEventListener("load", function () {
+        console.log("🔐 Authentication test page loaded successfully");
+      });
+    </script>
+  </body>
+</html>

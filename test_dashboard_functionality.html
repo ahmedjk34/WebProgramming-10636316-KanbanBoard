@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Functionality Test</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <style>
+      body {
+        padding: 20px;
+        background: #f5f5f5;
+        font-family: Arial, sans-serif;
+      }
+      .test-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .test-buttons {
+        display: flex;
+        gap: 10px;
+        margin: 10px 0;
+        flex-wrap: wrap;
+      }
+      .debug-info {
+        background: #e9ecef;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        margin: 10px 0;
+        white-space: pre-wrap;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .test-result {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .test-result.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .test-result.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .mock-data {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-container">
+      <h1>Dashboard Functionality Test</h1>
+
+      <div class="test-section">
+        <h2>Test 1: Export Functionality</h2>
+        <div class="test-buttons">
+          <button onclick="testExportJSON()" class="btn btn-primary">
+            Test JSON Export
+          </button>
+          <button onclick="testExportCSV()" class="btn btn-secondary">
+            Test CSV Export
+          </button>
+          <button onclick="testExportPDF()" class="btn btn-info">
+            Test PDF Export
+          </button>
+        </div>
+        <div class="debug-info" id="export-test-result"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>Test 2: Project View Toggle</h2>
+        <div class="test-buttons">
+          <button onclick="testProjectToggle()" class="btn btn-primary">
+            Test Project View Toggle
+          </button>
+          <button onclick="testLoadMoreActivity()" class="btn btn-secondary">
+            Test Load More Activity
+          </button>
+        </div>
+        <div class="debug-info" id="project-test-result"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>Test 3: Heatmap Generation</h2>
+        <div class="test-buttons">
+          <button onclick="testHeatmap()" class="btn btn-primary">
+            Test Heatmap Generation
+          </button>
+        </div>
+        <div id="heatmap-test-container" class="mock-data">
+          <h4>Heatmap will appear here:</h4>
+          <div id="test-heatmap"></div>
+        </div>
+        <div class="debug-info" id="heatmap-test-result"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>Test 4: Activity Feed</h2>
+        <div class="test-buttons">
+          <button onclick="testActivityFeed()" class="btn btn-primary">
+            Test Activity Feed
+          </button>
+        </div>
+        <div id="activity-test-container" class="mock-data">
+          <h4>Activity Feed will appear here:</h4>
+          <div id="test-activity-feed"></div>
+        </div>
+        <div class="debug-info" id="activity-test-result"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>Test 5: Project Analytics</h2>
+        <div class="test-buttons">
+          <button onclick="testProjectCards()" class="btn btn-primary">
+            Test Project Cards
+          </button>
+          <button onclick="testProjectTable()" class="btn btn-secondary">
+            Test Project Table
+          </button>
+        </div>
+        <div id="project-test-container" class="mock-data">
+          <h4>Project Analytics will appear here:</h4>
+          <div id="test-projects-analytics"></div>
+        </div>
+        <div class="debug-info" id="project-analytics-result"></div>
+      </div>
+
+      <div class="test-section">
+        <h2>Test 6: Event Log</h2>
+        <div class="debug-info" id="event-log"></div>
+      </div>
+    </div>
+
+    <script>
+      // Mock data for testing
+      const mockAnalyticsData = {
+        overview: {
+          total_tasks: 45,
+          completed_tasks: 32,
+          active_tasks: 13,
+          total_projects: 8,
+          completed_projects: 3,
+          active_projects: 5,
+        },
+        projects: [
+          {
+            id: 1,
+            name: "Website Redesign",
+            color: "#667eea",
+            status: "active",
+            task_count: 12,
+            done_count: 8,
+          },
+          {
+            id: 2,
+            name: "Mobile App Development",
+            color: "#f093fb",
+            status: "active",
+            task_count: 18,
+            done_count: 15,
+          },
+          {
+            id: 3,
+            name: "Database Migration",
+            color: "#4facfe",
+            status: "completed",
+            task_count: 8,
+            done_count: 8,
+          },
+        ],
+        activities: [
+          {
+            id: 1,
+            action_type: "created",
+            task: { title: "Design Homepage" },
+            project: { name: "Website Redesign" },
+            workspace: { name: "Development", icon: "💻" },
+            created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            id: 2,
+            action_type: "status_changed",
+            task: { title: "API Integration" },
+            project: { name: "Mobile App Development" },
+            workspace: { name: "Development", icon: "💻" },
+            new_value: "completed",
+            created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+          },
+        ],
+      };
+
+      function logEvent(message) {
+        const log = document.getElementById("event-log");
+        const timestamp = new Date().toLocaleTimeString();
+        log.innerHTML += `[${timestamp}] ${message}\n`;
+        console.log(message);
+      }
+
+      // Test 1: Export Functionality
+      function testExportJSON() {
+        logEvent("📊 Testing JSON export...");
+        try {
+          const analyticsManager = new window.AnalyticsDataManager();
+          analyticsManager.currentData = mockAnalyticsData;
+          analyticsManager.exportData("json");
+          document.getElementById("export-test-result").textContent =
+            "✅ JSON export completed successfully";
+          logEvent("✅ JSON export test passed");
+        } catch (error) {
+          document.getElementById(
+            "export-test-result"
+          ).textContent = `❌ JSON export failed: ${error.message}`;
+          logEvent(`❌ JSON export test failed: ${error.message}`);
+        }
+      }
+
+      function testExportCSV() {
+        logEvent("📊 Testing CSV export...");
+        try {
+          const analyticsManager = new window.AnalyticsDataManager();
+          analyticsManager.currentData = mockAnalyticsData;
+          analyticsManager.exportData("csv");
+          document.getElementById("export-test-result").textContent =
+            "✅ CSV export completed successfully";
+          logEvent("✅ CSV export test passed");
+        } catch (error) {
+          document.getElementById(
+            "export-test-result"
+          ).textContent = `❌ CSV export failed: ${error.message}`;
+          logEvent(`❌ CSV export test failed: ${error.message}`);
+        }
+      }
+
+      function testExportPDF() {
+        logEvent("📊 Testing PDF export...");
+        try {
+          const analyticsManager = new window.AnalyticsDataManager();
+          analyticsManager.currentData = mockAnalyticsData;
+          analyticsManager.exportData("pdf");
+          document.getElementById("export-test-result").textContent =
+            "✅ PDF export completed successfully";
+          logEvent("✅ PDF export test passed");
+        } catch (error) {
+          document.getElementById(
+            "export-test-result"
+          ).textContent = `❌ PDF export failed: ${error.message}`;
+          logEvent(`❌ PDF export test failed: ${error.message}`);
+        }
+      }
+
+      // Test 2: Project View Toggle
+      function testProjectToggle() {
+        logEvent("🔄 Testing project view toggle...");
+        try {
+          if (window.toggleProjectView) {
+            window.toggleProjectView();
+            document.getElementById("project-test-result").textContent =
+              "✅ Project view toggle test passed";
+            logEvent("✅ Project view toggle test passed");
+          } else {
+            throw new Error("toggleProjectView function not found");
+          }
+        } catch (error) {
+          document.getElementById(
+            "project-test-result"
+          ).textContent = `❌ Project view toggle failed: ${error.message}`;
+          logEvent(`❌ Project view toggle test failed: ${error.message}`);
+        }
+      }
+
+      function testLoadMoreActivity() {
+        logEvent("⬇️ Testing load more activity...");
+        try {
+          if (window.loadMoreActivity) {
+            window.loadMoreActivity();
+            document.getElementById("project-test-result").textContent =
+              "✅ Load more activity test passed";
+            logEvent("✅ Load more activity test passed");
+          } else {
+            throw new Error("loadMoreActivity function not found");
+          }
+        } catch (error) {
+          document.getElementById(
+            "project-test-result"
+          ).textContent = `❌ Load more activity failed: ${error.message}`;
+          logEvent(`❌ Load more activity test failed: ${error.message}`);
+        }
+      }
+
+      // Test 3: Heatmap Generation
+      function testHeatmap() {
+        logEvent("🔥 Testing heatmap generation...");
+        try {
+          const analyticsApp = new window.AnalyticsApp();
+          analyticsApp.createProductivityHeatmap();
+          document.getElementById("heatmap-test-result").textContent =
+            "✅ Heatmap generation test passed";
+          logEvent("✅ Heatmap generation test passed");
+        } catch (error) {
+          document.getElementById(
+            "heatmap-test-result"
+          ).textContent = `❌ Heatmap generation failed: ${error.message}`;
+          logEvent(`❌ Heatmap generation test failed: ${error.message}`);
+        }
+      }
+
+      // Test 4: Activity Feed
+      function testActivityFeed() {
+        logEvent("📋 Testing activity feed...");
+        try {
+          const analyticsManager = new window.AnalyticsDataManager();
+          const activities = analyticsManager.formatActivityData(
+            mockAnalyticsData.activities
+          );
+
+          const container = document.getElementById("test-activity-feed");
+          let activityHTML = "";
+          activities.forEach((activity) => {
+            activityHTML += `
+                        <div class="activity-item">
+                            <div class="activity-icon">${activity.icon}</div>
+                            <div class="activity-content">
+                                <div class="activity-text">${
+                                  activity.actionText
+                                }</div>
+                                <div class="activity-meta">
+                                    <span class="activity-time">${
+                                      activity.timeAgo
+                                    }</span>
+                                    <span class="activity-workspace">${
+                                      activity.workspace?.icon || "🏢"
+                                    } ${
+              activity.workspace?.name || "Unknown Workspace"
+            }</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+          });
+          container.innerHTML = activityHTML;
+
+          document.getElementById("activity-test-result").textContent =
+            "✅ Activity feed test passed";
+          logEvent("✅ Activity feed test passed");
+        } catch (error) {
+          document.getElementById(
+            "activity-test-result"
+          ).textContent = `❌ Activity feed failed: ${error.message}`;
+          logEvent(`❌ Activity feed test failed: ${error.message}`);
+        }
+      }
+
+      // Test 5: Project Analytics
+      function testProjectCards() {
+        logEvent("📁 Testing project cards view...");
+        try {
+          const analyticsApp = new window.AnalyticsApp();
+          analyticsApp.updateProjectsCards(mockAnalyticsData);
+          document.getElementById("project-analytics-result").textContent =
+            "✅ Project cards test passed";
+          logEvent("✅ Project cards test passed");
+        } catch (error) {
+          document.getElementById(
+            "project-analytics-result"
+          ).textContent = `❌ Project cards failed: ${error.message}`;
+          logEvent(`❌ Project cards test failed: ${error.message}`);
+        }
+      }
+
+      function testProjectTable() {
+        logEvent("📊 Testing project table view...");
+        try {
+          const analyticsApp = new window.AnalyticsApp();
+          analyticsApp.updateProjectsTable(mockAnalyticsData);
+          document.getElementById("project-analytics-result").textContent =
+            "✅ Project table test passed";
+          logEvent("✅ Project table test passed");
+        } catch (error) {
+          document.getElementById(
+            "project-analytics-result"
+          ).textContent = `❌ Project table failed: ${error.message}`;
+          logEvent(`❌ Project table test failed: ${error.message}`);
+        }
+      }
+
+      // Test page load
+      window.addEventListener("load", function () {
+        logEvent("📄 Dashboard functionality test page loaded");
+
+        // Check if required modules are available
+        if (window.AnalyticsDataManager) {
+          logEvent("✅ AnalyticsDataManager module found");
+        } else {
+          logEvent("❌ AnalyticsDataManager module not found");
+        }
+
+        if (window.AnalyticsApp) {
+          logEvent("✅ AnalyticsApp module found");
+        } else {
+          logEvent("❌ AnalyticsApp module not found");
+        }
+
+        if (window.toggleProjectView) {
+          logEvent("✅ toggleProjectView function found");
+        } else {
+          logEvent("❌ toggleProjectView function not found");
+        }
+
+        if (window.loadMoreActivity) {
+          logEvent("✅ loadMoreActivity function found");
+        } else {
+          logEvent("❌ loadMoreActivity function not found");
+        }
+      });
+    </script>
+  </body>
+</html>

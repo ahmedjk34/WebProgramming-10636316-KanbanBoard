@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Chat Refresh Test - Kanban Board</title>
+    <meta
+      name="description"
+      content="Test page for AI chat refresh functionality"
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico" />
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-theme="light">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-container">
+        <div class="header-left">
+          <h1 class="app-title">
+            <span class="app-icon">🧪</span>
+            AI Chat Refresh Test
+          </h1>
+        </div>
+        <div class="header-controls">
+          <button
+            id="theme-toggle"
+            class="theme-toggle"
+            title="Toggle Dark/Light Mode"
+          >
+            <span id="theme-icon">🌙</span>
+          </button>
+          <a href="index.html" class="btn btn-primary">
+            <span class="btn-icon">🏠</span>
+            Back to App
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="test-container">
+        <h2>AI Chat Refresh Functionality Test</h2>
+
+        <section class="test-section">
+          <h3>1. Test Refresh Methods</h3>
+          <p>
+            Test different refresh methods to ensure tasks are properly updated
+          </p>
+          <div class="test-buttons">
+            <button class="btn btn-primary" onclick="testRefreshMethods()">
+              <span class="btn-icon">🧪</span>
+              Test All Refresh Methods
+            </button>
+            <button class="btn btn-secondary" onclick="forceRefreshTasks()">
+              <span class="btn-icon">🔄</span>
+              Force Refresh Tasks
+            </button>
+            <button class="btn btn-info" onclick="testAIChatRefresh()">
+              <span class="btn-icon">🤖</span>
+              Test AI Chat Refresh
+            </button>
+          </div>
+        </section>
+
+        <section class="test-section">
+          <h3>2. Simulate AI Plan Confirmation</h3>
+          <p>Simulate the process of confirming an AI-generated plan</p>
+          <div class="test-buttons">
+            <button
+              class="btn btn-success"
+              onclick="simulatePlanConfirmation()"
+            >
+              <span class="btn-icon">✅</span>
+              Simulate Plan Confirmation
+            </button>
+          </div>
+        </section>
+
+        <section class="test-section">
+          <h3>3. Debug Information</h3>
+          <p>Check the current state of managers and dependencies</p>
+          <div class="test-buttons">
+            <button class="btn btn-warning" onclick="showDebugInfo()">
+              <span class="btn-icon">🔍</span>
+              Show Debug Info
+            </button>
+          </div>
+          <div id="debug-info" class="debug-info" style="display: none">
+            <pre id="debug-content"></pre>
+          </div>
+        </section>
+
+        <section class="test-section">
+          <h3>4. Manual Task Creation Test</h3>
+          <p>Create a test task and verify refresh works</p>
+          <div class="test-buttons">
+            <button class="btn btn-primary" onclick="createTestTask()">
+              <span class="btn-icon">📝</span>
+              Create Test Task
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p>
+          &copy; 2025 Web Programming 10636316 Project | AI Chat Refresh Test
+        </p>
+      </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="utils/js-utils.js"></script>
+    <script src="modules/LoadingManager.js"></script>
+    <script src="modules/APIManager.js"></script>
+    <script src="modules/TaskManager.js"></script>
+    <script src="modules/UIManager.js"></script>
+    <script src="modules/AIChatManager.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+      // Test functions
+      async function testRefreshMethods() {
+        console.log("🧪 Testing refresh methods...");
+
+        if (window.forceRefreshTasks) {
+          const success = await window.forceRefreshTasks();
+          console.log(`Refresh result: ${success ? "SUCCESS" : "FAILED"}`);
+          alert(`Refresh test completed: ${success ? "SUCCESS" : "FAILED"}`);
+        } else {
+          console.error("❌ forceRefreshTasks not available");
+          alert("❌ forceRefreshTasks function not available");
+        }
+      }
+
+      async function simulatePlanConfirmation() {
+        console.log("🧪 Simulating plan confirmation...");
+
+        if (window.aiChatManager) {
+          // Simulate the confirmPlan process
+          console.log("🤖 Calling aiChatManager.confirmPlan()...");
+          await window.aiChatManager.confirmPlan();
+        } else {
+          console.error("❌ aiChatManager not available");
+          alert("❌ aiChatManager not available");
+        }
+      }
+
+      function showDebugInfo() {
+        const debugInfo = document.getElementById("debug-info");
+        const debugContent = document.getElementById("debug-content");
+
+        const info = {
+          timestamp: new Date().toISOString(),
+          managers: {
+            aiChatManager: !!window.aiChatManager,
+            taskManager: !!window.taskManager,
+            apiManager: !!window.apiManager,
+            uiManager: !!window.uiManager,
+          },
+          methods: {
+            forceRefreshTasks: typeof window.forceRefreshTasks,
+            testAIChatRefresh: typeof window.testAIChatRefresh,
+          },
+          dependencies: window.aiChatManager
+            ? {
+                taskManager: !!window.aiChatManager.dependencies?.taskManager,
+                apiManager: !!window.aiChatManager.dependencies?.apiManager,
+                uiManager: !!window.aiChatManager.dependencies?.uiManager,
+              }
+            : null,
+        };
+
+        debugContent.textContent = JSON.stringify(info, null, 2);
+        debugInfo.style.display = "block";
+      }
+
+      async function createTestTask() {
+        console.log("🧪 Creating test task...");
+
+        if (window.apiManager) {
+          try {
+            const taskData = {
+              title: "Test Task - " + new Date().toLocaleTimeString(),
+              description: "This is a test task created for refresh testing",
+              project_id: 1,
+              priority: "medium",
+              due_date: new Date().toISOString().split("T")[0],
+              status: "todo",
+            };
+
+            const result = await window.apiManager.createTask(taskData);
+            if (result.success) {
+              console.log("✅ Test task created successfully");
+              alert("✅ Test task created successfully");
+
+              // Try to refresh
+              if (window.forceRefreshTasks) {
+                const refreshSuccess = await window.forceRefreshTasks();
+                console.log(
+                  `Refresh after task creation: ${
+                    refreshSuccess ? "SUCCESS" : "FAILED"
+                  }`
+                );
+              }
+            } else {
+              console.error("❌ Failed to create test task:", result);
+              alert("❌ Failed to create test task");
+            }
+          } catch (error) {
+            console.error("❌ Error creating test task:", error);
+            alert("❌ Error creating test task");
+          }
+        } else {
+          console.error("❌ apiManager not available");
+          alert("❌ apiManager not available");
+        }
+      }
+
+      // Theme toggle
+      document.addEventListener("DOMContentLoaded", function () {
+        const themeToggle = document.getElementById("theme-toggle");
+        const themeIcon = document.getElementById("theme-icon");
+
+        themeToggle.addEventListener("click", function () {
+          const body = document.body;
+          const currentTheme = body.getAttribute("data-theme");
+          const newTheme = currentTheme === "dark" ? "light" : "dark";
+
+          body.setAttribute("data-theme", newTheme);
+          themeIcon.textContent = newTheme === "dark" ? "☀️" : "🌙";
+          localStorage.setItem("theme", newTheme);
+        });
+      });
+    </script>
+
+    <style>
+      .test-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .test-section {
+        background: var(--bg-glass);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        margin-bottom: 24px;
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color);
+      }
+
+      .test-section h3 {
+        color: var(--text-primary);
+        margin-bottom: 12px;
+        font-size: 1.3rem;
+      }
+
+      .test-section p {
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+      }
+
+      .test-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .debug-info {
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 16px;
+        border: 1px solid var(--border-color);
+      }
+
+      .debug-info pre {
+        color: var(--text-primary);
+        font-family: monospace;
+        font-size: 0.9rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+
+      @media (max-width: 768px) {
+        .test-buttons {
+          flex-direction: column;
+        }
+
+        .test-buttons .btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </body>
+</html>
