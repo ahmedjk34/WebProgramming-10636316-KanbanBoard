@@ -338,11 +338,6 @@ try {
         'message' => 'An error occurred during guest login. Please try again.'
     ]);
 }
-
-/**
- * Generate a secure random token
- */
-function generateSecureToken($length = 64) {
-    return bin2hex(random_bytes($length / 2));
-}
 ?>
+
+
