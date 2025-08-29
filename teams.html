@@ -487,6 +487,7 @@
     </dialog>
 
     <!-- Scripts -->
+    <script src="utils/js-utils.js"></script>
     <script src="js/auth-check.js"></script>
     <script src="js/analytics-app.js"></script>
     <script src="js/app.js"></script>
@@ -559,27 +560,21 @@
 
       // Theme toggle function
       window.toggleTheme = () => {
-        const body = document.body;
+        const html = document.documentElement;
         const themeIcon = document.getElementById("theme-icon");
+        const currentTheme = html.getAttribute("data-theme") || "light";
 
         console.log("🎨 Theme toggle clicked");
-        console.log("Current theme:", localStorage.getItem("theme"));
-        console.log(
-          "Body has dark-mode:",
-          body.classList.contains("dark-mode")
-        );
+        console.log("Current theme:", currentTheme);
 
-        if (body.classList.contains("dark-mode")) {
-          body.classList.remove("dark-mode");
-          themeIcon.textContent = "🌙";
-          localStorage.setItem("theme", "light");
-          console.log("✅ Switched to light mode");
-        } else {
-          body.classList.add("dark-mode");
-          themeIcon.textContent = "☀️";
-          localStorage.setItem("theme", "dark");
-          console.log("✅ Switched to dark mode");
-        }
+        const newTheme = currentTheme === "light" ? "dark" : "light";
+        html.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+
+        // Update theme icon
+        themeIcon.textContent = newTheme === "light" ? "🌙" : "☀️";
+
+        console.log("✅ Switched to", newTheme, "mode");
       };
 
       // Logout function
@@ -644,18 +639,29 @@
 
       // Initialize theme on page load
       document.addEventListener("DOMContentLoaded", () => {
-        const savedTheme = localStorage.getItem("theme");
-        const themeIcon = document.getElementById("theme-icon");
-
-        if (savedTheme === "dark") {
-          document.body.classList.add("dark-mode");
-          themeIcon.textContent = "☀️";
+        const savedTheme = localStorage.getItem("theme") || "light";
+        if (typeof window.initializeTheme === "function") {
+          window.initializeTheme(savedTheme);
+        } else {
+          // Fallback theme initialization
+          const themeIcon = document.getElementById("theme-icon");
+          const html = document.documentElement;
+          html.setAttribute("data-theme", savedTheme);
+          if (themeIcon) {
+            themeIcon.textContent = savedTheme === "light" ? "🌙" : "☀️";
+          }
         }
+
+        console.log("🎨 Theme initialized:", savedTheme);
 
         // Add click handler to theme toggle
         const themeToggle = document.getElementById("theme-toggle");
         if (themeToggle) {
-          themeToggle.addEventListener("click", window.toggleTheme);
+          themeToggle.addEventListener("click", () => {
+            const currentTheme =
+              document.documentElement.getAttribute("data-theme") || "light";
+            window.toggleTheme(currentTheme);
+          });
         }
 
         // Update user info
