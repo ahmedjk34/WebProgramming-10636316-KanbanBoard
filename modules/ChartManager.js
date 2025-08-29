@@ -5,13 +5,13 @@ class ChartManager {
     this.dependencies = dependencies;
     this.charts = new Map();
     this.defaultColors = {
-      primary: '#3498db',
-      success: '#27ae60',
-      warning: '#f39c12',
-      danger: '#e74c3c',
-      info: '#17a2b8',
-      purple: '#9b59b6',
-      teal: '#1abc9c'
+      primary: "#3498db",
+      success: "#27ae60",
+      warning: "#f39c12",
+      danger: "#e74c3c",
+      info: "#17a2b8",
+      purple: "#9b59b6",
+      teal: "#1abc9c",
     };
 
     console.log("📈 ChartManager initialized");
@@ -33,48 +33,62 @@ class ChartManager {
     }
 
     const dailyActivity = data.daily_activity || [];
-    
+
     // Prepare data for the last 30 days
     const labels = [];
     const createdData = [];
     const completedData = [];
-    
+
     // Fill in missing days with zero values
     const today = new Date();
     for (let i = 29; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-      
-      const dayData = dailyActivity.find(d => d.date === dateStr);
+      const dateStr = date.toISOString().split("T")[0];
+
+      labels.push(
+        date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      );
+
+      const dayData = dailyActivity.find((d) => d.date === dateStr);
       createdData.push(dayData ? parseInt(dayData.tasks_created) : 0);
       completedData.push(dayData ? parseInt(dayData.tasks_completed) : 0);
     }
 
     const chart = new Chart(ctx, {
-      type: 'line',
+      type: "line",
       data: {
         labels: labels,
         datasets: [
           {
-            label: 'Tasks Created',
+            label: "Tasks Created",
             data: createdData,
             borderColor: this.defaultColors.primary,
-            backgroundColor: this.defaultColors.primary + '20',
+            backgroundColor: this.defaultColors.primary + "20",
             fill: true,
-            tension: 0.4
+            tension: 0.4,
+            borderWidth: 3,
+            pointBackgroundColor: this.defaultColors.primary,
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8,
           },
           {
-            label: 'Tasks Completed',
+            label: "Tasks Completed",
             data: completedData,
             borderColor: this.defaultColors.success,
-            backgroundColor: this.defaultColors.success + '20',
+            backgroundColor: this.defaultColors.success + "20",
             fill: true,
-            tension: 0.4
-          }
-        ]
+            tension: 0.4,
+            borderWidth: 3,
+            pointBackgroundColor: this.defaultColors.success,
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -82,25 +96,75 @@ class ChartManager {
         plugins: {
           title: {
             display: true,
-            text: 'Daily Task Activity'
+            text: "Daily Task Activity Trends",
+            font: {
+              size: 18,
+              weight: "bold",
+            },
+            color: "#333",
+            padding: 20,
           },
           legend: {
-            position: 'top'
-          }
+            position: "top",
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: {
+                size: 14,
+                weight: "600",
+              },
+            },
+          },
+          tooltip: {
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            titleColor: "#ffffff",
+            bodyColor: "#ffffff",
+            borderColor: "#ffffff",
+            borderWidth: 1,
+            cornerRadius: 8,
+            displayColors: true,
+          },
         },
         scales: {
+          x: {
+            grid: {
+              color: "rgba(0, 0, 0, 0.1)",
+              drawBorder: false,
+            },
+            ticks: {
+              font: {
+                size: 12,
+                weight: "500",
+              },
+              color: "#666",
+            },
+          },
           y: {
             beginAtZero: true,
+            grid: {
+              color: "rgba(0, 0, 0, 0.1)",
+              drawBorder: false,
+            },
             ticks: {
-              stepSize: 1
-            }
-          }
+              stepSize: 1,
+              font: {
+                size: 12,
+                weight: "500",
+              },
+              color: "#666",
+            },
+          },
         },
         interaction: {
           intersect: false,
-          mode: 'index'
-        }
-      }
+          mode: "index",
+        },
+        elements: {
+          point: {
+            hoverBackgroundColor: "#ffffff",
+          },
+        },
+      },
     });
 
     this.charts.set(canvasId, chart);
@@ -123,22 +187,24 @@ class ChartManager {
     }
 
     const projects = data.projects || [];
-    
-    const labels = projects.map(p => p.name);
-    const completionRates = projects.map(p => p.completion_percentage || 0);
-    const colors = projects.map(p => p.color || this.defaultColors.primary);
+
+    const labels = projects.map((p) => p.name);
+    const completionRates = projects.map((p) => p.completion_percentage || 0);
+    const colors = projects.map((p) => p.color || this.defaultColors.primary);
 
     const chart = new Chart(ctx, {
-      type: 'bar',
+      type: "bar",
       data: {
         labels: labels,
-        datasets: [{
-          label: 'Completion Rate (%)',
-          data: completionRates,
-          backgroundColor: colors.map(color => color + '80'),
-          borderColor: colors,
-          borderWidth: 2
-        }]
+        datasets: [
+          {
+            label: "Completion Rate (%)",
+            data: completionRates,
+            backgroundColor: colors.map((color) => color + "80"),
+            borderColor: colors,
+            borderWidth: 2,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -146,24 +212,24 @@ class ChartManager {
         plugins: {
           title: {
             display: true,
-            text: 'Project Completion Rates'
+            text: "Project Completion Rates",
           },
           legend: {
-            display: false
-          }
+            display: false,
+          },
         },
         scales: {
           y: {
             beginAtZero: true,
             max: 100,
             ticks: {
-              callback: function(value) {
-                return value + '%';
-              }
-            }
-          }
-        }
-      }
+              callback: function (value) {
+                return value + "%";
+              },
+            },
+          },
+        },
+      },
     });
 
     this.charts.set(canvasId, chart);
@@ -186,28 +252,36 @@ class ChartManager {
     }
 
     const priorityData = data.priority_distribution || [];
-    
-    const labels = priorityData.map(p => p.priority.charAt(0).toUpperCase() + p.priority.slice(1));
-    const counts = priorityData.map(p => p.count);
-    const colors = priorityData.map(p => {
-      switch(p.priority) {
-        case 'high': return this.defaultColors.danger;
-        case 'medium': return this.defaultColors.warning;
-        case 'low': return this.defaultColors.success;
-        default: return this.defaultColors.info;
+
+    const labels = priorityData.map(
+      (p) => p.priority.charAt(0).toUpperCase() + p.priority.slice(1)
+    );
+    const counts = priorityData.map((p) => p.count);
+    const colors = priorityData.map((p) => {
+      switch (p.priority) {
+        case "high":
+          return this.defaultColors.danger;
+        case "medium":
+          return this.defaultColors.warning;
+        case "low":
+          return this.defaultColors.success;
+        default:
+          return this.defaultColors.info;
       }
     });
 
     const chart = new Chart(ctx, {
-      type: 'doughnut',
+      type: "doughnut",
       data: {
         labels: labels,
-        datasets: [{
-          data: counts,
-          backgroundColor: colors.map(color => color + '80'),
-          borderColor: colors,
-          borderWidth: 2
-        }]
+        datasets: [
+          {
+            data: counts,
+            backgroundColor: colors.map((color) => color + "80"),
+            borderColor: colors,
+            borderWidth: 2,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -215,13 +289,13 @@ class ChartManager {
         plugins: {
           title: {
             display: true,
-            text: 'Task Priority Distribution'
+            text: "Task Priority Distribution",
           },
           legend: {
-            position: 'bottom'
-          }
-        }
-      }
+            position: "bottom",
+          },
+        },
+      },
     });
 
     this.charts.set(canvasId, chart);
@@ -239,49 +313,62 @@ class ChartManager {
     }
 
     const productivityData = data.productivity_by_day || [];
-    
+
     // Days of the week
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+
     // Hours of the day (simplified to 4 time periods)
-    const timeSlots = ['Morning', 'Afternoon', 'Evening', 'Night'];
-    
+    const timeSlots = ["Morning", "Afternoon", "Evening", "Night"];
+
     // Create heatmap grid
     let heatmapHTML = '<div class="heatmap-grid">';
-    
+
     // Header row
     heatmapHTML += '<div class="heatmap-row header">';
     heatmapHTML += '<div class="heatmap-cell header"></div>';
-    timeSlots.forEach(slot => {
+    timeSlots.forEach((slot) => {
       heatmapHTML += `<div class="heatmap-cell header">${slot}</div>`;
     });
-    heatmapHTML += '</div>';
-    
+    heatmapHTML += "</div>";
+
     // Data rows
     days.forEach((day, dayIndex) => {
       heatmapHTML += '<div class="heatmap-row">';
       heatmapHTML += `<div class="heatmap-cell day-label">${day}</div>`;
-      
+
       timeSlots.forEach((slot, slotIndex) => {
         // Find productivity data for this day
-        const dayData = productivityData.find(d => d.day_number === (dayIndex + 1));
-        const activity = dayData ? parseInt(dayData.tasks_created) + parseInt(dayData.tasks_completed) : 0;
-        
+        const dayData = productivityData.find(
+          (d) => d.day_number === dayIndex + 1
+        );
+        const activity = dayData
+          ? parseInt(dayData.tasks_created) + parseInt(dayData.tasks_completed)
+          : 0;
+
         // Calculate intensity (simplified)
         const intensity = Math.min(activity / 5, 1); // Normalize to 0-1
-        const intensityClass = intensity > 0.7 ? 'high' : intensity > 0.3 ? 'medium' : 'low';
-        
+        const intensityClass =
+          intensity > 0.7 ? "high" : intensity > 0.3 ? "medium" : "low";
+
         heatmapHTML += `<div class="heatmap-cell activity ${intensityClass}" 
                         data-day="${day}" data-slot="${slot}" data-activity="${activity}"
                         title="${day} ${slot}: ${activity} activities">
                         </div>`;
       });
-      
-      heatmapHTML += '</div>';
+
+      heatmapHTML += "</div>";
     });
-    
-    heatmapHTML += '</div>';
-    
+
+    heatmapHTML += "</div>";
+
     container.innerHTML = heatmapHTML;
   }
 
@@ -296,13 +383,13 @@ class ChartManager {
     }
 
     // Update chart data based on chart type
-    if (chart.config.type === 'line') {
+    if (chart.config.type === "line") {
       // Update activity chart
       this.updateActivityChart(chart, newData);
-    } else if (chart.config.type === 'bar') {
+    } else if (chart.config.type === "bar") {
       // Update completion chart
       this.updateCompletionChart(chart, newData);
-    } else if (chart.config.type === 'doughnut') {
+    } else if (chart.config.type === "doughnut") {
       // Update priority chart
       this.updatePriorityChart(chart, newData);
     }
@@ -315,18 +402,18 @@ class ChartManager {
    */
   updateActivityChart(chart, data) {
     const dailyActivity = data.daily_activity || [];
-    
+
     // Update data for the last 30 days
     const today = new Date();
     const createdData = [];
     const completedData = [];
-    
+
     for (let i = 29; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      const dayData = dailyActivity.find(d => d.date === dateStr);
+      const dateStr = date.toISOString().split("T")[0];
+
+      const dayData = dailyActivity.find((d) => d.date === dateStr);
       createdData.push(dayData ? parseInt(dayData.tasks_created) : 0);
       completedData.push(dayData ? parseInt(dayData.tasks_completed) : 0);
     }
@@ -340,11 +427,17 @@ class ChartManager {
    */
   updateCompletionChart(chart, data) {
     const projects = data.projects || [];
-    
-    chart.data.labels = projects.map(p => p.name);
-    chart.data.datasets[0].data = projects.map(p => p.completion_percentage || 0);
-    chart.data.datasets[0].backgroundColor = projects.map(p => (p.color || this.defaultColors.primary) + '80');
-    chart.data.datasets[0].borderColor = projects.map(p => p.color || this.defaultColors.primary);
+
+    chart.data.labels = projects.map((p) => p.name);
+    chart.data.datasets[0].data = projects.map(
+      (p) => p.completion_percentage || 0
+    );
+    chart.data.datasets[0].backgroundColor = projects.map(
+      (p) => (p.color || this.defaultColors.primary) + "80"
+    );
+    chart.data.datasets[0].borderColor = projects.map(
+      (p) => p.color || this.defaultColors.primary
+    );
   }
 
   /**
@@ -352,9 +445,11 @@ class ChartManager {
    */
   updatePriorityChart(chart, data) {
     const priorityData = data.priority_distribution || [];
-    
-    chart.data.labels = priorityData.map(p => p.priority.charAt(0).toUpperCase() + p.priority.slice(1));
-    chart.data.datasets[0].data = priorityData.map(p => p.count);
+
+    chart.data.labels = priorityData.map(
+      (p) => p.priority.charAt(0).toUpperCase() + p.priority.slice(1)
+    );
+    chart.data.datasets[0].data = priorityData.map((p) => p.count);
   }
 
   /**
@@ -391,7 +486,7 @@ class ChartManager {
    * Check if Chart.js is available
    */
   isChartJSAvailable() {
-    return typeof Chart !== 'undefined';
+    return typeof Chart !== "undefined";
   }
 }
 
